@@ -1,0 +1,25 @@
+article {
+    border: black 1px solid;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 5px;
+}
+
+code {
+    font-family: Consolas, Lucida Console, Menlo, Monaco, monospace;
+    background-color: aliceblue;"
+}
+
+article.note h2:first-child::before {
+    color: blue;
+    content: "\24D8";
+    margin-right: 5px;
+    font-weight: lighter;
+}
+
+article.warning h2:first-child::before {
+    color: red;
+    content: "\26A0";
+    margin-right: 5px;
+    font-weight: lighter;
+}
