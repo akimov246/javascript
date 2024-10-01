@@ -23,3 +23,22 @@ article.warning h2:first-child::before {
     margin-right: 5px;
     font-weight: lighter;
 }
+
+kbd {
+    border: lightgray 1px solid;
+    border-radius: 3px;
+}
+
+table, th, td {
+    border: black 1px solid;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+th {
+    background-color: lightpink;"
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2
+}
