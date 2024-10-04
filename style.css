@@ -8,6 +8,7 @@ article {
 code {
     font-family: Consolas, Lucida Console, Menlo, Monaco, monospace;
     background-color: aliceblue;"
+    white-space: pre;
 }
 
 article.note h2:first-child::before {
