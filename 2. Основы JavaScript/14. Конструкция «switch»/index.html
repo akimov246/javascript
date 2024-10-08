@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Конструкиция «switch»</title>
+    <link href="../../style.css" type="text/css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Конструкция «switch»</h2>
+        <p>Конструкция <code>switch</code> заменяет собой сразу несколько <code>if</code>.</p>
+        <p>Она представляет собой более наглядный способ сравнить выражения сразу с несколькими вариантами.</p>
+    </article>
+
+    <article>
+        <h2>Синтаксис</h2>
+        <p>Конструкция <code>switch</code> имеет один или более блок <code>case</code> и необязательный блок <code>default</code>.</p>
+        <p>Выглядит оно так:</p>
+        <code>
+            switch(x) {<br>
+            &nbsp;&nbsp;case 'value1':<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;...<br>
+            &nbsp;&nbsp;&nbsp;[break]<br>
+            &nbsp;&nbsp;case 'value2':<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;...<br>
+            &nbsp;&nbsp;&nbsp;[break]<br>
+            &nbsp;&nbsp;default:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;...<br>
+            &nbsp;&nbsp;&nbsp;[break]<br>
+            }
+        </code>
+        <ul>
+            <li>Переменная <code>x</code> проверяется на строгое равенство первому значению <code>value1</code>, затем
+            второму <code>value2</code> и так далее;</li>
+            <li>Если соответствие установлено - <code>switch</code> начинает выполняться от соответствующей директивы
+            <code>case</code> и далее, до ближайшего <code>break</code> (или до конца <code>switch</code>);</li>
+            <li>Если ни один <code>case</code> не совпал - выполняется (если есть) вариант <code>default</code>.</li>
+        </ul>
+        <p><b>Если <code>break</code> нет, то выполнение пойдет ниже по следующим <code>case</code>, при этом остальные проверки
+        игнорируются.</b></p>
+
+        <article class="note">
+            <h2>Любое выражение может быть аргументом для <code>switch/case</code></h2>
+            <p>И <code>switch</code> и <code>case</code> допускают любое выражение в качестве аргумента.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Группировка «case»</h2>
+        <p>Несколько вариантов <code>case</code>, использующих один код, можно группировать.</p>
+        <p>Для примера выполним один и тот же код для <code>case 3</code> и <code>case 5</code>, сгруппировав их:</p>
+        <code>
+            let a = 3;<br>
+            <br>
+            switch (a) {<br>
+            &nbsp;&nbsp;case 4:<br>
+            &nbsp;&nbsp;&nbsp;alert('Правильно!');<br>
+            &nbsp;&nbsp;&nbsp;break;<br>
+            <br>
+            &nbsp;&nbsp;case 3:<br>
+            &nbsp;&nbsp;case 5:<br>
+            &nbsp;&nbsp;&nbsp;alert('Неправильно!');<br>
+            &nbsp;&nbsp;&nbsp;alert('Может вам посетить урок математики?');<br>
+            &nbsp;&nbsp;&nbsp;break;<br>
+            <br>
+            &nbsp;&nbsp;default:<br>
+            &nbsp;&nbsp;&nbsp;alert('Результат выглядит странновато.');<br>
+            }
+        </code>
+        <p>Теперь оба варианта <code>3</code> и <code>5</code> выводят одно сообщение.</p>
+        <p>Возможность группировать <code>case</code> - это побочный эффект того, как <code>switch/case</code> работает
+        без <code>break</code>.</p>
+    </article>
+
+    <article>
+        <h2>Тип имеет значение</h2>
+        <p>Нужно отметить, что проверка на равенство всегда строгая. Значения должны быть одного типа, чтобы выполнялось равенство.</p>
+    </article>
+
+    <script src="script.js"></script>
+</body>
+</html>
