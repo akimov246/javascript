@@ -43,3 +43,8 @@ th {
 tr:nth-child(even) {
     background-color: #f2f2f2
 }
+
+article a {
+    text-decoration: none;
+    color: #436ebd;
+}
