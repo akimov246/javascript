@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Объект функции, NFE</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Объект функции, NFE</h2>
+        <p>Как мы уже знаем, в JavaScript функция - это значение.</p>
+        <p>Каждое значение в JavaScript имеет свой тип. А функция - это какой тип?</p>
+        <p>В JavaScript функции - это объекты.</p>
+        <p>Можно представить функцию как «объект, который может делать какое-то действие». Функции можно не только вызывать,
+        но и использовать их как обычные объекты: добавлять/удалять свойства, передавать их по ссылке и т.д.</p>
+    </article>
+
+    <article>
+        <h2>Свойство «name»</h2>
+        <p>Объект функции содержи несколько полезных свойств.</p>
+        <p>Например, имя функции нам доступно как свойство «name»:</p>
+        <code>
+            function sayHi() {<br>
+            &nbsp;&nbsp;alert('Hi');<br>
+            }<br>
+            <br>
+            alert(sayHi.name); // sayHi
+        </code>
+        <p>Также имена имеют и методы объекта.</p>
+        <p>Бывает, что корректное имя определить невозможно. В таких случаях свойство <code>name</code> имеет пустое значение.</p>
+    </article>
+
+    <article>
+        <h2>Свойство «length»</h2>
+        <p>Еще одно встроенное свойство «length» содержит количество параметров функции в ее объявлении.</p>
+        <p>Например:</p>
+        <code>
+            function f1(a) {}<br>
+            function f2(a, b) {}<br>
+            function many(a, b, ...more) {}<br>
+            <br>
+            alert(f1.length); // 1
+            alert(f2.length); // 2
+            alert(many.length); // 2
+        </code>
+        <p>Как мы видим, троеточие, обозначающее «остаточные параметры», здесь как был «не считается».</p>
+    </article>
+
+    <article>
+        <h2>Пользовательские свойства</h2>
+        <p>Мы также можем добавить свои собственные свойства.</p>
+        <p>Давайте добавим свойство <code>counter</code> для отслеживания общего количества вызовов:</p>
+        <code>
+            function sayHi() {<br>
+            &nbsp;&nbsp;alert('Hi');<br>
+            <br>
+            &nbsp;&nbsp;sayHi.counter++;<br>
+            }<br>
+            <br>
+            sayHi.counter = 0; // Начальное значение<br>
+            <br>
+            sayHi();<br>
+            sayHi();<br>
+            <br>
+            alert(sayHi.counter); // 2
+        </code>
+
+        <article class="warning">
+            <h2>Свойство не есть переменная</h2>
+            <p>Свойство функции, назначенное как <code>sayHi.counter = 0</code>, не <i>объявляет</i> локальную
+            переменную <code>counter</code> внутри ее. Другими словами, свойство <code>counter</code> и переменная
+            <code>let counter</code> - это две независимые вещи.</p>
+            <p>Мы можем использовать функцию как объект, хранить в ней свойства, но они никак не влияют на ее выполнение.
+            Переменные - это не свойства функции и наоборот. Это два параллельных мира.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Named Function Expression</h2>
+        <p>Named Function Expression или NFE - это термин для Function Expression, у которого есть имя.</p>
+        <p>Например, давайте объявим Function Expression:</p>
+        <code>
+            let sayHi = function(who) {<br>
+            &nbsp;&nbsp;alert(`Hello, ${who}`);<br>
+            }
+        </code>
+        <p>И присвоим ему имя:</p>
+        <code>
+            let sayHi = function func(who) {<br>
+            &nbsp;&nbsp;alert(`Hello, ${who}`);<br>
+            };
+        </code>
+        <p>Чего мы здесь достигли? Какова цель этого дополнительного имени <code>func</code>?</p>
+        <p>Для начала заметим, что функция все еще задана как Function Expression. Добавление <code>func</code>
+        после <code>function</code> не превращает объявление в Function Declaration, потому что оно все еще
+        является частью выражения присваивания.</p>
+        <p>Добавление такого имени ничего не ломает.</p>
+        <p>Функция все еще доступна как <code>sayHi()</code>:</p>
+        <code>
+            let sayHi = function func(who) {<br>
+            &nbsp;&nbsp;alert(`Hello, ${who}`);<br>
+            };<br>
+            <br>
+            sayHi('John'); // Hello, John
+        </code>
+        <p>Есть две важные особенности имени <code>func</code>, ради которого оно дается:</p>
+        <ol>
+            <li>Оно позволяет функции ссылаться на себя же.</li>
+            <li>Оно не доступно за пределами функции.</li>
+        </ol>
+        <p>Например, ниже функция <code>sayHi</code> вызывает себя с <code>Guest</code>, если не передан параметр
+        <code>who</code>:</p>
+        <code>
+            let sayHi = function func(who) {<br>
+            &nbsp;&nbsp;if (who) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Hello, ${who}`);<br>
+            &nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;func('Guest');<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            sayHi(); // Hello, Guest<br>
+            <br>
+            // А вот так - не сработает:<br>
+            func(); // Ошибка, func не определена (недоступна вне функции)
+        </code>
+        <p>Почему мы используем <code>func</code>? Почему просто не использовать <code>sayHi</code> для вложенного
+        вызова?</p>
+        <p>Вообще, обычно мы можем так поступить:</p>
+        <code>
+            let sayHi = function func(who) {<br>
+            &nbsp;&nbsp;if (who) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Hello, ${who}`);<br>
+            &nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;sayHi('Guest');<br>
+            &nbsp;&nbsp;}<br>
+            };
+        </code>
+        <p>Однако, у этого кода есть проблема, которая заключается в том, что значение <code>sayHi</code> может быть
+        изменено. Функция может быть присвоена другой переменной, и тогда код начнет выдавать ошибки:</p>
+        <code>
+            let sayHi = function func(who) {<br>
+            &nbsp;&nbsp;if (who) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Hello, ${who}`);<br>
+            &nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;sayHi('Guest');<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let welcome = sayHi;<br>
+            sayHi = null;<br>
+            <br>
+            welcome(); // Ошибка, вложенный вызов sayHi больше не работает!
+        </code>
+        <p>Так происходит, потому что функция берет <code>sayHi</code> из внешнего лексического окружения.
+        Так как локальная переменная <code>sayHi</code> отсутствует, используется внешняя. И на момент вызова
+        эта внешняя <code>sayHi</code> равна <code>null</code>.</p>
+        <p>Необязательное имя, которое можно вставить в Function Expression, как раз и призвано решать такого рода
+        проблемы.</p>
+        <p>Давайте используем его, чтобы исправить наш код:</p>
+        <code>
+            let sayHi = function func(who) {<br>
+            &nbsp;&nbsp;if (who) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Hello, ${who}`);<br>
+            &nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;func('Guest');<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let welcome = sayHi;<br>
+            sayHi = null;<br>
+            <br>
+            welcome(); // Hello, Guest (вложенный вызов работает)
+        </code>
+        <p>Теперь все работает, потому что имя <code>func</code> локальное и находится внутри функции.
+        Теперь оно взято не снаружи (и недоступно от туда). Спецификация гарантирует, что оно всегда будет ссылаться
+        на текущую функцию.</p>
+        <p>Внешний код все еще содержит переменные <code>sayHi</code> и <code>welcome</code>, но теперь
+        <code>func</code> - это «внутреннее имя функции», таким образом она может вызвать себя изнутри.</p>
+
+        <article class="note">
+            <h2>Это не работает с Function Declaration</h2>
+            <p>Трюк с «внутренним» именем, описанный выше, работает только для Function Expression и не работает
+            для Function Declaration. Для Function Declaration синтаксис не предусматривает возможность объявить
+            дополнительное «внутреннее» имя.</p>
+            <p>Зачастую, когда нам нужно надежное «внутреннее» имя, стоит переписать Function Declaration на
+            Named Function Expression.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Функции - это объекты.</p>
+        <p>Их свойства:</p>
+        <ul>
+            <li>
+                <p><code>name</code> - имя функции. Обычно берется из объявления функции, но если там нет - JavaScript
+                пытается понять его из контекста.</p>
+            </li>
+            <li>
+                <p><code>length</code> - количество аргументов в объявлении функции. Троеточие («остаточные параметры»)
+                не считаются.</p>
+            </li>
+        </ul>
+        <p>Если функция объявлена как Function Expression (вне основного потока кода) и имеет имя, тогда это
+        называется Named Function Expression (Именованным Функциональным Выражением). Это может быть использвано для
+        ссылки на себя же, для рекурсивных вызовов и т.п.</p>
+        <p>Также функции могут содержать дополнительные свойства. Многие известные JavaScript-библиотеки искусно
+        используют эту возможность.</p>
+        <p>Таким образом, функция может не только делать что-то сама по себе, но также и предоставлять полезную
+        функциональность через свои свойства.</p>
+    </article>
+</body>
+</html>
+
+<script src="script.js"></script>

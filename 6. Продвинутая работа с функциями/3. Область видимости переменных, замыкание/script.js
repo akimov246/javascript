@@ -52,11 +52,11 @@ function makeArmy() {
   let i = 0;
   while (i < 10) {
       let x = i;
-    let shooter = function() { // функция shooter
-        console.log(x); // должна выводить порядковый номер
-    };
-    shooters.push(shooter); // и добавлять стрелка в массив
-    i++;
+      let shooter = function() { // функция shooter
+          console.log(x); // должна выводить порядковый номер
+      };
+      shooters.push(shooter); // и добавлять стрелка в массив
+      i++;
   }
 
   // ...а в конце вернуть массив из всех стрелков
@@ -64,4 +64,4 @@ function makeArmy() {
 }
 
 let army = makeArmy();
-console.log(army[5]());
+army[5]();
