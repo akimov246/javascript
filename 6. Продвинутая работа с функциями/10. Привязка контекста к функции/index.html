@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Привязка контекста к функции</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Привязка контекста к функции</h2>
+        <p>При передаче методов объекта в качестве колбэков, например для <code>setTimeout</code>, возникает известная
+        проблема - потеря <code>this</code>.</p>
+    </article>
+
+    <article>
+        <h2>Потеря «this»</h2>
+        <p>Мы уже видели примеры потери <code>this</code>. Как только метод передается отдельно от объекта - <code>this</code>
+        теряется.</p>
+        <p>Вот как это может произойти в случае с <code>setTimeout</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;firstName: 'Вася',<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Привет, ${this.firstName}!`);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            setTimeout(user.sayHi, 1000); // Привет, undefined
+        </code>
+        <p>При запуске этого кода мы видим, что вызов <code>this.firstName</code> возвращает не «Вася», а <code>undefined</code>!</p>
+        <p>Это произошло потому что <code>setTimeout</code> получил функцию <code>sayHi</code> отдельно от объекта
+        <code>user</code> (именно здесь функция и потеряла контекст).</p>
+        <p>Метод <code>setTimeout</code> в браузере имеет особенность: он устанавливает <code>this=window</code> для вызова
+        функции (в Node.js <code>this</code> становится объектом таймера, но здесь это не имеет значения). Таким образом,
+        для <code>this.firstName</code> он пытается получить <code>window.firstName</code>, которого не существует. В других
+        подобных случаях <code>this</code> обычно просто становится <code>undefined</code>.</p>
+        <p>Задача довольно типичная - мы хотим передать метод объекта куда-то еще (в этом конкретном случае - в планировщик),
+        где он будет вызван. Как бы сделать так, чтобы он вызывался в правильном контексте?</p>
+    </article>
+
+    <article>
+        <h2>Решение 1: сделать функцию-обертку</h2>
+        <p>Самый простой вариант решения - это обернуть вызов в анонимную функцию, создав замыкание:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;firstName = 'Вася',<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Привет, ${this.firstName}!`);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            setTimout(function() {<br>
+            &nbsp;&nbsp;user.sayHi(); // Привет, Вася!<br>
+            }, 1000);
+        </code>
+        <p>Теперь код работает корректно, так как объект <code>user</code> достается из замыкания, а затем вызывается его
+        метод <code>sayHi</code>.</p>
+        <p>То же самое, только короче:</p>
+        <code>setTimeout(() => user.sayHi(), 1000);</code>
+        <p>Выглядит хорошо, но теперь в нашем коде появилась небольшая уязвимость.</p>
+        <p>Что произойдет, если до момента срабатывания <code>setTimeout</code> в переменную <code>user</code> будет
+        записано другое значение? Тогда вызов неожиданно будет совсем не тот!</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;firstName = 'Вася',<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Привет, ${this.firstName}!`);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            setTimeout(() => user.sayHi(), 1000);<br>
+            <br>
+            user = {sayHi() {alert('Другой пользователь в "setTimeout"!');}};<br>
+            // Другой пользователь в 'setTimeout'!
+        </code>
+        <p>Следующее решение гарантирует, что такого не случится.</p>
+    </article>
+
+    <article>
+        <h2>Решение 2: привязать контекст с помощью bind</h2>
+        <p>В современном JavaScript есть встроенный метод <code>bind</code>, который позволяет зафиксировать <code>this</code>.</p>
+        <p>Базовый синтаксис <code>bind</code>:</p>
+        <code>let boundFunc = func.bind(context);</code>
+        <p>Результатом вызова <code>func.bind(context)</code> является особый «экзотический объект», который вызывается как
+        функция и прозрачно передает вызов в <code>func</code>, при этом устанавливается <code>this=context</code>.</p>
+        <p>Другими словами, вызов <code>boundFunc</code> подобен вызову <code>func</code> с фиксированным <code>this</code>.</p>
+        <p>Например, здесь <code>funcUser</code> передает вызов <code>user</code>, фиксируя <code>this=user</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;firstName = 'Вася'<br>
+            };<br>
+            <br>
+            function func() {<br>
+            &nbsp;&nbsp;alert(this.firstName);<br>
+            }<br>
+            <br>
+            let funcUser = func.bind(user);<br>
+            funcUser(); // Вася
+        </code>
+        <p>Здесь <code>func.bind(user)</code> - это «связанный вариант» <code>func</code>, с фиксированным <code>this=user</code>.</p>
+        <p>Все аргументы передаются исходному методу <code>func</code> как есть, например:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;firstName = 'Вася'<br>
+            };<br>
+            <br>
+            function func(phrase) {<br>
+            &nbsp;&nbsp;alert(phrase + ', ' + this.firstName);<br>
+            }<br>
+            <br>
+            let funcUser = func.bind(user);<br>
+            funcUser('Привет'); // Привет, Вася
+        </code>
+        <p>Теперь давайте попробуем с методом объекта:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;firstName = 'Вася',<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Привет, ${this.firstName}!`);<br>
+            &nbsp;&nbsp;}
+            };<br>
+            <br>
+            let sayHi = user.sayHi.bind(user);<br>
+            <br>
+            sayHi(); // Привет, Вася
+        </code>
+
+        <article class="note">
+            <h2>Удобный метод: <code>bindAll</code></h2>
+            <p>Если у объекта много методов и мы планируем их активно передавать, то можно привязать контекст для них всех
+            в цикле:</p>
+            <code>
+                for (let key of user) {<br>
+                &nbsp;&nbsp;if (typeof user[key] == 'function') {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;user[key] = user[key].bind(user);<br>
+                &nbsp;&nbsp;}
+                }
+            </code>
+            <p>Некоторые JS-библиотеки предоставляют встроенные функции для удобной массовой привязки контекста,
+            например <code>_.bindAll(obj)</code> в lodash.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Частичное применение</h2>
+        <p>До сих пор мы говорили только о привязывании <code>this</code>. Давайте шагнем дальше.</p>
+        <p>Мы можем привязать не только <code>this</code>, но и аргументы. Это делается редко, но иногда может быть полезно.</p>
+        <p>Полный синтаксис <code>bind</code>:</p>
+        <code>let bound = func.bind(context, [arg1], [arg2], ...);</code>
+        <p>Это позволяет привязать контекст <code>this</code> и начальные аргументы функции.</p>
+        <p>Давайте воспользуемся <code>bind</code>, чтобы создать функцию <code>double</code> на ее основе:</p>
+        <code>
+            function mul(a, b) {<br>
+            &nbsp;&nbsp;return a * b;<br>
+            }<br>
+            <br>
+            let double = mul.bind(null, 2);<br>
+            <br>
+            alert(double(3)); // = mul(2, 3) = 6<br>
+            alert(double(4)); // = mul(2, 4) = 8<br>
+            alert(double(5)); // = mul(2, 5) = 10
+        </code>
+        <p>Вызов <code>mul.bind(null, 2)</code> создает новую функцию <code>double</code>, которая передает вызов
+        <code>mul</code>, фиксируя <code>null</code> как контекст, и <code>2</code> - как первый аргумент.
+        Следующие аргументы передаются как есть.</p>
+        <p>Это называется частичное применение - мы создаем новую функцию, фиксируя некоторые из существующих параметров.</p>
+        <p>Обратите внимание, что в данном случае мы на самом деле не используем <code>this</code>. Но для
+        <code>bind</code> это обязательный параметр, так что мы должны передать туда что-нибудь вроде <code>null</code>.</p>
+        <p>Для чего мы обычно создаем частично примененную функцию?</p>
+        <p>Польза от этого в том, что возможно создать независимую функцию с понятным названием. Мы можем использовать ее
+        и не передавать каждый аргумент, т.к. он зафиксирован с помощью <code>bind</code>.</p>
+        <p>В других случаях частичное применение полезно, когда у нас есть очень общая функция и для удобства мы хотим
+        создать ее более специализированный вариант.</p>
+    </article>
+
+    <article>
+        <h2>Частичное применение без контекста</h2>
+        <p>Что если мы хотим зафиксировать некоторые аргументы, но не контекст <code>this</code>? Например, для метода
+        объекта.</p>
+        <p>Встроенный <code>bind</code> не позволяет этого. Мы не можем просто опустить контекст и перейти к аргументам.</p>
+        <p>К счастью, легко создать вспомогательную функцию <code>partial</code>, которая привязывает только аргументы.</p>
+        <p>Вот так:</p>
+        <code>
+            function partial(func, ...argsBound) {<br>
+            &nbsp;&nbsp;return function(...args) { // (*)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return func.call(this, ...argsBound, ...args);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            // Использование<br>
+            let user = {<br>
+            &nbsp;&nbsp;firstName = 'John',<br>
+            &nbsp;&nbsp;say(time, phrase) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`[${time}] ${this.firstName}: ${phrase}!`);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            // Добавляем частично примененный метод с фиксированным временем<br>
+            user.sayNow = partial(user.say, new Date().getHours() + ':' + new Date().getMinutes());<br>
+            <br>
+            user.sayNow('Hello');<br>
+            // Что-то вроде этого<br>
+            // [10:00] John: Hello!
+        </code>
+        <p>Результатом вызова <code>partial(func[, arg1, arg2...])</code> будет обертка <code>(*)</code>, которая
+        вызывает <code>func</code> с:</p>
+        <ul>
+            <li>Тем же <code>this</code>, который она получает (для вызова <code>user.sayNow</code> - это будет <code>user</code>)</li>
+            <li>Затем передает ей <code>...argsBound</code> - аргументы из вызова <code>partial</code>
+            (<code>'10:00'</code>)</li>
+            <li>Затем передает ей <code>...args</code> - аргументы, полученные оберткой (<code>'Hello'</code>)</li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Метод <code>bind</code> возвращает «привязанный вариант» функции <code>func</code>, фиксируя контекст
+        <code>this</code> и первые аргументы <code>arg1</code>, <code>arg2</code>, ..., если они заданы.</p>
+        <p>Обычно <code>bind</code> применяются для фиксации <code>this</code> в методе объекта, чтобы передать его
+        в качестве колбэка. Например, для <code>setTimeout</code>.</p>
+        <p>Когда мы привязываем аргументы, такая функция называется «частично примененной» или «частичной».</p>
+        <p>Частичное применение удобно, когда мы не хотим повторять один и тот же аргумент много раз.</p>
+    </article>
+</body>
+</html>
+
+<script src="script.js">
