@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Флаги и дескрипторы свойств</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Флаги и дескрипторы свойств</h2>
+        <p>Как мы знаем, объекты могут содержать свойства.</p>
+        <p>До этого момент мы рассматривали свойство как пару «ключ-значение». Но на самом деле свойство объекта гораздо
+        мощнее и гибче.</p>
+    </article>
+
+    <article>
+        <h2>Флаги свойств</h2>
+        <p>Помимо значения <code>value</code>, свойства объекта имеют три специальных атрибута (так называемые «флаги»).</p>
+        <ul>
+            <li><code>writable</code> - если <code>true</code>, свойство можно изменить, иначе только для чтения.</li>
+            <li><code>enumerable</code> - если <code>true</code>, свойство перечисляется в циклах, в противном случае
+            циклы его игнорируют.</li>
+            <li><code>configurable</code> - если <code>true</code>, свойство можно удалить, а эти атрибуты можно изменять,
+            иначе этого делать нельзя.</li>
+        </ul>
+        <p>Мы еще не встречали эти атрибуты, потому что обычно они скрыты. Когда мы создаем свойство «обычным способом»,
+        все они имеют значение <code>true</code>. Но мы можем изменять их в любое время.</p>
+        <p>Сначала посмотрим как можно получить их текущие значения.</p>
+        <p>Метод <code>Object.getOwnPropertyDescriptor</code> позволяет получить полную информацию о свойстве.</p>
+        <p>Его синтаксис:</p>
+        <code>let descriptor = Object.getOwnPropertyDescriptor(obj, propertyName);</code>
+        <p><code>obj</code></p>
+        <p>Объект, из которого мы получаем информацию.</p>
+        <p><code>propertyName</code></p>
+        <p>Имя свойства.</p>
+        <p>Возвращаемое значение - это объект, так называемый «дескриптор свойства»: он содержит значение свойства и все
+        его флаги.</p>
+        <p>Например:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John'<br>
+            };<br>
+            <br>
+            let descriptor = Object.getOwnPropertyDescriptor(user, 'name');<br>
+            <br>
+            alert(JSON.stringify(descriptor, null, 2));<br>
+            /* Дескриптор свойства:<br>
+            {<br>
+            &nbsp;&nbsp;"value": "John",<br>
+            &nbsp;&nbsp;"writable": true,<br>
+            &nbsp;&nbsp;"enumerable": true,<br>
+            &nbsp;&nbsp;"configurable": true<br>
+            }<br>
+            */
+        </code>
+        <p>Чтобы изменить флаги, мы можем использовать метод <code>Object.defineProperty</code>.</p>
+        <p>Его синтаксис:</p>
+        <code>Object.defineProperty(obj, propertyName, descriptor);</code>
+        <p><code>obj</code>, <code>propertyName</code></p>
+        <p>Объект и его свойство, для которого нужно применить дескриптор.</p>
+        <code>descriptor</code>
+        <p>Применяемый дескриптор.</p>
+        <p>Если свойство существует, <code>defineProperty</code> обновит его флаги. В противном случае метод создает
+        новое свойство с указанными значением и флагами; если какой-либо флаг не указан явно, ему присваивается значение
+        <code>false</code>.</p>
+        <p>Например, здесь создается свойство <code>name</code>, все флаги которого имеют значение <code>false</code>:</p>
+        <code>
+            let user = {};<br>
+            <br>
+            Object.defineProperty(user, 'name', {value: 'John'});<br>
+            <br>
+            let descriptor = Object.getOwnPropertyDescriptor(user, 'name');<br>
+            <br>
+            alert(JSON.stringify(descriptor, null, 2));<br>
+            /* Дескриптор свойства:<br>
+            {<br>
+            &nbsp;&nbsp;"value": "John",<br>
+            &nbsp;&nbsp;"writable": false,<br>
+            &nbsp;&nbsp;"enumerable": false,<br>
+            &nbsp;&nbsp;"configurable": false<br>
+            }<br>
+            */
+        </code>
+        <p>Сравните это с предыдущим примером, в котором мы создали свойство <code>user.name</code> «обычным способом»:
+        в этот раз все флаги имеют значение <code>false</code>. Если это не то, что нам нужно, надо присвоить им значения
+        <code>true</code> в параметре <code>descriptor</code>.</p>
+        <p>Теперь давайте рассмотрим на примерах, что нам дает использование флагов.</p>
+    </article>
+
+    <article>
+        <h2>Только для чтения</h2>
+        <p>Сделаем свойство <code>user.name</code> доступным только для чтения. Для этого изменим флаг <code>writable</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John'<br>
+            };<br>
+            <br>
+            Object.defineProperty(user, 'name', {writable: false});<br>
+            <br>
+            user.name = 'Pete'; // Ошибка: Невозможно изменить доступное только для чтения свойство 'name'
+        </code>
+        <p>Теперь никто не сможет изменить имя пользователя, если только не обновит соответствующий флаг новым
+        вызовом <code>defineProperty</code>.</p>
+
+        <article class="note">
+            <h2>Ошибки появляются только в строгом режиме</h2>
+            <p>В нестрогом режиме, без <code>use strict</code>, мы не увидим никаких ошибок при записи в свойства
+            «только для чтения» и т.п. Но эти операции все равно не будут выполнены успешно. Действия, нарушающие
+            ограничения флагов, в нестрогом режиме просто молча игнорируются.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Неперечислимое свойство</h2>
+        <p>Теперь добавим собственный метод <code>toString</code> к объекту <code>user</code>.</p>
+        <p>Встроенный метод <code>toString</code> в объектах - неперчислимый, его не видно в цикле <code>for...in</code>.
+        Но если мы напишем свой собственный метод <code>toString</code>, цикл <code>for...in</code> будет выводить
+        его по умолчанию:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John',<br>
+            &nbsp;&nbsp;toString() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this.name;<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            // По умолчанию оба свойства выведутся:<br>
+            for (let key in user) alert(key); // name, toString
+        </code>
+        <p>Если мы этого не хотим, можно установить для свойства <code>enumerable: false</code>. Тогда оно перестанет
+        появляться в цикле <code>for...in</code> аналогично встроенному <code>toString</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John',<br>
+            &nbsp;&nbsp;toString() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this.name;<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            Object.defineProperty(user, 'toString', {enumerable: false});<br>
+            <br>
+            // Теперь наше свойство toString пропало из цикла:<br>
+            for (let key in user) alert(key); // name
+        </code>
+        <p>Неперечислимые свойства также не возвращаются <code>Object.keys</code>:</p>
+        <code>alert(Object.keys(user)); // name</code>
+    </article>
+
+    <article>
+        <h2>Неконфигурируемое свойство</h2>
+        <p>Флаг неконфигурируемого свойства (<code>configurable: false</code>) иногда предустановлен для некоторых
+        встроенных объектов и свойств.</p>
+        <p>Неконфигурируемое свойство не может быть удалено, его атрибуты не могут быть изменены.</p>
+        <p>Например, свойство <code>Math.PI</code> - только для чтения, неперечислимое и неконфигурируемое.</p>
+        <p>То есть программист не сможет изменить значение <code>Math.PI</code> или перезаписать его.</p>
+        <p>Мы абсолютно ничего не можем сделать с <code>Math.PI</code>.</p>
+        <p>Определение свойства как неконфигурируемого - это дорога в один конец. Мы не можем изменить его
+        обратно с помощью <code>defineProperty</code>.</p>
+        <p><b>Обратите внимание: <code>configurable: false</code> не даст изменить флаги свойства, а также не даст
+        его удалить. При этом можно изменить значение свойства.</b></p>
+    </article>
+
+    <article>
+        <h2>Метод Object.defineProperties</h2>
+        <p>Существует метод <code>Object.defineProperties(obj, descriptors)</code>, который позволяет определять множество
+        свойств сразу.</p>
+        <p>Его синтаксис:</p>
+        <code>
+            Object.defineProperties(obj, {<br>
+            &nbsp;&nbsp;prop1: descriptor1,<br>
+            &nbsp;&nbsp;pror2: descriptor2,<br>
+            &nbsp;&nbsp;// ...<br>
+            });
+        </code>
+        <p>Например:</p>
+        <code>
+            Object.defineProperties(user, {<br>
+            &nbsp;&nbsp;name; {value: 'John', writable: false},<br>
+            &nbsp;&nbsp;surname; {value: 'Smith', writable: false},<br>
+            &nbsp;&nbsp;// ...<br>
+            });
+        </code>
+        <p>Таким образом, мы можем определить множество свойств одной операцией.</p>
+    </article>
+
+    <article>
+        <h2>Метод Object.getOwnPropertyDescriptors</h2>
+        <p>Чтобы получить все дескрипторы свойств сразу, можно воспользоваться методом
+        <code>Object.getOwnPropertyDescriptors(obj)</code>.</p>
+        <p>Вместе с <code>Object.defineProperties</code> этот метод можно использовать для клонирования объекта вместе
+        с его флагами:</p>
+        <code>let clone = Object.defineProperties({}, Object.getOwnPropertyDescriptors(obj));</code>
+        <p>Обычно при клонировании объекта мы используем присваивание, чтобы скопировать его свойства:</p>
+        <code>
+            for (let key in user) {<br>
+            &nbsp;&nbsp;clone[key] = user[key];<br>
+            }
+        </code>
+        <p>Но это не копирует флаги. Так что если нам нужен клон «получше», предпочтительнее использовать
+        <code>Object.defineProperties</code>.</p>
+        <p>Другое отличие в том, что <code>for...in</code> игнорирует символьные и неперечислимые свойства, а
+        <code>Object.getOwnPropertyDescriptors</code> возвращает дескрипторы всех свойств.</p>
+    </article>
+
+    <article>
+        <h2>Глобальное запечатывание объекта</h2>
+        <p>Дескрипторы свойств работают на уровне конкретных свойств.</p>
+        <p>Но есть еще методы, которые ограничивают доступ ко всему объекту:</p>
+        <ul>
+            <li>
+                <p><code>Object.preventExtensions(obj)</code></p>
+                <p>Запрещает добавлять новые свойства в объект.</p>
+            </li>
+            <li>
+                <p><code>Object.seal(obj)</code></p>
+                <p>Запрещает добавлять/удалять свойства. Устанавливает <code>configurable:false</code> для всех существующих
+                свойств.</p>
+            </li>
+            <li>
+                <p><code>Object.freeze(obj)</code></p>
+                <p>Запрещает добавлять/удалять/изменять свойства. Устанавливает <code>configurable:false,
+                writable: false</code> для всех существующих свойств.</p>
+            </li>
+        </ul>
+        <p>Также есть методы для их проверки:</p>
+        <ul>
+            <li>
+                <p><code>Object.isExtensible(obj)</code></p>
+                <p>Возвращает <code>false</code>, если добавление свойств запрещено, иначе <code>true</code>.</p>
+            </li>
+            <li>
+                <p><code>Object.isSealed(obj)</code></p>
+                <p>Возвращает <code>true</code>, если добавление/удаление свойств запрещено и для всех существующих
+                свойств установлено <code>configurable: false</code>.</p>
+            </li>
+            <li>
+                <p><code>Object.isFrozen(obj)</code></p>
+                <p>Возвращает <code>true</code>, если добавление/удаление/изменение свойств запрещено, и для всех
+                текущих свойств установлено <code>configurable: false, writable: false</code>.</p>
+            </li>
+        </ul>
+        <p>На практике эти методы используются редко.</p>
+    </article>
+</body>
+</html>
