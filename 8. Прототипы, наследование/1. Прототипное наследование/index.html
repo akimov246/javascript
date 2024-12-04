@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Прототипное наследование</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Прототипное наследование</h2>
+        <p>В программировании мы часто хотим взять что-то и расширить.</p>
+        <p>Например, у нас есть объект <code>user</code> со своими свойствами и методами, и мы хотим создать объект
+        <code>admin</code> и <code>guest</code> как его слегка измененные варианты. Мы хотели бы повторно использовать
+        то, что есть у объекта <code>user</code>, не копировать/переопределять его методы, а просто создать новый
+        объект на его основе.</p>
+        <p><i>Прототипное наследование</i> - это возможность языка, которая помогает в этом.</p>
+    </article>
+
+    <article>
+        <h2>[[Prototype]]</h2>
+        <p>В JavaScript объекты имеют специальное скрытое свойство <code>[[Prototype]]</code>, которое либо равно
+        <code>null</code>, либо ссылается на другой объект. Этот объект называется «прототип».</p>
+        <p>Прототип дает нам немного «магии». Когда мы хотим прочитать свойство из <code>object</code>, а оно отсутствует,
+        JavaScript автоматически берет его из прототипа. В программировании такой механизм называется «прототипным наследованием».
+        Многие интересные возможности языка и техник программирования основываются на нем.</p>
+        <p>Свойство <code>[[Prototype]]</code> является внутренним и скрытым, но есть много способов задать его.</p>
+        <p>Одним из них является использование <code>__proto__</code>, например так:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;aets: true<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;jumps: true<br>
+            };<br>
+            <br>
+            rabbit.__proto__ = animal; // (*)<br>
+            <br>
+            // Теперь мы можем найти оба свойства в rabbit<br>
+            alert(rabbit.eats); // true (**)<br>
+            alert(rabbit.jumps); // true
+        </code>
+        <p>Здесь строка <code>(*)</code> устанавливает <code>animal</code> как прототип для <code>rabbit</code>.</p>
+        <p>Затем, когда <code>alert</code> пытается прочитать свойство <code>rabbit.eats</code>, его нет в <code>rabbit</code>,
+        поэтому следует по ссылке <code>[[Prototype]]</code> и находит его в <code>animal</code>.</p>
+        <p>Здесь мы можем сказать, что «<code>animal</code> является прототипом <code>rabbit</code>» или
+        «<code>rabbit</code> прототипно наследует от <code>animal</code>».</p>
+        <p>Так что если у <code>animal</code> много полезных свойств и методов, то они автоматически становятся доступными
+        у <code>rabbit</code>. Такие свойства называются «унаследованными».</p>
+        <p>Если у нас есть метод в <code>animal</code>, ог может быть вызван в <code>rabbit</code>:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;eats: true,<br>
+            &nbsp;&nbsp;walk() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Animal walk');<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;jumps: true,<br>
+            &nbsp;&nbsp;__proto__: animal<br>
+            };<br>
+            <br>
+            // walk взял из прототипа<br>
+            rabbit.walk(); // Animal walk
+        </code>
+        <p>Метод автоматически берется из прототипа.</p>
+        <p>Цепочка прототипов может быть длиннее:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;eats: true,<br>
+            &nbsp;&nbsp;walk() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Animal walk');<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;jumps: true,<br>
+            &nbsp;&nbsp;__proto__: animal<br>
+            };<br>
+            <br>
+            let longEar = {<br>
+            &nbsp;&nbsp;earLength: 10,<br>
+            &nbsp;&nbsp;__proto__: rabbit<br>
+            };<br>
+            <br>
+            // walk взят из цепочки прототипов<br>
+            longEar.walk(); // Animal walk<br>
+            alert(longEar.jumps); // true (из rabbit)
+        </code>
+        <p>Теперь если мы прочтем что-нибудь из <code>longEar</code>, и оно будет отсутствовать, JavaScript будет искать его
+        в <code>rabbit</code>, а затем в <code>animal</code>.</p>
+        <p>Есть только два ограничения:</p>
+        <ol>
+            <li>Ссылки не могут идти по кругу. JavaScript выдаст ошибку, если мы попытаемся назначить <code>__proto__</code>
+            по кругу.</li>
+            <li>Значение <code>__proto__</code> может быть объектом или <code>null</code>. Другие типы игнорируются.</li>
+        </ol>
+        <p>Это вполне очевидно, но все же: может быть только один <code>[[Prototype]]</code>. Объект не может наследовать
+        от двух других объектов.</p>
+
+        <article class="note">
+            <h2>Свойство <code>__proto__</code> - исторически обусловленный геттер/сеттер для <code>[[Prototype]]</code></h2>
+            <p>Это распространенная ошибка начинающих разработчиков - не знать разницы между этими двумя понятиями.</p>
+            <p>Обратите внимание, что <code>__proto__</code> - это не то же самое, что внутреннее устройство
+            <code>[[Prototype]]</code>. Это геттер/сеттер для <code>[[Prototype]]</code>.</p>
+            <p>Свойство <code>__proto__</code> немного устарело, оно существует по историческим причинам. Современный
+            JavaScript предполагает, что мы должны использовать функции <code>Object.getPrototypeOf/Object.setPrototypeOf</code>
+            вместо того, чтобы получать/устанавливать прототип.</p>
+            <p>По спецификации <code>__proto__</code> должен поддерживаться только браузерами, но по факту все среды,
+            включая серверную, поддерживают его. Так что мы вполне безопасно его используем.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Операция записи не использует прототип</h2>
+        <p>Прототип используется только для чтения свойств.</p>
+        <p>Операции записи/удаления работают напрямую с объектом.</p>
+        <p>В приведенном ниже примере мы присваиваем <code>rabbit</code> собственный метод <code>walk</code>:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;eats: true,<br>
+            &nbsp;&nbsp;walk() {<br>
+            &nbsp;&nbsp;// Этот метод не будет использоваться в rabbit<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;__proto__: animal<br>
+            };<br>
+            <br>
+            rabbit.walk = function() {<br>
+            &nbsp;&nbsp;alert('Rabbit! Bounce-bounce!');<br>
+            };<br>
+            <br>
+            rabbit.walk(); // Rabbit! Bounce-bounce
+        </code>
+        <p>Теперь вызов <code>rabbit.walk()</code> находит метод непосредственно в объекте и выполняет его, не используя
+        прототип.</p>
+        <p>Свойства-аксессоры - исключение, так как запись в него обрабатывается функцией-сеттером. То есть это фактически
+        вызов функции.</p>
+    </article>
+
+    <article>
+        <h2>Значение «this»</h2>
+        <p>Прототипы никак не влияют на <code>this</code>.</p>
+        <p><b>Неважно, где находится метод: в объекте или его прототипе. При вызове метода <code>this</code> - всегда
+        объект перед точкой.</b></p>
+        <p>Это на самом деле осень важная деталь, потому что у нас может быть большой объект со множеством методов,
+        от которого можно наследовать. Затем наследующие объекты могут вызывать его методы, но они будут изменять свое
+        состояние, а не состояние объекта-родителя.</p>
+        <p>Например, здесь <code>animal</code> представляет собой «хранилище методов», и <code>rabbit</code>
+        использует его.</p>
+        <p>Вызов <code>rabbit.sleep()</code> устанавливает <code>this.isSleeping</code> для объекта <code>rabbit</code>:</p>
+        <code>
+            // Методы animal<br>
+            let animal = {<br>
+            &nbsp;&nbsp;walk() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (!this.isSleeping) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('I walk');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;sleep() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.isSleeping = true;<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;name: 'White Rabbit',<br>
+            &nbsp;&nbsp;__proto__: animal<br>
+            };<br>
+            <br>
+            // Модифицирует rabbit.isSleeping<br>
+            rabbit.sleep();<br>
+            <br>
+            alert(rabbit.isSleeping); // true<br>
+            alert(animal.isSleeping); // undefined (нет такого свойства в прототипе)
+        </code>
+        <p>Если бы у нас были другие объекты, такие как <code>bird</code>, <code>snake</code> и т.д., унаследованные от
+        <code>animal</code>, они также получили бы доступ к методам <code>animal</code>. Но <code>this</code>
+        при вызове каждого метода будет соответствовать объекту (перед точкой), на котором происходит вызов, а не
+        <code>animal</code>. Поэтому, когда мы записываем данные в <code>this</code>, они сохраняются в этих объектах.</p>
+        <p>В результате методы являются общими, а состояния объекта - нет.</p>
+    </article>
+
+    <article>
+        <h2>Цикл for...in</h2>
+        <p>Цикл <code>for...in</code> проходит не только по собственным, но и по унаследованным свойствам объекта.</p>
+        <p>Например:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;eats: true<br>
+            };<br>
+            <br>
+            ler rabbit = {<br>
+            &nbsp;&nbsp;jumps: true,<br>
+            &nbsp;&nbsp;__proto__: animal<br>
+            };<br>
+            <br>
+            // Object.keys возвращает только собственные ключи<br>
+            alert(Object.keys(rabbit)); // jumps<br>
+            <br>
+            // for...in проходит и по своим, и по унаследованным ключам<br>
+            for (let prop in rabbit) alert(prop); // jumps, eats
+        </code>
+        <p>Если унаследованные свойства нам не нужны, то мы можем отфильтровать их при помощи встроенного метода
+        <code>obj.hasOwnProperty(key)</code>: он возвращает <code>true</code>, если у <code>obj</code> есть собственное,</p>
+        не унаследованное свойство с именем <code>key</code>.
+
+        <article class="note">
+            <h2>Почти все остальные методы получения ключей/значений игнорируют унаследованные свойства</h2>
+            <p>Почти все остальные методы, получающие ключи/значения, такие как <code>Object.keys</code>,
+            <code>Object.values</code> и другие - игнорируют унаследованные свойства.</p>
+            <p>Они учитывают только свойства самого объекта, не его прототипа.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>В JavaScript все объекты имеют скрытое свойство <code>[[Prototype]]</code>, которое является либо другим
+            объектом, либо <code>null</code>.</li>
+            <li>Мы можем использовать <code>obj.__proto__</code> для доступа к нему (исторически обусловленный геттер/сеттер)</li>
+            <li>Объект, на который ссылается <code>[[Prototype]]</code>, называется «прототипом».</li>
+            <li>Если мы хотим прочитать свойство <code>obj</code> или вызвать метод, которого не существует у <code>obj</code>,
+            тогда JavaScript попытается найти его в прототипе.</li>
+            <li>Операции записи/удаления работают непосредственно с объектом, они не используют прототип (если это обычное
+            свойство, а не сеттер).</li>
+            <li>Если мы вызываем <code>obj.method()</code>, а метод при этом взят из прототипа, то <code>this</code> все равно
+            ссылается на <code>obj</code>. Таким образом, методы всегда работают с текущим объектом, даже если они наследуются.</li>
+            <li>Цикл <code>for...in</code> перебираем как свои, так и унаследованные свойства. Остальные методы получения
+            ключей/значений работают только с собственными свойствами объекта.</li>
+        </ul>
+    </article>
+</body>
+</html>
