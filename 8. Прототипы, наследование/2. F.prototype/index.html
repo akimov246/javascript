@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>F.prototype</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>F.prototype</h2>
+        <p>Как мы помним, новые объекты могут быть созданы с помощью функции-конструктора <code>new F()</code>.</p>
+        <p>Если в <code>F.prototype</code> содержится объект, оператор <code>new</code> устанавливает его в качестве
+        <code>[[Prototype]]</code> для нового объекта.</p>
+
+        <article class="note">
+            <h2>На заметку:</h2>
+            <p>JavaScript использовал прототипное наследование с момента своего появления. Это одна из основных особенностей
+            языка.</p>
+            <p>Но раньше, в старые времена, прямого доступа к прототипу объекта не было. Надежно работало только свойство
+            <code>prototype</code> функции-конструктора. Поэтому оно используется во многих скриптах.</p>
+        </article>
+
+        <p>Обратите внимание, что <code>F.prototype</code> означает обычное свойство с именем <code>prototype</code>
+        для <code>F</code>. Это еще не прототип объекта, а обычное свойство <code>F</code> с таким именем.</p>
+        <p>Приведем пример:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;eats: true<br>
+            };<br>
+            <br>
+            function Rabbit(name) {<br>
+            &nbsp;&nbsp;this.name = name;<br>
+            }<br>
+            <br>
+            Rabbit.prototype = animal;<br>
+            <br>
+            let rabbit = new Rabbit('White Rabbit'); // rabbit.__proto__ = animal<br>
+            <br>
+            alert(rabbit.eats); // true
+        </code>
+        <p>Установка <code>Rabbit.prototype = animal</code> буквально говорит интерпретатору следующее: «При создании
+        объекта через <code>new Rabbit()</code> запиши ему <code>animal</code> в <code>[[Prototype]]</code>».</p>
+
+        <article class="note">
+            <h2><code>F.prototype</code> используется только в момент вызова <code>new F</code></h2>
+            <p><code>F.prototype</code> используется только при вызове <code>new F</code> и присваивается в качестве свойства
+            <code>[[Prototype]]</code> нового объекта.</p>
+            <p>Если после создания свойство <code>F.prototype</code> изменится (<code>F.prototype = &ltдругой объект&gt</code>),
+            то новые объекты, созданные с помощью <code>new F</code>, будут иметь в качестве <code>[[Prototype]]</code>
+            другой объект, а уже существующие объекты сохранят старый.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>F.prototype по умолчанию, свойство constructor</h2>
+        <p>У каждой функции (за исключением стрелочных) по умолчанию уже есть свойство <code>prototype</code>.</p>
+        <p>По умолчанию <code>prototype</code> - объект с единственным свойством <code>constructor</code>,
+        которое ссылается на функцию-конструктор.</p>
+        <p>Вот такой:</p>
+        <code>
+            function Rabbit() {}<br>
+            <br>
+            // Прототип по умолчанию<br>
+            Rabbit.prototype = {constructor: Rabbit};
+        </code>
+        <p>Проверим это:</p>
+        <code>
+            function Rabbit() {}<br>
+            // По умолчанию:<br>
+            // Rabbit.prototype = {constructor: Rabbit}<br>
+            <br>
+            alert(Rabbit.prototype.constructor == Rabbit); // true
+        </code>
+        <p>Соответственно, если мы ничего не меняем, то свойство <code>constructor</code> будет доступно всем кроликам через
+        <code>[[Prototype]]</code>:</p>
+        <code>
+            function Rabbit() {}<br>
+            // По умолчанию:<br>
+            // Rabbit.prototype = {constructor: Rabbit}<br>
+            <br>
+            let rabbit = new Rabbit(); // Наследует от {constructor: Rabbit}<br>
+            <br>
+            alert(rabbit.constructor == Rabbit); // true (свойство получено из прототипа)
+        </code>
+        <p>Мы можем использовать свойство <code>constructor</code> существующего объекта для создания нового.</p>
+        <p>Пример:</p>
+        <code>
+            function Rabbit(name) {<br>
+            &nbsp;&nbsp;this.name = name;
+            &nbsp;&nbsp;alert(name);<br>
+            }<br>
+            <br>
+            let rabbit = new Rabbit('White Rabbit');<br>
+            <br>
+            let rabbit2 = new rabbit.constructor('Black Rabbit');
+        </code>
+        <p>Это удобно, когда у нас есть объект, но мы не знаем, какой конструктор использовался для создания (например,
+        он мог быть взят из сторонней библиотеки), а нам необходимо создать еще один такой объект.</p>
+        <p>Но, пожалуй, самое важное в свойстве <code>constructor</code> это то, что...</p>
+        <p><b>... JavaScript сам по себе не гарантирует правильное значение свойства <code>constructor</code>.</b></p>
+        <p>Да, оно является свойством по умолчанию в <code>prototype</code> у функций, но что случится с ним позже - зависит
+        только от нас.</p>
+        <p>В частности, если мы заменим прототип по умолчанию на другой объект, то свойства <code>constructor</code>
+        в нем не будет.</p>
+        <p>Например:</p>
+        <code>
+            function Rabbit() {}<br>
+            Rabbit.prototype = {<br>
+            &nbsp;&nbsp;jumps: true<br>
+            };<br>
+            <br>
+            let rabbit = new Rabbit();<br>
+            alert(rabbit.constructor == Rabbit); // false
+        </code>
+        <p>Таким образом, чтобы сохранить верное свойство <code>constructor</code>, мы должны добавлять/удалять/изменять
+        свойства у прототипа по умолчанию вместо того, чтобы перезаписывать его целиком:</p>
+        <code>
+            function Rabbit() {}<br>
+            <br>
+            // Не перезаписываем Rabbit.prototype полностью,<br>
+            // а добавляем к нему свойство<br>
+            Rabbit.prototype.jumps = true;<br>
+            // Прототип по умолчанию сохраняется, и мы все еще имеем доступ к Rabbit.prototype.constructor
+        </code>
+        <p>Или мы можем заново создать свойство <code>constructor</code>:</p>
+        <code>
+            Rabbit.prototype = {<br>
+            &nbsp;&nbsp;jumps: true,<br>
+            &nbsp;&nbsp;constructor: Rabbit<br>
+            };<br>
+            <br>
+            // Теперь свойство constructor снова корректное, так как мы добавили его
+        </code>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>В этой главе мы кратко описали способ задания <code>[[Prototype]]</code> для объектов, создаваемых с помощью
+        функции-конструктора.</p>
+        <p>Основные моменты:</p>
+        <ul>
+            <li>Свойство <code>F.prototype</code> (не путать с <code>[[Prototype]]</code>) устанавливает <code>[[Prototype]]</code>
+            для новых объектов при вызове <code>new F()</code>.</li>
+            <li>Значение <code>F.prototype</code> должно быть либо объектом, либо <code>null</code>. Другие значения не будут
+            работать.</li>
+            <li>Свойство <code>prototype</code> является особым, только когда оно назначено функции-конструктору, которая
+            вызывается оператором <code>new</code>.</li>
+        </ul>
+        <p>В обычных объектах <code>prototype</code> не является чем-то особенным:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John',<br>
+            &nbsp;&nbsp;prototype: 'Bla-bla' // Никакой магии нет - обычное свойство<br>
+            };
+        </code>
+        <p>По умолчанию все функции имеют <code>F.prototype = {constructor: F}</code>, поэтому мы можем получить
+        конструктор объекта через свойство <code>constructor</code>.</p>
+    </article>
+</body>
+</html>
