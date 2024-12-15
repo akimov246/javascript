@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Наследование классов</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Наследование классов</h2>
+        <p>Наследование классов - это способ расширения одного класса другим классом.</p>
+        <p>Таким образом, мы можем добавить новый функционал к уже существующему.</p>
+    </article>
+
+    <article>
+        <h2>Ключевое слово «extends»</h2>
+        <p>Допустим у нас есть класс <code>Animal</code>:</p>
+        <code>
+            class Animal {<br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = 0;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;run(speed) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = speed;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} бежит со скоростью ${this.speed}.`);<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;stop() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = 0;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} стоит неподвижно.`);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let animal = new Animal('Мой питомец');
+        </code>
+        <p>... И мы хотели бы создать еще один класс <code>Rabbit</code>.</p>
+        <p>Поскольку кролики - это животные, класс <code>Rabbit</code> должен быть основан на <code>Animal</code>,
+        и иметь доступ к методам животных, так чтобы кролики могли делать то, что могут делать «общие» животные.</p>
+        <p>Синтаксис для расширения другого класса следующий: <code>class Child extends Parent</code>.</p>
+        <p>Давайте создадим <code>class Rabbit</code>, который наследуется от <code>Animal</code>:</p>
+        <code>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;hide() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} прячется!`);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let rabbit = new Rabbit('Белый кролик');<br>
+            <br>
+            rabbit.run(5); // Белый кролик бежит со скоростью 5.<br>
+            rabbit.hide(); // Белый кролик прячется!
+        </code>
+        <p>Объект класса <code>Rabbit</code> имеет доступ как к методам <code>Rabbit</code>, таким как
+        <code>rabbit.hide()</code>, так и к методам <code>Animal</code>, таким как <code>rabbit.run()</code>.</p>
+        <p>Внутри ключевое слово <code>extends</code> работает по старой доброй механике прототипов. Оно устанавливает
+        <code>Rabbit.prototype.[[Prototype]]</code> в <code>Animal.prototype</code>. Таким образом, если метода не оказалось
+        в <code>Rabbit.prototype</code>, JavaScript берет его из <code>Animal.prototype</code>.</p>
+
+        <article>
+            <h2>После <code>extends</code> разрешены любые выражения</h2>
+            <p>Синтаксис создания класса допускает указывать после <code>extends</code> не только класс, но и любое
+            выражение.</p>
+            <p>Пример вызова функции, которая генерирует родительский класс:</p>
+            <code>
+                function f(phrase) {<br>
+                &nbsp;&nbsp;return class {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;sayHi() { alert(phrase); }<br>
+                &nbsp;&nbsp;};<br>
+                }<br>
+                <br>
+                class User extends f('Привет') {}<br>
+                <br>
+                new User().sayHi(); // Привет
+            </code>
+            <p>Здесь <code>class User</code> наследует от результата вызова <code>f('Привет')</code>.</p>
+            <p>Это может быть полезно для продвинутых приемов проектирования, где мы можем использовать функции
+            для генерации классов в зависимости от многих условий и затем наследовать их.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Переопределение методов</h2>
+        <p>Теперь давайте продвинемся дальше и переопределим метод. По умолчанию все методы, не указанные в классе
+        <code>Rabbit</code>, берутся непосредственно «как есть» из класса <code>Animal</code>.</p>
+        <p>Но если мы укажем в <code>Rabbit</code> собственный метод, например <code>stop()</code>, то он будет
+        использован вместо него:</p>
+        <code>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;stop() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ... теперь это будет использоваться для rabbit.stop()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// вместо stop() из класса Animal<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <p>Впрочем, обычно мы не хотим полностью заменить родительский метод, а скорее хотим сделать новый на его основе,
+        изменяя или расширяя его функциональность. Мы делаем что-то в нашем методе и вызываем родительский метод
+        до/после или в процессе.</p>
+        <p>У классов есть ключевое слово <code>super</code> для таких случаев.</p>
+        <ul>
+            <li><code>super.method(...)</code> вызывает родительский метод.</li>
+            <li><code>super(...)</code> для вызова родительского конструктора (работает только внутри нашего конструктора).</li>
+        </ul>
+        <p>Пусть наш кролик автоматически прячется при остановке:</p>
+        <code>
+            class Animal {<br>
+            <br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = 0;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;run(speed) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = speed;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} бежит со скоростью ${this.speed}.`);<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;stop() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = 0;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} стоит.`);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;hide() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} прячется!`);<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;stop() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super.stop(); // Вызываем родительский метод stop<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.hide(); // и затем hide<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let rabbit = new Rabbit('Белый кролик');<br>
+            <br>
+            rabbit.run(5); // Белый кролик бежит со скоростью 5.<br>
+            rabbit.stop(); // Белый кролик стоит. Белый кролик прячется!
+        </code>
+        <p>Теперь у класса <code>Rabbit</code> есть метод <code>stop</code>, который вызывает родительский
+        <code>super.stop()</code> в процессе выполнения.</p>
+
+        <article>
+            <h2>У стрелочных функций нет <code>super</code></h2>
+            <p>При обращении к <code>super</code> стрелочной функции он берется из внешней функции:</p>
+            <code>
+                class Rabbit extends Animal {<br>
+                &nbsp;&nbsp;stop() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => super.stop(), 1000); // Вызывает родительский stop после 1 секунды<br>
+                &nbsp;&nbsp;}<br>
+                }
+            </code>
+            <p>В примере <code>super</code> в стрелочной функции тот же самый, что и в <code>super()</code>, поэтому метод
+            отрабатывает, как и ожидается. Если бы мы указали здесь «обычную» функцию, была бы ошибка:</p>
+            <code>
+                // Unexpected super<br>
+                setTimeout(function() { super.stop() }, 1000);
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Переопределение конструктора</h2>
+        <p>С конструкторами немного сложнее.</p>
+        <p>До сих пор у <code>Rabbit</code> не было своего конструктора.</p>
+        <p>Согласно спецификации, если класс расширяет другой класс и не имеет конструктора, то автоматически создается
+        такой «пустой» конструктор:</p>
+        <code>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;// Генерируется для классов-потомков, у которых нет своего конструктора<br>
+            &nbsp;&nbsp;constructor(...args) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super(...args);<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <p>Как мы видим, он просто вызывает конструктор родительского класса. Так будет происходить, пока мы не создадим
+        собственный конструктор.</p>
+        <p>Давайте добавим конструктор для <code>Rabbit</code>. Он будет устанавливать <code>earLength</code>
+        в дополнение к <code>name</code>:</p>
+        <code>
+            class Animal {<br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = 0;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;// ...<br>
+            }<br>
+            <br>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;constructor(name, earLength) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = 0;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.earLength = earLength;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;// ...<br>
+            }<br>
+            <br>
+            // Не работает!<br>
+            let rabbit = new Rabbit('Белый кролик', 10); // Error: this is not defined.
+        </code>
+        <p>Упс! При создании кролика - ошибка! Что не так?</p>
+        <p>Если коротко, то:</p>
+        <ul>
+            <li><b>Конструкторы в наследуемых классах должны обязательно вызывать <code>super(...)</code>,
+            и (!) делать это перед использованием <code>this</code>.</b></li>
+        </ul>
+        <p>... Но почему? Что происходит? Это требование кажется довольно странным.</p>
+        <p>Конечно, всему есть свое объяснение. Давайте углубимся в детали, чтобы вы действительно поняли, что происходит.</p>
+        <p>В JavaScript существует различие между «функцией-конструктором наследующего класса» и всеми остальными.
+        В наследующем классе соответствующая функция-конструктор помечена специальным внутренним свойством
+        <code>[[ConstructorKind]]: 'derived'</code>.</p>
+        <p>Разница в следующем:</p>
+        <ul>
+            <li>Когда выполняется обычный конструктор, он создает пустой объект и присваивает его <code>this</code>.</li>
+            <li>Когда запускается конструктор унаследованного класса, он этого не делает. Вместо этого он ждет, что
+            это сделает конструктор родительского класса.</li>
+        </ul>
+        <p>Поэтому, если мы создаем собственный конструктор, мы должны вызвать <code>super</code>, в противном случае
+        объект для <code>this</code> не будет создан, и мы получим ошибку.</p>
+        <p>Чтобы конструктор <code>Rabbit</code> работал, он должен вызвать <code>super()</code> до того, как использовать
+        <code>this</code>, чтобы не было ошибки:</p>
+        <code>
+            class Animal {<br>
+            <br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = 0;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;// ...<br>
+            }<br>
+            <br>
+            class Rabbit extends Animal {<br>
+            <br>
+            &nbsp;&nbsp;constructor(name, earLength) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super(name);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.earLength = earLength;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;// ...<br>
+            }<br>
+            <br>
+            // Теперь работает<br>
+            let rabbit = new Rabbit('Белый кролик', 10);<br>
+            alert(rabbit.name); // Белый кролик<br>
+            alert(rabbit.earLength); // 10
+        </code>
+    </article>
+
+    <article>
+        <h2>Переопределение полей класса</h2>
+        <p>Мы можем переопределять не только методы, но и поля класса.</p>
+        <p>Однако, когда мы получаем доступ к переопределенному полю в родительском конструкторе, это поведение отличвается
+        от большинства других языков программирования.</p>
+        <p>Рассмотрим этот пример:</p>
+        <code>
+            class Animal {<br>
+            &nbsp;&nbsp;name = 'animal';<br>
+            <br>
+            &nbsp;&nbsp;constructor() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(this.name);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;name = 'rabbit';<br>
+            }<br>
+            <br>
+            new Animal(); // animal<br>
+            new Rabbit(); // animal
+        </code>
+        <p>Здесь класс <code>Rabbit</code> расширяет <code>Animal</code> и переопределяет поле <code>name</code> своим
+        собственным значением.</p>
+        <p>В <code>Rabbit</code> нет собственного конструктора, поэтому вызывается конструктор <code>Animal</code>.</p>
+        <p>Что интересно, в обоих случаях: <code>new Animal()</code> и <code>new Rabbit()</code>, <code>alert</code>
+        показывает <code>'animal'</code>.</p>
+        <p><b>Другими словами, родительский конструктор всегда использует свое собственное значение поля, а не
+        переопределенное.</b></p>
+        <p>Вот тот же код, но вместо поля <code>this.name</code>, мы вызываем метод <code>this.showName()</code>:</p>
+        <code>
+            class Animal {<br>
+            &nbsp;&nbsp;showName() { // Вместо this.name = 'animal'<br>
+            &nbsp;&nbsp;alert('animal');<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;constructor() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.showName(); // вместо alert(this.name);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;showName() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('rabbit');<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            new Animal(); // animal<br>
+            new Rabbit(); // rabbit
+        </code>
+        <p>Обратите внимание: теперь результат другой.</p>
+        <p>И это то, чего мы, естественно, ожидаем. Когда родительский конструктор вызывается в производном классе,
+        он использует переопределенный метод.</p>
+        <p>... Но для полей класса это не так. Как уже было сказано, родительский конструктор всегда использует родительское
+        поле.</p>
+        <p>Почему же наблюдается разница?</p>
+        <p>Что ж, причина заключается в порядке инициализации полей. Поле класса инициализируется:</p>
+        <ul>
+            <li>Перед конструктором для базового класса (который ничего не расширяет).</li>
+            <li>Сразу после <code>super</code> для производного класса.</li>
+        </ul>
+        <p>В нашем случае <code>Rabbit</code> - это производный класс. В нем нет конструктора <code>constructor()</code>.
+        Как было сказано ранее, это то же самое, как если бы был пустой конструктор, содержащий только <code>super(...args)</code>.</p>
+        <p>Итак, <code>new Rabbit()</code> вызывает <code>super()</code>, таким образом, выполняя родительский конструктор,
+        и (согласно правилу производных классов) только после этого инициализируются поля его класса. На момент выполнения
+        родительского конструктора еще нет полей класса <code>Rabbit</code>, поэтому используются поля <code>Animal</code>.</p>
+        <p>Это тонкое различие между полями и методами характерно для JavaScript.</p>
+        <p>К счастью, такое поведение проявляется только в том случае, когда переопределенное поле используется в родительском
+        конструкторе.</p>
+        <p>Если это становится проблемой, ее можно решить, используя методы или геттеры/сеттеры вместо полей.</p>
+    </article>
+
+    <article>
+        <h2>Устройство super, [[HomeObject]]</h2>
+        <p>Давайте заглянем «под капот» <code>super</code>. Здесь есть некоторые интересные моменты.</p>
+        <p>Вообще, исходя из наших знаний до этого момента, <code>super</code> вообще не может работать!</p>
+        <p>Ну правда, давайте спросим себя - как он должен работать, чисто технически? Когда метод объекта выполняется,
+        он получает текущий объект как <code>this</code>. Если мы вызываем <code>super.method()</code>, то движку
+        необходимо получить <code>method</code> из прототипа текущего объекта. И как ему это сделать?</p>
+        <p>Задача может показаться простой, но это не так. Движок знает текущий <code>this</code> и мог бы попытаться
+        получить родительский метод как <code>this.__proto__.method</code>. Однако, увы, такой «наивный» путь не работает.</p>
+        <p>Продемонстрируем проблему. Без классов, используя простые объекты для наглядности.</p>
+        <p>В примере ниже <code>rabbit.__proto__ = animal</code>. Попробуем в <code>rabbit.eat()</code> вызвать
+        <code>animal.eat()</code>, используя <code>this.__proto__</code>:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;name: 'Animal',<br>
+            &nbsp;&nbsp;eat() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} ест.`);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;__proto__: animal,<br>
+            &nbsp;&nbsp;name: 'Кролик',
+            &nbsp;&nbsp;eat() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Вот как предположительно может работать super.eat()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.__proto__.eat.call(this); // (*)<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            rabbit.eat(); // Кролик ест.
+        </code>
+        <p>В строке <code>(*)</code> мы берем <code>eat</code> из прототипа (<code>animal</code>) и вызываем его
+        в контексте текущего объекта. Обратите внимание, что <code>.call(this)</code> здесь неспроста: простой
+        вызов <code>this.__proto__.eat()</code> будет выполнять родительский <code>eat</code> в контексте
+        прототипа, а не текущего объекта.</p>
+        <p>Приведенный выше код работает так, как задумано: выполняет нужный <code>alert</code>.</p>
+        <p>Теперь давайте добавим еще один объект в цепочку наследования и увидим, как все ломается:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;name: 'Животное',<br>
+            &nbsp;&nbsp;eat() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} ест.`);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;__proto__: animal,<br>
+            &nbsp;&nbsp;eat() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ... Делаем что-то специфичное для кролика и вызываем родительский (animal) метод<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.__proto__.eat.call(this); // (*)<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let longEar = {<br>
+            &nbsp;&nbsp;__proto__: rabbit,<br>
+            &nbsp;&nbsp;eat() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ... Делаем что-то, связанное с длинными ушами, и вызываем родительский (rabbit) метод<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.__proto__.eat.call(this); // (**)<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            longEat.eat(); // Error: Maximum call stack size exceeded
+        </code>
+        <p>Теперь код не работает! Ошибка возникает при попытке вызова <code>longEat.eat()</code>.</p>
+        <p>На первый взгляд все не так очевидно, но если мы проследим вызов <code>longEat.eat()</code>, то сможем
+        понять причину ошибки. В обеих строках <code>(*)</code> и <code>(**)</code> значение <code>this</code> - это
+        текущий объект (<code>longEar</code>). Это важно: для всех методов объекта <code>this</code> указывает на текущий
+        объект, а не на прототип или что-то еще.</p>
+        <p>Итак, в обеих линиях <code>(*)</code> и <code>(**)</code> значение <code>this.__proto__</code> одно и то же:
+        <code>rabbit</code>. В обоих случаях метод <code>rabbit.eat</code> вызывается в бесконечном цикле не поднимаясь
+        по цепочке вызовов.</p>
+        <p>Картина того, что происходит:</p>
+        <ol>
+            <li>
+                <p>Внутри <code>longEar.eat()</code> строка <code>(**)</code> вызывает <code>rabbit.eat</code>
+                со значением <code>this=longEar</code>.</p>
+                <code>
+                    // Внутри longEar.eat() у нас this=longEar<br>
+                    this.__proto__.eat.call(this); // (**)<br>
+                    // Становится<br>
+                    longEar.__proto__.eat.call(this);<br>
+                    // То же что и<br>
+                    rabbit.eat.call(this);
+                </code>
+            </li>
+            <li>
+                <p>В строке <code>(*)</code> в <code>rabbit.eat</code> мы хотим передать вызов выше по цепочке, но
+                <code>this=longEar</code>, поэтому <code>this.__proto__.eat</code> снова равен <code>rabbit.eat</code>!</p>
+                <code>
+                    // Внутри rabbit.eat() у нас также this=longEar<br>
+                    this.__proto__.eat.call(this); // (*)<br>
+                    // Становится<br>
+                    longEar.__proto__.eat.call(this);<br>
+                    // или (снова)<br>
+                    rabbit.eat.call(this);
+                </code>
+            </li>
+            <li>
+                <p>... <code>rabbit.eat</code> вызывает себя в бесконечном цикле, потому что не может подняться дальше
+                по цепочке.</p>
+            </li>
+        </ol>
+        <p>Проблема не может быть решена с помощью одного только <code>this</code>.</p>
+    </article>
+
+    <article>
+        <h2>[[HomeObject]]</h2>
+        <p>Для решения этой проблемы в JavaScript было добавлено специальное внутреннее свойство для функций:
+        <code>[[HomeObject]]</code>.</p>
+        <p>Когда функция объявлена как метод внутри класса или объекта, ее свойство <code>[[HomeObject]]</code> становится
+        равно этому объекту.</p>
+        <p>Затем <code>super</code> использует его, чтобы получить прототип родителя и его методы.</p>
+        <p>Давайте рассмотрим, как это работает - опять же используя простые объекты:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;name: 'Животное',<br>
+            &nbsp;&nbsp;eat() { // animal.eat.[[HomeObject]] == animal<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} ест.`);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;__proto__: animal,<br>
+            &nbsp;&nbsp;name: 'Кролик',<br>
+            &nbsp;&nbsp;eat() { // longEar.eat.[[HomeObject]] == rabbit<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super.eat();<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let longEar = {<br>
+            &nbsp;&nbsp;__proto__: rabbit,<br>
+            &nbsp;&nbsp;name: 'Длинноух',<br>
+            &nbsp;&nbsp;eat() { // longEar.eat.[[HomeObject]] == longEar<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super.eat();<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            // Работает верно<br>
+            longEar.eat(); // Длинноух ест.
+        </code>
+        <p>Это работает как задумано благодаря <code>[[HomeObject]]</code>. Метод, такой как <code>longEar.eat</code>,
+        знает свой <code>[[HomeObject]]</code> и получает метод родителя из его прототипа. Вообще без использования
+        <code>this</code>.</p>
+    </article>
+
+    <article>
+        <h2>Методы не «свободны»</h2>
+        <p>До этого мы видели, что функции в JavaScript «свободны», не привязаны к объектам. Их можно копировать между
+        объектами и вызывать с любым <code>this</code>.</p>
+        <p>Но само существование <code>[[HomeObject]]</code> нарушает этот принцип, так как методы запоминают свои
+        объекты: <code>[[HomeObject]]</code> нельзя изменить, эта связь - навсегда.</p>
+        <p>Единственное место в языке, где используется <code>[[HomeObject]]</code> - это <code>super</code>. Поэтому
+        если метод не использует <code>super</code>, то мы все еще можем считать его свободным и копировать между
+        объектами. А вот если <code>super</code> в коде есть, то возможны побочные эффекты.</p>
+        <p>Вот пример неверного результата <code>super</code> после копирования:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Я животное');<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            // rabbit наследует от animal<br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;__proto__: animal,<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super.sayHi();<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let plant = {<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Я растение');<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            // tree наследует от plant<br>
+            let tree = {<br>
+            &nbsp;&nbsp;__proto__: plant,<br>
+            &nbsp;&nbsp;sayHi = rabbit.sayHi; // (*)<br>
+            };<br>
+            <br>
+            tree.sayHi(); // Я животное (?!?)
+        </code>
+        <p>Вызов <code>tree.sayHi()</code> показывает «Я животное». Определенно неверно.</p>
+        <p>Причина проста:</p>
+        <ul>
+            <li>В строке <code>(*)</code>, метод <code>tree.sayHi</code> скопирован из <code>rabbit</code>. Возможно,
+            мы хотели избежать дублирования кода?</li>
+            <li>Его <code>[[HomeObject]]</code> - это <code>rabbit</code>, ведь он был создан в <code>rabbit</code>.
+            Свойство <code>[[HomeObject]]</code> никогда не меняется.</li>
+            <li>В коде <code>tree.sayHi()</code> есть вызов <code>super.sayHi()</code>. Он идет вверх от <code>rabbit</code>
+            и берет метод из <code>animal</code>.</li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Методы, а не свойства-функции</h2>
+        <p>Свойство <code>[[HomeObject]]</code> определено для методов как классов, так и обычных объектов. Но для
+        объектов методы должны быть объявлены именно как <code>method()</code>, а не <code>method: function()</code>.</p>
+        <p>Для нас различий нет, но они есть для JavaScript.</p>
+        <p>В приведенном ниже примере используется синтаксис не метода, а свойства-функции. Поэтому у него нет
+        <code>[[HomeObject]]</code>, и наследование не работает:</p>
+        <code>
+            let animal = {<br>
+            &nbsp;&nbsp;eat: function() { // Намеренно пишем так, а не eat() { ...<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let rabbit = {<br>
+            &nbsp;&nbsp;__proto__: animal,<br>
+            &nbsp;&nbsp;eat: function() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super.eat();<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            rabbit.eat(); // Ошибка вызова super (потому что нет [[HomeObject]])
+        </code>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ol>
+            <li>
+                <p>Чтобы унаследовать от класса: <code>class Child extends Parent</code>:</p>
+                <ul>
+                    <li>
+                        <p>При этом <code>Child.prototype.__proto__</code> будет равен <code>Parent.prototype</code>,
+                        так что методы будут унаследованы.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>При переопределении конструктора:</p>
+                <ul>
+                    <li>Обязателен вызов конструктора родителя <code>super()</code> в конструкторе <code>Child</code>
+                    до обращения к <code>this</code>.</li>
+                </ul>
+            </li>
+            <li>
+                <p>При переопределении другого метода:</p>
+                <ul>
+                    <li>Мы можем вызвать <code>super.method()</code> в методе <code>Child</code> для обращения к методу
+                    родителя <code>Parent</code>.</li>
+                </ul>
+            </li>
+            <li>
+                <p>Внутренние детали:</p>
+                <ul>
+                    <li>Методы запоминают свой объект во внутреннем свойстве <code>[[HomeObject]]</code>. Благодаря этому
+                    работает <code>super</code>, он в его прототипе ищет родительские методы.</li>
+                    <li>Поэтому копировать метод, использующий <code>super</code>, между разными объектами небезопасно.</li>
+                </ul>
+            </li>
+        </ol>
+        <p>Так же:</p>
+        <ul>
+            <li>У стрелочных функций нет своего <code>this</code> и <code>super</code>, поэтому они «прозрачно» встраиваются
+            во внешний контекст.</li>
+        </ul>
+    </article>
+</body>
+</html>
+
+<script src="script.js"></script>
