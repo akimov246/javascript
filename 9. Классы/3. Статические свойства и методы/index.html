@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Статические свойства и методы</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Статические свойства и методы</h2>
+        <p>Мы также можем присвоить метод самому классу. Такие методы называются <i>статическими</i>.</p>
+        <p>В объявлении класса они добавляются с помощью ключевого слова <code>static</code>, например:</p>
+        <code>
+            class User {<br>
+            &nbsp;&nbsp;static staticMethod() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(this === User);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            User.staticMethod(); // true
+        </code>
+        <p>Это фактически то же самое, что присвоить метод напрямую как свойство функции:</p>
+        <code>
+            class User {}<br>
+            <br>
+            User.staticMethod = function() {<br>
+            &nbsp;&nbsp;alert(this === User);<br>
+            };
+        </code>
+        <p>Значением <code>this</code> при вызове <code>User.staticMethod()</code> является сам конструктор класса
+        <code>User</code> (правило «объект до точки»).</p>
+        <p>Обычно статические методы используются для реализации функций, которые будут принадлежать классу в целом,
+        но не какому-либо его конкретному объекту.</p>
+        <p>Например, есть объекты статей <code>Article</code>, и нужна функция их сравнения.</p>
+        <p>Естественное решение - сделать для этого статический метод <code>Article.compare</code>:</p>
+        <code>
+            class Article {<br>
+            &nbsp;&nbsp;constructor(title, date) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.title = title;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.date = date;<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;static compare(articleA, articleB) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return articleA.date - articleB.date;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            // Использование<br>
+            let articles = [<br>
+            &nbsp;&nbsp;new Article('HTML', new Date(2019, 1, 1)),<br>
+            &nbsp;&nbsp;new Article('CSS', new Date(2019, 0, 1)),<br>
+            &nbsp;&nbsp;new Article('JavaScript', new Date(2019, 11, 1)),<br>
+            ];<br>
+            <br>
+            article.sort(Alice.compare);<br>
+            <br>
+            alert(articles[0].title); // CSS
+        </code>
+        <p>Здесь метод <code>Article.compare</code> стоит «над» статьями, как средство для их сравнения. Это метод не
+        отдельной статьи, а всего класса.</p>
+        <p>Другим примером может быть так называемый «фабричный» метод.</p>
+        <p>Скажем, нам нужно несколько способов создания статьи:</p>
+        <ol>
+            <li>Создание через заданные параметры (<code>title</code>, <code>date</code> и т.д.).</li>
+            <li>Создание пустой статьи с сегодняшней датой.</li>
+            <li>... или как-то еще.</li>
+        </ol>
+        <p>Первый способ может быть реализован через конструктор. А для второго можно использовать статический метод класса.</p>
+        <p>Такой как <code>Article.createTodays()</code> в следующем примере:</p>
+        <code>
+            class Article {<br>
+            &nbsp;&nbsp;constructor(title, date) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.title = title;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.date = date;<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;static createTodays() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return new this('Сегодняшний дайджест', new Date());
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let article = Article.createTodays();<br>
+            <br>
+            alert(article.title); // Сегодняшний дайджест
+        </code>
+        <p>Теперь каждый раз, когда нам нужно создать сегодняшний дайджест, нужно вызывать <code>Article.createTodays()</code>.
+        Еще раз, это не метод одной статьи, а метод всего класса.</p>
+        <p>Статические методы также используются в классах, относящимся к базам данных, для поиска/сохранения/удаления
+        вхождений в базу данных, например:</p>
+        <code>
+            // Предположим, что Article - это специальный класс для управления статьями<br>
+            // статический метод для удаления статьи по id<br>
+            Article.remove({id: 12345});
+        </code>
+
+        <article class="warning">
+            <h2>Статические методы недоступны для отдельных объектов</h2>
+            <p>Статические методы могут вызываться для классов, но не для отдельных объектов.</p>
+            <p>Например, такой код не будет работать:</p>
+            <code>
+                // ...<br>
+                article.createTodays(); // Error: article.createTodays is not a function
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Статические свойства</h2>
+        <p>Статические свойства также возможны, они выглядят как свойства класса, но с <code>static</code> в начале:</p>
+        <code>
+            class Article {<br>
+            &nbsp;&nbsp;static publisher = 'Илья Кантор';<br>
+            }<br>
+            <br>
+            alert(Article.publisher); // Илья Кантор
+        </code>
+        <p>Это то же самое, что и прямое присваивание <code>Article</code>:</p>
+        <code>Article.publisher = 'Илья Кантор';</code>
+    </article>
+
+    <article>
+        <h2>Наследование статических свойств и методов</h2>
+        <p>Статические свойства и методы наследуются.</p>
+        <p>Например, метод <code>Animal.compare</code> в коде ниже наследуется и доступен как <code>Rabbit.compare</code>:</p>
+        <code>
+            class Animal {<br>
+            <br>
+            &nbsp;&nbsp;constructor(name, speed) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed = speed;<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;run(speed = 0) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.speed += speed;
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} бежит со скоростью ${this.speed}.`);<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;static compare(animalA, animalB) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return animalA.speed - animalB.speed;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            // Наследует от Animal<br>
+            class Rabbit extends Animal {<br>
+            &nbsp;&nbsp;hide() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${this.name} прячется!`);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let rabbits = [<br>
+            &nbsp;&nbsp;new Rabbit('Белый кролик', 10),<br>
+            &nbsp;&nbsp;new Rabbit('Черный кролик', 5),<br>
+            ];<br>
+            <br>
+            rabbits.sort(Rabbit.compare);<br>
+            <br>
+            rabbits[0].run(); // Черный кролик бежит со скоростью 5.
+        </code>
+        <p>Мы можем вызвать <code>Rabbit.compare</code>, при этом будет вызван унаследованный <code>Animal.compare</code>.</p>
+        <p>Как это работает? Снова с использованием прототипов. Как вы уже могли предположить, <code>extends</code>
+        дает <code>Rabbit</code> ссылку <code>[[Prototype]]</code> на <code>Animal</code>.</p>
+        <p>Так что <code>Rabbit extends Animal</code> создает две ссылки на прототип:</p>
+        <ol>
+            <li>Функция <code>Rabbit</code> прототипно наследует от функции <code>Animal</code>.</li>
+            <li><code>Rabbit.prototype</code> прототипно наследует от <code>Animal.prototype</code>.</li>
+        </ol>
+        <p>В результате наследование работает как для обычных, так и для статических методов.</p>
+        <p>Давайте проверим это кодом:</p>
+        <code>
+            class Animal {}<br>
+            class Rabbit extends Animal {}<br>
+            <br>
+            // Для статики<br>
+            alert(Rabbit.__proto__ === Animal); // true<br>
+            <br>
+            // Для обычных методов<br>
+            alert(Rabbit.prototype.__proto__ === Animal.prototype); // true
+        </code>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Статические методы используются для функциональности, принадлежат классу «в целом», а не относятся к
+        конкретному объекту класса.</p>
+        <p>Например, метод для сравнения двух статей <code>Article.compare(article1, article2)</code> или фабричный метод
+        <code>Article.createTodays()</code>.</p>
+        <p>В объявлении класса они помечаются ключевым словом <code>static</code>.</p>
+        <p>Статические свойства используются в тех случаях, когда мы хотели бы сохранить данные на уровне класса,
+        а не какого-то одного объекта.</p>
+        <p>Синтаксис:</p>
+        <code>
+            class MyClass {<br>
+            &nbsp;&nbsp;static property = ...;<br>
+            <br>
+            &nbsp;&nbsp;static method() {...}<br>
+            }
+        </code>
+        <p>Технически, статическое объявление - это то же самое, что и присвоение классу:</p>
+        <code>
+            MyClass.property = ...;<br>
+            MyClass.method = ...;
+        </code>
+        <p>Статические свойства и методы наследуются.</p>
+        <p>Для <code>class B extends A</code> прототип класса <code>B</code> указывает на <code>A</code>:
+        <code>B.[[Prototype]] = A</code>. Таким образом, если поле не найдено в <code>B</code>, поиск продолжается
+        в <code>A</code>.</p>
+    </article>
+</body>
+</html>
+
+<script>
+    class Test {
+        static name = 'Leo';
+    }
+
+    console.log(Test.name);
+    let test = new Test();
+    console.log(Object.getPrototypeOf(test).constructor.name);
+</script>
