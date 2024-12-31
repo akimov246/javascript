@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Обработка ошибок, «try...catch»</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Обработка ошибок, «try...catch»</h2>
+        <p>Неважно, насколько мы хороши в программировании, иногда наши скрипты содержат ошибки. Они могут возникать
+        из-за наших промахов, неожиданного ввода пользователя, неправильного ответа сервера и по тысячи других причин.</p>
+        <p>Обычно скрипт в случае ошибки «падает» (сразу же останавливается), с выводом ошибки в консоль.</p>
+        <p>Но есть синтаксическая конструкция <code>try...catch</code>, которая позволяет «ловить» ошибки и вместо
+        падения делать что-то более осмысленное.</p>
+    </article>
+
+    <article>
+        <h2>Синтаксис «try...catch»</h2>
+        <p>Конструкция <code>try...catch</code> состоит из двух основных блоков: <code>try</code>, и затем <code>catch</code>:</p>
+        <code>
+            try {<br>
+            &nbsp;&nbsp;// Код...<br>
+            } catch(err) {<br>
+            &nbsp;&nbsp;// Обработка ошибки<br>
+            }
+        </code>
+        <p>Работает она так:</p>
+        <ol>
+            <li>Сначала выполняет код внутри блока <code>try {...}</code>.</li>
+            <li>Если в нем нет ошибок, то блок <code>catch(err)</code> игнорируется: выполнение доходит до конца
+            <code>try</code> и потом далее, полностью пропуская <code>catch</code>.</li>
+            <li>Если же в нем возникает ошибка, то выполнение <code>try</code> прерывается, и поток управления переходит
+            в начало <code>catch(err)</code>. Переменная <code>err</code> (можно использовать любое имя) содержит объект
+            ошибки с подробной информацией о произошедшем.</li>
+        </ol>
+        <p>Таким образом, при ошибке в блоке <code>try {...}</code> скрипт не «падает», и мы получаем возможность обработать
+        ошибку внутри <code>catch</code>.</p>
+        <p>Давайте рассмотрим примеры:</p>
+        <ul>
+            <li>
+                <p>Пример без ошибок: выдает <code>alert</code> <code>(1)</code> и <code>(2)</code>:</p>
+                <code>
+                    try {<br>
+                    &nbsp;&nbsp;alert('Начало блока try'); // (1) <--<br>
+                    <br>
+                    &nbsp;&nbsp;// ... Код без ошибок<br>
+                    <br>
+                    &nbsp;&nbsp;alert('Конец блока try'); // (2) <--<br>
+                    } catch(err) {<br>
+                    &nbsp;&nbsp;alert('Catch игнорируется, так как ошибок нет'); // (3)<br>
+                    }
+                </code>
+            </li>
+            <li>
+                <p>Пример с ошибками: выведет <code>(1)</code> и <code>(3)</code>:</p>
+                <code>
+                    try {<br>
+                    &nbsp;&nbsp;alert('Начало блока try'); // (1) <--<br>
+                    <br>
+                    &nbsp;&nbsp;lalala; // Ошибка, переменная не определена!<br>
+                    <br>
+                    &nbsp;&nbsp;alert('Конец блока try (никогда не выполнится)'); // (2)<br>
+                    } catch(err) {<br>
+                    &nbsp;&nbsp;alert('Возникла ошибка!'); // (3) <--<br>
+                    }
+                </code>
+            </li>
+        </ul>
+
+        <article class="warning">
+            <h2><code>try...catch</code> работает только для ошибок, возникающих во время выполнения кода</h2>
+            <p>Чтобы <code>try...catch</code> работал, код должен быть выполнимым. Другими словами, это должен быть
+            корректный JavaScript-код.</p>
+            <p>Он не сработает, если код синтаксически неверен, например, содержит несовпадающее количество фигурных скобок:</p>
+            <code>
+                try {<br>
+                &nbsp;&nbsp;{{{{{{{{{{{{<br>
+                } catch(e) {<br>
+                &nbsp;&nbsp;alert('Движок не может понять этот код, он некорректен');<br>
+                }
+            </code>
+            <p>JavaScript-движок сначала читает код, а затем исполняет его. Ошибки, которые возникают во время фазы чтения,
+            называются ошибками парсинга. Их нельзя обработать (изнутри этого кода), потому что движок не понимает код.</p>
+            <p>Таким образом, <code>try...catch</code> может обрабатывать только ошибки, которые возникают в корректном коде.
+            Такие ошибки называются «ошибками во время выполнения», а иногда «исключениями».</p>
+        </article>
+
+        <article class="warning">
+            <h2><code>try...catch</code> работает синхронно</h2>
+            <p>Исключение, которое произойдет в коде, запланированном «на будущее», например в <code>setTimeout</code>,
+            <code>try...catch</code> не поймает:</p>
+            <code>
+                try {<br>
+                &nbsp;&nbsp;setTimeout(function() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;noSuchVariable; // Скрипт упадет тут<br>
+                &nbsp;&nbsp;}, 1000);<br>
+                } catch(e) {<br>
+                &nbsp;&nbsp;alert('Не сработает');<br>
+                }
+            </code>
+            <p>Это потому, что функция выполняется позже, когда движок уже покинул конструкцию <code>try...catch</code>.</p>
+            <p>Чтобы поймать исключение внутри запланированной функции, <code>try...catch</code> должен находиться
+            внутри самой этой функции:</p>
+            <code>
+                setTimeout(function() {<br>
+                &nbsp;&nbsp;try {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;noSuchVariable; // try...catch обрабатывает ошибку!<br>
+                &nbsp;&nbsp;} catch(e) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert('Ошибка поймана!');<br>
+                &nbsp;&nbsp;}<br>
+                }, 1000);
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Объект ошибки</h2>
+        <p>Когда возникает ошибка, JavaScript генерирует объект, содержащий ее детали. Затем этот объект передается
+        как аргумент в блок <code>catch</code>:</p>
+        <code>
+            try {<br>
+            &nbsp;&nbsp;// ...<br>
+            } catch(err) { // <-- объект ошибки, можно использовать другое название вместо err<br>
+            &nbsp;&nbsp;// ...<br>
+            }
+        </code>
+        <p>Для всех встроенных ошибок этот объект имеет два основных свойства:</p>
+        <ul>
+            <li>
+                <p><code>name</code></p>
+                <p>Имя ошибки. Например, для неопределенной переменной это <code>'ReferenceError'</code>.</p>
+            </li>
+            <li>
+                <p><code>message</code></p>
+                <p>Текстовое сообщение о деталях ошибки.</p>
+            </li>
+        </ul>
+        <p>В большинстве окружений доступны и другие, нестандартные свойства. Одно из самых широко используемых
+        и поддерживаемых - это:</p>
+        <ul>
+            <li>
+                <p><code>stack</code></p>
+                <p>Текущий стек вызова: строка, содержащая информацию о последовательности вложенных вызовов,
+                которые привели к ошибке. Используется в целях отладки.</p>
+                <p>Например:</p>
+                <code>
+                    try {<br>
+                    &nbsp;&nbsp;lalala; // Ошибка, переменная не определена!<br>
+                    } catch(err) {<br>
+                    &nbsp;&nbsp;alert(err.name); // ReferenceError<br>
+                    &nbsp;&nbsp;alert(err.message); // lalala is not defined<br>
+                    &nbsp;&nbsp;alert(err.stack); // ReferenceError: lalala is not defined at (... стек вызовов)<br>
+                    <br>
+                    // Можем также просто вывести ошибку целиком<br>
+                    // Ошибка приводится к строке вида 'name: message'<br>
+                    alert(err); // ReferenceError: lalala is not defined<br>
+                    }
+                </code>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Блок «catch» без переменной</h2>
+        <p>Если нам не нужны детали ошибки, в <code>catch</code> можно ее пропустить:</p>
+        <code>
+            try {<br>
+            &nbsp;&nbsp;// ...<br>
+            } catch { // <-- без (err)<br>
+            &nbsp;&nbsp;// ...<br><br>
+            }
+        </code>
+    </article>
+
+    <article>
+        <h2>Использование «try...catch»</h2>
+        <p>Давайте рассмотрим реальные случаи использования <code>try...catch</code>.</p>
+        <p>Как мы уже знаем, JavaScript поддерживает метод <code>JSON.parse(str)</code> для чтения JSON.</p>
+        <p>Обычно он используется для декорирования данных, полученных по сети, от сервера или из другого источника.</p>
+        <p>Мы получаем их и вызываем <code>JSON.parse</code> вот так:</p>
+        <code>
+            let json = '{"name": "John", "age": 30}'; // Данные с сервера<br>
+            <br>
+            let user = JSON.parse(json); // Преобразовываем текстовое представление в JS-объект<br>
+            <br>
+            // Теперь user - объект со свойствами из строки<br>
+            alert(user.name); // 'John'<br>
+            alert(user.age); // 30
+        </code>
+        <p><b>Если <code>json</code> некорректен, <code>JSON.parse</code> генерирует ошибку, то есть скрипт «падает».</b></p>
+        <p>Устроит ли нас такое поведение? Конечно нет!</p>
+        <p>Получается, что если вдруг что-то не так с данными, то посетитель никогда (если, конечно, не откроет консоль)
+        об этом не узнает. А люди очень не любят, когда что-то «просто падает» без всякого сообщения об ошибке.</p>
+        <p>Давайте используем <code>try...catch</code> для обработки ошибки:</p>
+        <code>
+            let json = '{Некорректный JSON}';<br>
+            <br>
+            try {<br>
+            &nbsp;&nbsp;let user = JSON.parse(json); // <-- Тут возникает ошибка...<br>
+            &nbsp;&nbsp;alert(user.name); // Не сработает<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;// ... Выполнение прыгает сюда<br>
+            &nbsp;&nbsp;alert('Извините, в данных ошибка, мы пробуем получить их еще раз.');<br>
+            &nbsp;&nbsp;alert(e.name);<br>
+            &nbsp;&nbsp;alert(e.message);<br>
+            }
+        </code>
+        <p>Здесь мы используем блок <code>catch</code> только для вывода сообщения, но мы также можем сделать гораздо
+        больше: отправить новый сетевой запрос, предложить посетителю альтернативный способ, отослать информацию
+        об ошибке на сервер для логирования, ... Все лучше, чем просто «падение».</p>
+    </article>
+
+    <article>
+        <h2>Генерация собственных ошибок</h2>
+        <p>Что если <code>json</code> корректен, но не содержит необходимого свойства <code>name</code>?</p>
+        <p>Например, так:</p>
+        <code>
+            let json = '{"age": 30}'; // Данные неполны<br>
+            <br>
+            try {<br>
+            &nbsp;&nbsp;let user = JSON.parse(json); // <-- Выполнится без ошибок<br>
+            &nbsp;&nbsp;alert(user.name); // не свойства name!<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;alert('Не выполнится');<br>
+            }
+        </code>
+        <p>Здесь <code>JSON.parse</code> выполнится без ошибок, но на самом деле отсутствие свойства <code>name</code>
+        для нас ошибка.</p>
+        <p>Для того чтобы унифицировать обработку ошибок, мы воспользуемся оператором <code>throw</code>.</p>
+    </article>
+
+    <article>
+        <h2>Оператор «throw»</h2>
+        <p>Оператор <code>throw</code> генерирует ошибку.</p>
+        <p>Синтаксис:</p>
+        <code>throw &ltобъект ошибки&gt</code>
+        <p>Технически в качестве объекта ошибки можно передать что угодно. Это может быть даже примитив, число или строка,
+        но все же лучше, чтобы это был объект, желательно со свойствами <code>name</code> и <code>message</code>
+        (для совместимости со встроенными ошибками).</p>
+        <p>В JavaScript есть множество внутренних конструкторов для стандартных ошибок: <code>Error</code>,
+        <code>SyntaxError</code>, <code>ReferenceError</code>, <code>TypeError</code> и другие. Можно использовать и их
+        для создания объектов ошибки.</p>
+        <p>Их синтаксис:</p>
+        <code>
+            let error = new Error(message);<br>
+            // Или<br>
+            let error = new SyntaxError(message);<br>
+            let error = new ReferenceError(message);<br>
+            // ...
+        </code>
+        <p>Для встроенных ошибок (не для любых объектов, только для ошибок), свойство <code>name</code> - это в точности
+        имя конструктора. А свойство <code>message</code> берется из аргумента.</p>
+        <p>Например:</p>
+        <code>
+            let error = new Error('Ого, ошибка! О_о');<br>
+            <br>
+            alert(error.name); // Error<br>
+            alert(error.message); 'Ого, ошибка! О_о'
+        </code>
+        <p>Давайте посмотрим, какую ошибку генерирует <code>JSON.parse</code>:</p>
+        <code>
+            try {<br>
+            &nbsp;&nbsp;JSON.parse('{Некорректный JSON}');<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;alert(e.name); // SyntaxError<br>
+            &nbsp;&nbsp;alert(e.message); // Expected property name or '{' in JSON at position 2 (line 1 column 3)
+        </code>
+        <p>Как мы видим, это <code>SyntaxError</code>.</p>
+        <p>В нашем случае отсутствие свойства <code>name</code> - это ошибка, ведь пользователи должны иметь имена.</p>
+        <p>Сгенерируем ее:</p>
+        <code>
+            let json = '{"age": 30}'; // Данные неполны<br>
+            <br>
+            try {<br>
+            &nbsp;&nbsp;let user = JSON.parse(json); // <-- Выполнится без ошибок<br>
+            <br>
+            &nbsp;&nbsp;if (!user.name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;throw new SyntaxError('Данные неполны: нет имени'); // (*)<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;alert(user.name);<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;alert('JSON Error: ' + e.message); // JSON Error: Данные неполны: нет имени<br>
+            }
+        </code>
+        <p>В строке <code>(*)</code> оператор <code>throw</code> генерирует ошибку <code>SyntaxError</code> с сообщением
+        <code>message</code>. Точно такого же вида, как генерирует сам JavaScript. Выполнение блока <code>try</code>
+        немедленно останавливается, и поток управления прыгает в <code>catch</code>.</p>
+        <p>Теперь блок <code>catch</code> становится единственным местом для обработки всех ошибок: и для
+        <code>JSON.parse</code> и для других случаев.</p>
+    </article>
+
+    <article>
+        <h2>Проброс исключения</h2>
+        <p>В примере выше мы использовали <code>try...catch</code> для обработки некорректных данных. А что если в блоке
+        <code>try {...}</code> возникнет <i>другая неожиданная ошибка</i>? Например, программная (неопределенная переменная)
+        или какая-то еще, а не ошибка, связанная с некорректными данными.</p>
+        <p>Пример:</p>
+        <code>
+            let json = '{"age": 30}'; // Данные неполны<br>
+            <br>
+            try {<br>
+            &nbsp;&nbsp;user = JSON.parse(json); // <-- Забыл добавить 'let' перед user<br>
+            &nbsp;&nbsp;// ...<br>
+            } catch(err) {<br>
+            &nbsp;&nbsp;alert('JSON Error: ' + err); // JSON Error: ReferenceError: user is not defined<br>
+            &nbsp;&nbsp;// (Не JSON ошибка на самом деле)<br>
+            }
+        </code>
+        <p>В нашем случае <code>try...catch</code> предназначен для выявления ошибок, связанных с некорректными данными.
+        Но по своей природе <code>catch</code> получает <i>все</i> свои ошибки из <code>try</code>. Здесь он получает
+        неожиданную ошибку, но все также показывает то же самое сообщение <code>'JSON Error'</code>. Это неправильно
+        и затрудняет отладку кода.</p>
+        <p>К счастью, мы можем выяснить, какую ошибку мы получили, например, по ее свойству <code>name</code>:</p>
+        <code>
+            try {<br>
+            &nbsp;&nbsp;user = {/*...*/};<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;alert(e.name); // ReferenceError<br>
+            }
+        </code>
+        <p>Есть простое правило:</p>
+        <p><b>Блок <code>catch</code> должен обрабатывать только те ошибки, которые ему известны, и «пробрасывать»
+        все остальные.</b></p>
+        <p>Техника «проброса исключения» выглядит так:</p>
+        <ol>
+            <li>Блок <code>catch</code> получает все ошибки.</li>
+            <li>В блоке <code>catch(err) {...}</code> мы анализируем объект ошибки <code>err</code>.</li>
+            <li>Если мы не знаем как ее обрабатывать, тогда делаем <code>throw err</code>.</li>
+        </ol>
+        <p>В коде ниже мы используем проброс исключения, <code>catch</code> обрабатывает только <code>SyntaxError</code>:</p>
+        <code>
+            let json = '{"age": 30}'; // Данные неполны<br>
+            <br>
+            try {<br>
+            &nbsp;&nbsp;let user = JSON.parse(json);<br>
+            <br>
+            &nbsp;&nbsp;if (!user.name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;throw new SyntaxError('Данные неполны: нет имени');<br>
+            &nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;blabla(); // Неожиданная ошибка<br>
+            <br>
+            &nbsp;&nbsp;alert(user.name);<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;if (e.name === 'SyntaxError') {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('JSON Error: ' + e.message);<br>
+            &nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;throw e; // Проброс (*)<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <p>Ошибка в строке <code>(*)</code> из блока <code>catch</code> «выпадает наружу» и может быть поймана другой
+        внешней конструкцией <code>try...catch</code> (если есть), или «убьет» скрипт.</p>
+        <p>Таким образом, блок <code>catch</code> фактически обрабатывает только те ошибки, с которыми он знает,
+        как справляться, и пропускает остальные.</p>
+        <p>Пример ниже демонстрирует, как такие ошибки могут быть пойманы с помощью еще одного уровня <code>try...catch</code>:</p>
+        <code>
+            function readData() {<br>
+            &nbsp;&nbsp;let json = '{"age": 30}';<br>
+            <br>
+            &nbsp;&nbsp;try {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;blabla(); // Ошибка!<br>
+            &nbsp;&nbsp;} catch(e) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (e.name !== 'SyntaxError') {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;throw e; // Проброс исключения (не знаю как это обработать)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            try {<br>
+            &nbsp;&nbsp;readData();<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;alert('Внешний catch поймал: ' + e); // Поймал!<br>
+            }
+        </code>
+        <p>Здесь <code>readData</code> знает только, как обработать <code>SyntaxError</code>, тогда как внешний блок
+        <code>try...catch</code> знает, как обработать все.</p>
+    </article>
+
+    <article>
+        <h2>try...catch.finally</h2>
+        <p>Конструкция <code>try...catch</code> может содержать еще одну секцию: <code>finally</code>.</p>
+        <p>Если секция есть, то она выполняется в любом случае:</p>
+        <ul>
+            <li>После <code>try</code>, если ошибок не было.</li>
+            <li>После <code>catch</code>, если ошибки были.</li>
+        </ul>
+        <p>Расширенные синтаксис выглядит следующим образом:</p>
+        <code>
+            try {<br>
+            &nbsp;&nbsp;... пробуем выполнить код ...<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;... обрабатываем ошибки ...<br>
+            } finally {<br>
+            &nbsp;&nbsp;... выполняем всегда ...<br>
+            }
+        </code>
+        <p>Секцию <code>finally</code> часто используют, когда мы начали что-то делать и хотим завершить это вне
+        зависимости от того, будет ошибка или нет.</p>
+        <p>Например, мы хотим измерить время, которое занимает функция чисел Фибоначчи <code>fib(n)</code>. Естественно,
+        мы можем начать изменение до того, как функция начнет выполняться, и закончится после. Но что делать, если при
+        вызове функции возникла ошибка? В частности, реализация <code>fib(n)</code> в коде ниже возвращает ошибку
+        для отрицательных и для нецелых чисел.</p>
+        <p>Секция <code>finally</code> отлично подходит для завершения измерений несмотря ни на что.</p>
+        <p>Здесь <code>finally</code> гарантирует, что время будет измерено корректно в обеих ситуациях - и в случае
+        успешного завершения <code>fib</code> и в случае ошибки:</p>
+        <code>
+            let num = prompt('Введите положительное целое число', '');<br>
+            <br>
+            let diff, result;<br>
+            <br>
+            function fib(n) {<br>
+            &nbsp;&nbsp;if (n < 0 || Math.trunc(n) !== n) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;throw new Error('Должно быть целое неотрицательное число');<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;return n <= 1 ? n: fib(n - 1) + fib(n - 2);<br>
+            }<br>
+            <br>
+            let start = Date.now();<br>
+            <br>
+            try {<br>
+            &nbsp;&nbsp;result = fib(num);<br>
+            } catch(e) {<br>
+            &nbsp;&nbsp;result = 0;<br>
+            } finally {<br>
+            &nbsp;&nbsp;diff = Date.now() - start;<br>
+            }<br>
+            <br>
+            alert(result || 'Возникла ошибка');<br>
+            <br>
+            alert(`Выполнение заняло ${diff}ms`);
+        </code>
+        <p>Не важно как завершилась функция: через <code>return</code> или <code>throw</code>. Секция <code>finally</code>
+        срабатывает в обоих случаях.</p>
+
+        <article class="note">
+            <h2>Переменные внутри <code>try...catch...finally</code> локальны</h2>
+            <p>Обратите внимание, что переменные <code>result</code> и <code>diff</code> в коде выше объявлены до
+            <code>try...catch</code>. Если переменную объявить в блоке, например в <code>try</code>, то она не будет
+            доступна после него.</p>
+        </article>
+
+        <article class="note">
+            <h2><code>finally</code> и <code>return</code></h2>
+            <p>Блок <code>finally</code> срабатывает при любом выходе из <code>try...catch</code>, в том числе и
+            <code>return</code>.</p>
+            <p>В примере ниже из <code>try</code> происходит <code>return</code>, но <code>finally</code> получает управление
+            до того, как контроль возвращается во внешний код.</p>
+            <code>
+                function func() {<br>
+                &nbsp;&nbsp;try {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return 1;<br>
+                &nbsp;&nbsp;} catch(e) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
+                &nbsp;&nbsp;} finally {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert('finally');<br>
+                &nbsp;&nbsp;}<br>
+                }<br>
+                <br>
+                alert(func()); // Сначала срабатывает alert из finally, а затем return
+            </code>
+        </article>
+
+        <article class="note">
+            <h2>try...finally</h2>
+            <p>Конструкция <code>try...catch</code> без секции <code>catch</code> также полезна. Мы применяем ее, когда не
+            хотим здесь обрабатывать ошибки (пусть выпадут), но хотим быть уверены, что начатые процессы завершились.</p>
+            <code>
+                function func() {<br>
+                &nbsp;&nbsp;// Начать что-то делать, что требует завершения (например, измерения)<br>
+                &nbsp;&nbsp;try {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
+                &nbsp;&nbsp;} finally {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// Завершить это, даже если все упадет<br>
+                &nbsp;&nbsp;}<br>
+                }
+            </code>
+            <p>В приведенном выше коде ошибка всегда выпадает наружу, потому что тут нет блока <code>catch</code>.
+            Но <code>finally</code> отрабатывает до того, как поток управления выйдет из функции.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Глобальный catch</h2>
+        <p>Давайте представим, что произошла фатальная ошибка (программная или что-то еще ужасное) снаружи
+        <code>try...catch</code> и скрипт упал.</p>
+        <p>Существует ли способ отреагировать на такие ситуации? Мы можем захотеть залогировать ошибку, показать
+        что-то пользователю (обычно они не видят сообщение об ошибке) и т.д.</p>
+        <p>Такого способа нет в спецификации, но обычно окружения предоставляют его, потому что это весьма полезно.
+        Например, в Node.js для этого есть <code>process.on('uncaughtException')</code>. А в браузере мы можем
+        присвоить функцию специальному свойству <code>windows.onerror</code>, которая будет вызвана в случае
+        необработанной ошибки.</p>
+        <p>Синтаксис:</p>
+        <code>
+            windows.onerror = function(message, url, line, col, error) {<br>
+            &nbsp;&nbsp;// ...<br>
+            };
+        </code>
+        <ul>
+            <li>
+                <p><code>message</code> - Сообщение об ошибке</p>
+            </li>
+            <li>
+                <p><code>url</code> - URL скрипта, в котором произошла ошибка</p>
+            </li>
+            <li>
+                <p><code>line</code>, <code>col</code> - Номера строки и столбца, в котором произошла ошибка.</p>
+            </li>
+            <li>
+                <p><code>error</code> - Объект ошибки.</p>
+            </li>
+        </ul>
+        <p>Пример:</p>
+        <code>
+            windows.onerror = function(message, url, line, col, error) {<br>
+            &nbsp;&nbsp;alert(`${message}\n В ${line}:${col} на ${url}`);<br>
+            };<br>
+            <br>
+            function readData() {<br>
+            &nbsp;&nbsp;badFunc(); // Ой, что-то пошло не так!<br>
+            }<br>
+            <br>
+            readData();
+        </code>
+        <p>Роль глобального обработчика <code>windows.onerror</code> обычно заключается не в восстановлении выполнения
+        скрипта - это скорее всего невозможно в случае программной ошибки, а в отправке сообщения об ошибке разработчикам.</p>
+        <p>Существуют также веб-сервисы, которые предоставляют логирование ошибок для таких случаев, такие как
+        <a href="https://www.muscula.com">https://www.muscula.com</a>.</p>
+        <p>Они работают так:</p>
+        <ol>
+            <li>Мы регистрируемся в сервисе и получаем небольшой JS-скрипт (или URL скрипта) от них для вставки на страницы.</li>
+            <li>Этот JS-скрипт ставит свою функцию <code>windows.onerror</code>.</li>
+            <li>Когда возникает ошибка, она выполняется и отправляет сетевой запрос с информацией о ней в сервис.</li>
+            <li>Мы можем войти в веб-интерфейс сервиса и увидеть ошибки.</li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Конструкция <code>try...catch</code> позволяет обрабатывать ошибки по время исполнения кода. Она позволяет
+        запустить код и перехватить ошибки, которые могут в нем возникнуть.</p>
+        <p>Синтаксис:</p>
+        <code>
+            try {<br>
+            &nbsp;&nbsp;// Исполняем код<br>
+            } catch(err) {<br>
+            &nbsp;&nbsp;// Если случилась ошибка, прыгаем сюда<br>
+            &nbsp;&nbsp;// err - это объект ошибки<br>
+            } finally {<br>
+            &nbsp;&nbsp;// Выполняется всегда после try/catch<br>
+            }
+        </code>
+        <p>Секций <code>catch</code> или <code>finally</code> может не быть, то есть более короткие конструкции
+        <code>try...catch</code> и <code>try...finally</code> тоже корректны.</p>
+        <p>Объекты ошибок содержат следующие свойства:</p>
+        <ul>
+            <li><code>message</code> - понятное человеку сообщение.</li>
+            <li><code>name</code> - строка с именем ошибки (имя конструкции ошибки).</li>
+            <li><code>stack</code> (нестандартное, но хорошо поддерживается) - стек на момент ошибки.</li>
+        </ul>
+        <p>Если объект ошибки не нужен, мы можем пропустить его, используя <code>catch {</code> вместо
+        <code>catch(err) {</code>.</p>
+        <p>Мы можем также генерировать собственные ошибки, используя оператор <code>throw</code>. Аргументом
+        <code>throw</code> может быть что угодно, но обычно это объект ошибки, наследуемый от встроенного класса
+        <code>Error</code>.</p>
+        <p><i>Проброс исключения</i> - это очень важный прием обработки ошибок: блок <code>catch</code> обычно
+        ожидает и знает, как обработать определенный тип ошибок, поэтому он должен пробрасывать дальше ошибки,
+        о которых он не знает.</p>
+        <p>Даже если у нас нет <code>try...catch</code>, большинство сред позволяют настроить «глобальный»
+        обработчик ошибок, чтобы ловить ошибки, которые «выпадают наружу». В браузере это <code>window.onerror</code>.</p>
+    </article>
+</body>
+</html>
