@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Цепочка промисов</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Цепочка промисов</h2>
+        <p>Давайте вернемся к ситуации из главы «Введение: колбэки»: у нас есть последовательность асинхронных задач,
+        которые должны быть выполнены одна за другой. Например, речь может идти о загрузке скриптов. Как же грамотно
+        реализовать это в коде?</p>
+        <p>Промисы предоставляют несколько способов решения подобной задачи.</p>
+        <p>В этой главе мы разберем цепочку промисов.</p>
+        <p>Она выглядит вот так:</p>
+        <code>
+            new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;setTimeout(() => resolve(1), 1000); // (*)<br>
+            }).then(function(result) { // (**)<br>
+            &nbsp;&nbsp;alert(result); // 1<br>
+            &nbsp;&nbsp;return result * 2;<br>
+            }).then(function(result) { // (***)<br>
+            &nbsp;&nbsp;alert(result); // 2<br>
+            &nbsp;&nbsp;return result * 2;<br>
+            }).then(function(result) {<br>
+            &nbsp;&nbsp;alert(result); // 4<br>
+            &nbsp;&nbsp;return result * 2;<br>
+            });
+        </code>
+        <p>Идея состоит в том, что результат первого промиса передается по цепочке обработчиков <code>.then</code>.</p>
+        <p>Поток выполнения такой:</p>
+        <ol>
+            <li>Начальный промис успешно выполняется через 1 секунду <code>(*)</code>.</li>
+            <li>Затем вызывается обработчик в <code>.then</code> <code>(**)</code>.</li>
+            <li>Возвращаемое им значение передается дальше в следующий обработчик <code>.then</code> <code>(***)</code>.</li>
+            <li>... И так далее.</li>
+        </ol>
+        <p>В итоге результат передается по цепочке обработчиков, и мы видим несколько <code>alert</code> подряд, которые
+        выводят: <code>1</code> → <code>2</code> → <code>4</code>.</p>
+        <p>Все это работает, потому что вызов <code>promise.then</code> тоже возвращает промис, так что мы можем вызвать
+        на нем следующий <code>.then</code>.</p>
+        <p>Когда обработчик возвращает какое-то значение, то оно становится результатом выполнения соответствующего промиса
+        и передается в следующий <code>.then</code>.</p>
+        <p><b>Классическая ошибка новичков: технически возможно добавить много обработчиков <code>.then</code> к
+        единственному промису. Но это не цепочка.</b></p>
+        <p>Например:</p>
+        <code>
+            let promise = new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;setTimeout(() => resolve(1), 1000);<br>
+            });<br>
+            <br>
+            promise.then(function(result) {<br>
+            &nbsp;&nbsp;alert(result); // 1<br>
+            &nbsp;&nbsp;return result * 2;<br>
+            });<br>
+            <br>
+            promise.then(function(result) {<br>
+            &nbsp;&nbsp;alert(result); // 1<br>
+            &nbsp;&nbsp;return result * 2;<br>
+            });<br>
+            <br>
+            promise.then(function(result) {<br>
+            &nbsp;&nbsp;alert(result); // 1<br>
+            &nbsp;&nbsp;return result * 2;<br>
+            });
+        </code>
+        <p>Мы добавили несколько обработчиков к одному промису. Они не передают друг другу результаты своего выполнения,
+        а действуют независимо.</p>
+        <p>Все обработчики <code>.then</code> на одном и том же промисе получают одно и то же значение - результат выполнения
+        того же самого промиса. Таким образом, в коде выше все <code>alert</code> показывают одно и то же: <code>1</code>.</p>
+        <p>На практике весьма редко требуется назначать несколько обработчиков одному промису. А вот цепочка промисов
+        используется куда чаще.</p>
+    </article>
+
+    <article>
+        <h2>Возвращаем промисы</h2>
+        <p>Обработчик <code>handler</code>, переданный в <code>.then(handler)</code>, может вернуть промис.</p>
+        <p>В этом случае дальнейшие обработчики ожидают, пока он выполнится, и затем получают его результат.</p>
+        <p>Например:</p>
+        <code>
+            new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;setTimeout(() => resolve(1), 1000);<br>
+            }).then(function(result) {<br>
+            &nbsp;&nbsp;alert(result); // 1<br>
+            &nbsp;&nbsp;return new Promise((resolve, reject) => { // (*)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => resolve(result * 2), 1000);<br>
+            &nbsp;&nbsp;});<br>
+            }).then(function(result) { // (**)<br>
+            &nbsp;&nbsp;alert(result); // 2<br>
+            &nbsp;&nbsp;return new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => resolve(result * 2), 1000);<br>
+            &nbsp;&nbsp;});<br>
+            }).then(function(result) {<br>
+            &nbsp;&nbsp;alert(result); // 4<br>
+            });
+        </code>
+        <p>Здесь первый <code>.then</code> показывает <code>1</code> и возвращает новый промис <code>new Promise(...)</code>
+        в строке <code>(*)</code>. Через одну секунду этот промис успешно выполняется, и его результат (аргумент в
+        <code>resolve</code>, то есть <code>result * 2</code>) передается обработчику в следующем <code>.then</code>.
+        Он находится в строке <code>(**)</code>, показывает <code>2</code> и делает то же самое.</p>
+        <p>Таким образом, как и в предыдущем примере, выводятся 1 → 2 → 4, но сейчас между вызовами <code>alert</code>
+        существует пауза в 1 секунду.</p>
+        <p>Возвращая промисы, мы можем строить цепочки из асинхронных действий.</p>
+    </article>
+
+    <article>
+        <h2>Пример: loadScript</h2>
+        <p>Давайте используем эту возможность вместе с промисифицированной функцией <code>loadScript</code>, чтобы
+        загружать скрипты по очереди, последовательно:</p>
+        <code>
+            loadScript('script1.js')<br>
+            &nbsp;&nbsp;.then(function(script) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return loadScript('script2.js');<br>
+            &nbsp;&nbsp;})<br>
+            &nbsp;&nbsp;.then(function(script) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return loadScript('script3.js');<br>
+            &nbsp;&nbsp;})<br>
+            &nbsp;&nbsp;.then(function(script) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Вызовем функции, объявленные в загружаемых скриптах,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// чтобы показать, что они действительно загрузились<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;one();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;two();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;three();<br>
+            &nbsp;&nbsp;});
+        </code>
+        <p>Этот же код можно переписать немного компактнее, используя стрелочные функции:</p>
+        <code>
+            loadScript('script1.js')<br>
+            &nbsp;&nbsp;.then(script => loadScript('script2.js'))<br>
+            &nbsp;&nbsp;.then(script => loadScript('script3.js'))<br>
+            &nbsp;&nbsp;.then(script => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Скрипты загружены, мы можем использовать объявленные в них функции<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;one();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;two();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;three();<br>
+            &nbsp;&nbsp;});
+        </code>
+        <p>Здесь каждый вызов <code>loadScript</code> возвращает промис, и следующим обработчик <code>.then</code>
+        срабатывает, только когда этот промис завершится. Затем инициируется загрузка следующего скрипта и так далее.
+        Таким образом, скрипты загружаются один за другим.</p>
+        <p>Мы можем добавить и другие асинхронные действия в цепочку. Обратите внимание, что наш код все еще «плоский»,
+        он «растет» вниз, а не вправо. Нет никаких признаков «адской пирамиды вызовов».</p>
+        <p>Технически мы могли бы добавлять <code>.then</code> напрямую к каждому вызову <code>loadScript</code>,
+        вот так:</p>
+        <code>
+            loadScript('script1.js').then(script1 => {<br>
+            &nbsp;&nbsp;loadScript('script2.js').then(script2 => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;loadScript('script3.js').then(script3 => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Эта функция имеет доступ к переменным script1, script2 и script3<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;one();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;two();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;three();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;});<br>
+            });
+        </code>
+        <p>Этот код делает то же самое: последовательно загружает 3 скрипта. Но он «растет вправо», так что возникает
+        такая же проблема, как и с колбэками.</p>
+        <p>Разработчики, которые не так давно начали использовать промисы, иногда не знают про цепочки и пишут
+        код именно так, как показано выше. В целом, использование цепочек промисов предпочтительнее.</p>
+        <p>Иногда все же приемлемо добавлять <code>.then</code> напрямую, чтобы вложенная в него функция имела доступ
+        к внешней области видимости. В примере выше самая глубоко вложенная функция обратного вызова имеет доступ ко всем
+        переменным <code>script1</code>, <code>script2</code>, <code>script3</code>. Но это скорее исключение, чем правило.</p>
+
+        <article class="note">
+            <h2>Thenable</h2>
+            <p>Если быть более точными, обработчик может возвращать не именно промис, а любой объект, содержащий метод
+            <code>.then</code>, такие объекты называется «thenable», и этот объект будет обработан как промис.</p>
+            <p>Смысл в том, что сторонние библиотеки могут создавать свои собственные совместимые с промисами объекты.
+            Они могут иметь свои наборы методов и при этом быть совместимыми со встроенными промисами, так как реализуют
+            метод <code>.then</code>.</p>
+            <p>Вот пример такого объекта:</p>
+            <code>
+                class Thenable {<br>
+                &nbsp;&nbsp;constructor(num) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;this.num = num;<br>
+                &nbsp;&nbsp;}<br>
+                <br>
+                &nbsp;&nbsp;then(resolve, reject) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert(resolve); // function() {native code}<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// Будет успешно выполнено с аргументом this.num * 2 через 1 секунду<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => resolve(this.num * 2), 1000); // (**)<br>
+                &nbsp;&nbsp;}<br>
+                }<br>
+                <br>
+                new Promise(resolve => resolve(1))<br>
+                &nbsp;&nbsp;.then(result => {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return new Thenable(result); // (*)<br>
+                &nbsp;&nbsp;})<br>
+                &nbsp;&nbsp;.then(alert); // показывает 2 через 1000мс
+            </code>
+            <p>JavaScript проверяет объект, возвращаемый из обработчика <code>.then</code> в строке <code>(*)</code>:
+            если у него имеется метод <code>then</code>, который можно вызвать, то этот метод вызывается, и в него
+            передаются как аргументы встроенные функции <code>resolve</code> и <code>reject</code>, вызов одной из которых
+            потом ожидается. В примере выше происходит вызов <code>resolve(2)</code> через 1 секунду <code>(**)</code>.
+            Затем результат передается дальше по цепочке.</p>
+            <p>Это позволяет добавлять в цепочки промисов пользовательские объекты, не заставляя их наследовать от
+            <code>Promise</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Более сложный пример: fetch</h2>
+        <p>Во фронтенд-разработке промисы часто используются, чтобы делать запросы по сети. Давайте рассмотрим один такой
+        пример.</p>
+        <p>Мы будем использовать метод <code>fetch</code>, чтобы подгрузить информацию о пользователях с удаленного сервиса.</p>
+        <p>Этот метод имеет много опциональных параметров, но базовый синтаксис весьма прост:</p>
+        <code>let promise = fetch(url);</code>
+        <p>Этот код запрашивает по сети <code>url</code> и возвращает промис. Промис успешно выполняется и в свою очередь
+        возвращает объект <code>response</code> после того, как удаленный сервер присылает заголовки ответа, но
+        <i>до того, как весь ответ сервера полностью загружен</i>.</p>
+        <p>Чтобы прочитать полный ответ, надо вызвать метод <code>response.text()</code>: он тоже возвращает промис,
+        который выполняется, когда данные полностью загружены с удаленного сервера, и возвращает эти данные.</p>
+        <p>Код ниже запрашивает файл <code>user.json</code> и загружает его содержимое с сервера:</p>
+        <code>
+            fetch('user.json')<br>
+            &nbsp;&nbsp;// .then в коде ниже выполняется, когда удаленный сервер отвечает<br>
+            &nbsp;&nbsp;.then(function(response) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// response.text() возвращает новый промис,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// который выполняется и возвращает полный ответ сервера,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// когда он загрузится<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return  response.text();<br>
+            &nbsp;&nbsp;})<br>
+            &nbsp;&nbsp;.then(function(text) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Выводим содержимое полученного файла<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(text);<br>
+            &nbsp;&nbsp;});
+        </code>
+        <p>Есть также метод <code>response.json()</code>, который читает данные в формате JSON. Он больше подходит для
+        нашего примера, так что давайте использовать его.</p>
+        <p>Мы также применим стрелочные функции для более компактной записи кода:</p>
+        <code>
+            // То же самое, что и раньше, только теперь response.json() читает данные в формате JSON<br>
+            fetch('user.json')<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;.then(user => alert(user));
+        </code>
+        <p>Теперь давайте что-нибудь сделаем с полученными данными о пользователе.</p>
+        <p>Например, мы можем послать запрос на GitHub, чтобы загрузить данные из профиля пользователя и показать его
+        аватар:</p>
+        <code>
+            // Запрашиваем user.json<br>
+            fetch('user.json')<br>
+            &nbsp;&nbsp;// Загружаем данные в формате json<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;// Делаем запрос к GitHub<br>
+            &nbsp;&nbsp;.then(user => fetch(`https://api.github.com/users/${user.name}`))<br>
+            &nbsp;&nbsp;// Загружаем ответ в формате json<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;// Показываем аватар (githubUser.avatar_url) в течение 3 секунд<br>
+            &nbsp;&nbsp;.then(githubUser => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let img = document.createElement('img');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;img.src = githubUser.avatar_url;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.append(img);<br>
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => img.remove(), 3000) // (*);<br>
+            &nbsp;&nbsp;});
+        </code>
+        <p>Код работает, детали реализации отражены в комментариях. Однако в нем есть одна потенциальная проблема,
+        с которой часто сталкиваются новички.</p>
+        <p>Посмотрите на строку <code>(*)</code>: как мы можем предпринять какие-то действия <i>после</i> того, как
+        аватар был показан и удален? Например, мы бы хотели показать форму редактирования пользователя или что-то еще.
+        Сейчас это невозможно.</p>
+        <p>Чтобы сделать наш код расширяемым, нам нужно возвращать еще один промис, который выполняется после того,
+        как завершается показ аватара.</p>
+        <p>Примерно так:</p>
+        <code>
+            fetch('user.json')<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;.then(user => fetch(`https://api.github.com/users/${user.name}`))<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;.then(githubUser => new Promise(function(response, reject) { // (*)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let img = document.createElement('img');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;img.src = githubUser.avatar_url;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.append(img);<br>
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;img.remove();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve(githubUser); // (**)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}, 3000);<br>
+            &nbsp;&nbsp;}))<br>
+            &nbsp;&nbsp;// Срабатывает через 3 секунды<br>
+            &nbsp;&nbsp;.then(githubUser => alert(`Закончили показ ${githubUser.name}`));
+        </code>
+        <p>То есть, обработчик <code>.then</code> в строке <code>(*)</code> будет возвращать <code>new Promise</code>,
+        который перейдет в состояние «выполнен» только после того, как в <code>setTimeout</code> <code>(**)</code>
+        будет вызвана <code>resolve(githubUser)</code>.</p>
+        <p>Соответственно, следующий по цепочке <code>.then</code> будет ждать этого.</p>
+        <p>Как правило, все асинхронные действия должны возвращать промис.</p>
+        <p>Это позволяет планировать после него какие-то дополнительные действия. Даже если эта возможность не нужна
+        прямо сейчас, она может понадобиться в будущем.</p>
+        <p>И, наконец, давайте разобьем написанный код на отдельные функции, пригодные для повторного использования:</p>
+        <code>
+            function loadJson(url) {<br>
+            &nbsp;&nbsp;return fetch(url)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;.then(response => response.json());<br>
+            }<br>
+            <br>
+            function loadGithubUser(name) {<br>
+            &nbsp;&nbsp;return fetch(`https://api.github.com/users/${name}`)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;.then(response => response.json());<br>
+            }<br>
+            <br>
+            function showAvatar(githubUser) {<br>
+            &nbsp;&nbsp;return new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let img = document.createElement('img');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;img.src = githubUser.avatar_url;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.append(img);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;img.remove();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve(githubUser);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}, 3000);<br>
+            &nbsp;&nbsp;});<br>
+            }<br>
+            <br>
+            // Используем их<br>
+            loadJson('user.json')<br>
+            &nbsp;&nbsp;.then(user => loadGithubUser(user.name))<br>
+            &nbsp;&nbsp;.then(githubUser => showAvatar(githubUser))<br>
+            &nbsp;&nbsp;.then(githubUser => alert(`Показ аватара ${githubUser.login} завершен`));<br>
+            &nbsp;&nbsp;// ...
+        </code>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Если обработчик в <code>.then</code> (или в <code>catch/finally</code>, без разницы) возвращает промис,
+        последующие элементы цепочки ждут, пока этот промис выполнится. Когда это происходит, результат его выполнения
+        (или ошибка) передается дальше.</p>
+    </article>
+</body>
+</html>
+
+<script>
+    let promise = fetch('https://api.github.com/users/akimov246');
+
+    promise.then(function(response) {
+        return response.json();
+    })
+    .then(githubUser => new Promise(function(resolve, reject) {
+        let link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'avatar-style.css';
+        document.head.append(link);
+
+        let img = document.createElement('img');
+        img.src = githubUser.avatar_url;
+        document.body.append(img);
+        setTimeout(() => {
+            img.remove();
+            resolve(githubUser);
+        }, 3000);
+    }))
+    .then(githibUser => console.log(`Закончили показ аватарки пользователя: ${githibUser.login}`));
+</script>
