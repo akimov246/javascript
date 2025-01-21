@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Промисы: обработка ошибок</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Промисы: обработка ошибок</h2>
+        <p>Цепочки промисов отлично подходят для перехвата ошибок. Если промис завершился с ошибкой, то управление
+        переходит в ближайший обработчик ошибок. На практике это очень удобно.</p>
+        <p>Например, в представленном ниже примере для <code>fetch</code> указана неправильная ссылка (сайт не существует),
+        и <code>.catch</code> перехватывает ошибку:</p>
+        <code>
+            fetch('https://no-such-server.blabla') // Ошибка<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;.catch(err => alert(err)) // TypeError: failed to fetch
+        </code>
+        <p>Как видно, <code>.catch</code> не обязательно должен быть сразу после ошибки, он может быть далее, после
+        одно или даже нескольких <code>.then</code>.</p>
+        <p>Или, может быть, с сервером все в порядке, но в ответе мы получим некорректный JSON. Самый лёгкий путь
+        перехватить все ошибки - это добавить <code>.catch</code> в конец цепочки:</p>
+        <code>
+            fetch('user.json')<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;.then(user => fetch(`https://api.github.com/users/${user.login}`))<br>
+            &nbsp;&nbsp;.then(response => response.json())<br>
+            &nbsp;&nbsp;.then(githubUser => new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let img = document.createElement('img');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;img.src = githubUser.avatar_url;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.append(img);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;img.remove();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve(githubUser);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}, 3000);<br>
+            &nbsp;&nbsp;}))<br>
+            &nbsp;&nbsp;.catch(error => alert(error.message));
+        </code>
+        <p>Если все в порядке, то такой <code>.catch</code> вообще не выполнится. Но если любой из промисов будет
+        отклонен (проблемы с сетью или некорректная json-строка, или что угодно другое), то ошибка будет перехвачена.</p>
+    </article>
+
+    <article>
+        <h2>Неявный try...catch</h2>
+        <p>Вокруг функции промиса и обработчиков находится «невидимый <code>try...catch</code>». Если происходит исключение,
+        то оно перехватывается, и промис считается отклоненным с этой ошибкой.</p>
+        <p>Например, этот код:</p>
+        <code>
+            new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;throw new Error('Ошибка!';<br>
+            }).catch(alert); // Error: Ошибка!
+        </code>
+        <p>... Работает так же, как и этот:</p>
+        <code>
+            new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;resolve(new Error('Ошибка!'))<br>
+            }).catch(alert); // Error: Ошибка!
+        </code>
+        <p>«Невидимый <code>try...catch</code>» вокруг промиса автоматически перехватывает ошибку и превращает ее в
+        отклоненный промис.</p>
+        <p>Это работает не только в функции промиса, но и в обработчиках. Если мы бросим ошибку (<code>throw</code>)
+        из обработчика (<code>.then</code>), то промис будет считаться отклоненным, и управление перейдет к ближайшему
+        обработчику ошибок.</p>
+        <p>Пример:</p>
+        <code>
+            new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;resolve('ok');<br>
+            }).then(result => {<br>
+            &nbsp;&nbsp;throw new Error('Ошибка!'); // Генерируем ошибку<br>
+            }).catch(alert); // Error: Ошибка!
+        </code>
+        <p>Это происходит для всех ошибок, не только для тех, которые вызваны оператором <code>throw</code>. Например,
+        программная ошибка:</p>
+        <code>
+            new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;resolve('ok');<br>
+            }).then(result => {<br>
+            &nbsp;&nbsp;blabla(); // Нет такой функции<br>
+            }).catch(alert); // ReferenceError: blabla is not defined
+        </code>
+        <p>Финальный <code>.catch</code> перехватывает как промисы, в которых вызван <code>reject</code>, так и случайные
+        ошибки в обработчиках.</p>
+    </article>
+
+    <article>
+        <h2>Пробрасывание ошибок</h2>
+        <p>Как мы уже заметили, <code>.catch</code> ведет себя как <code>try...catch</code>. Мы можем иметь столько
+        обработчиков <code>.then</code>, сколько мы захотим, и затем использовать один <code>.catch</code> в конце,
+        чтобы перехватить ошибки из всех обработчиков.</p>
+        <p>В обычном <code>try...catch</code> мы можем проанализировать ошибку и повторно пробросить дальше, если не
+        можем ее обработать. То же самое возможно для промисом.</p>
+        <p>Если мы пробросим (<code>throw</code>) ошибку внутри блока <code>.catch</code>, то управление перейдет к
+        следующему ближайшему обработчику ошибок. А если мы обработаем ошибку и завершим работу обработчика нормально,
+        то продолжит работу ближайший успешный обработчик <code>.then</code>.</p>
+        <p>В примере ниже <code>.catch</code> успешно обрабатывает ошибку:</p>
+        <code>
+            // the execution: catch → then<br>
+            new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;throw new Error('Ошибка!');<br>
+            }).catch(function(error) {<br>
+            &nbsp;&nbsp;alert('Ошибка обработана, продолжить работу');<br>
+            }).then(() => alert('Управление перейдет в следующий then'));
+        </code>
+        <p>Здесь блок <code>.catch</code> завершается нормально. Поэтому вызывается следующий успешный обработчик
+        <code>.then</code>.</p>
+        <p>В примере ниже мы видим другу ситуацию с блоком <code>.catch</code>. Обработчик <code>(*)</code>
+        перехватывает ошибку и не может обработать ее (например, он знает как обработать только <code>URIError</code>),
+        поэтому ошибка пробрасывается далее:</p>
+        <code>
+            // the execution: catch → catch → then<br>
+            new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;throw new Error('Ошибка!');<br>
+            }).catch(function(error) { // (*)<br>
+            &nbsp;&nbsp;if (error instanceof URIError) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Обрабатываем ошибку<br>
+            &nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Не могу обработать ошибку');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;throw error; // Пробрасываем ошибку в следующий catch<br>
+            &nbsp;&nbsp;}<br>
+            }).then(function() {<br>
+            &nbsp;&nbsp;/* Не выполнится */<br>
+            }).catch(error => { // (**)<br>
+            &nbsp;&nbsp;alert(`Неизвестная ошибка: ${error}`);<br>
+            &nbsp;&nbsp;// Ничего не возвращаем → выполнение продолжается в нормальном режиме<br>
+            });
+        </code>
+        <p>Управление переходит от первого блока <code>.catch</code> <code>(*)</code> к следующему <code>(**)</code>,
+        вниз по цепочке.</p>
+    </article>
+
+    <article>
+        <h2>Необработанные ошибки</h2>
+        <p>Что произойдет, если ошибка не будет обработана? Например, мы просто забыли добавить <code>.catch</code> в
+        конец цепочки, как здесь:</p>
+        <code>
+            new Promise(function() {<br>
+            &nbsp;&nbsp;noSuchFunction(); // Ошибка (нет такой функции)<br>
+            })<br>
+            &nbsp;&nbsp;.then(() => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Обработчик .then один или более<br>
+            }); // без .catch в самом конце!
+        </code>
+        <p>В случае ошибки выполнение должно перейти к ближайшему обработчику ошибок. Но в примере выше нет никакого
+        обработчика. Поэтому ошибка как бы «застревает», ее некому обработать.</p>
+        <p>На практике, как и при обычных необработанных ошибках в коде, это означает, что что-то пошло сильно не так.</p>
+        <p>Что происходит, когда обычная ошибка не перехвачена <code>try...catch</code>? Скрипт умирает с сообщением
+        в консоли. Похожее происходит и в случае необработанной ошибки просима.</p>
+        <p>JavaScript-движок отслеживает такие ситуации и генерирует в этом случае глобальную ошибку.</p>
+        <p>В браузере мы можем поймать такие ошибки, используя событие <code>unhandledrejection</code>:</p>
+        <code>
+            window.addEventListener('unhandledrejection', function(event) {<br>
+            &nbsp;&nbsp;// Объект события имеет два специальных свойства:<br>
+            &nbsp;&nbsp;alert(event.promise); // [object Promise] - промис, который сгенерировал ошибку<br>
+            &nbsp;&nbsp;alert(event.reason); // Error: Ошибка! - объект ошибки, которая не была обработана<br>
+            });<br>
+            <br>
+            new Promise(function() {<br>
+            &nbsp;&nbsp;throw new Error('Ошибка!');<br>
+            }); // Нет обработчика ошибок
+        </code>
+        <p>Это событие является частью стандарта HTML.</p>
+        <p>Если происходит ошибка, и отсутствует ее обработчик, то генерируется событие <code>unhandledrejection</code>,
+        и соответсвующий объект <code>event</code> содержит информацию об ошибке.</p>
+        <p>Однако такие ошибки неустранимы, поэтому лучше всего - информировать пользователя о проблеме и, возможно,
+        отправить информацию об ошибке на сервер.</p>
+        <p>В не-браузерных средах, таких как Node.js, есть другие способы отслеживания необработанных ошибок.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>
+                <p><code>.catch</code> перехватывает все виды ошибок в промисах: будь то вызов <code>reject()</code>
+                или ошибка, брошенная в обработчике при помощи <code>throw</code>.</p>
+            </li>
+            <li>
+                <p><code>.then</code> также перехватывает ошибки таким же образом, если задан второй аргумент
+                (который является обработчиком ошибок).</p>
+            </li>
+            <li>
+                <p>Необходимо размещать <code>.catch</code> там, где мы хотим обработать ошибки и знаем как это сделать.
+                Обработчик может проанализировать ошибку (могут быть полезны пользовательские классы ошибок) и
+                пробросить ее, если ничего не знает о ней (возможно, это программная ошибка).</p>
+            </li>
+            <li>
+                <p>Можно и совсем не использовать <code>.catch</code>, если нет нормального способа восстановиться
+                после ошибки.</p>
+            </li>
+            <li>
+                <p>В любом случае нам следует использовать обработчик события <code>unhandledrejection</code>
+                (для браузеров и аналог для других окружений), чтобы отслеживать необработанные ошибки и информировать
+                о них пользователя (и, возможно, наш сервер), благодаря чему наше приложение никогда не будет
+                «просто умирать».</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
