@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Асинхронные итераторы и генераторы</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Асинхронные итераторы и генераторы</h2>
+        <p>Асинхронные итераторы позволяют перебирать данные, поступающие асинхронно. Например, когда мы загружаем
+        что-то по частям по сети. Асинхронные генераторы делают такой перебор еще удобнее.</p>
+    </article>
+
+    <article>
+        <h2>Асинхронные итераторы</h2>
+        <p>Асинхронные итераторы похожи на обычные итераторы, но имеют некоторые синтаксические отличия.</p>
+        <p>«Обычный» перебираемый объект выглядит примерно так:</p>
+        <code>
+            let range = {<br>
+            &nbsp;&nbsp;from: 1,<br>
+            &nbsp;&nbsp;to: 5,<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// for...of вызывает этот метод один раз в самом начале<br>
+            &nbsp;&nbsp;[Symbol.iterator]() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ... Возвращает объект-итератор:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// далее for...of работает только с этим объектом, запрашивая следующее значение<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// вызовом next()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current: this.from,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;last: this.to,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// next() вызывается на каждой итерации цикла for...of
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;next() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Должен возвращать значение в виде объекта {done: ..., value: ...}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (this.current <= this.last) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return {done: false, value: this.current++};<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return {done: true};<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            for (let value of range) {<br>
+            &nbsp;&nbsp;alert(value); // 1, потом 2, потом 3, потом 4, потом 5<br>
+            }
+        </code>
+        <p>Чтобы сделать объект итерируемым асинхронно:</p>
+        <ol>
+            <li>
+                <p>Используется <code>Symbol.asyncIterator</code> вместо <code>Symbol.Iterator</code>.</p>
+            </li>
+            <li>
+                <p><code>next()</code> должен возвращать промис.</p>
+            </li>
+            <li>
+                <p>Чтобы перебрать такой объект, используется цикл <code>for await (let item of iterable)</code>.</p>
+            </li>
+        </ol>
+        <p>Давайте создадим итерируемый объект <code>range</code>, как и в предыдущем примере, но теперь он будет
+        возвращать значение асинхронно, по одному в секунду:</p>
+        <code>
+            let range = {<br>
+            &nbsp;&nbsp;from: 1,<br>
+            &nbsp;&nbsp;to: 5,<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// for await...of вызывает этот метод один раз в самом начале
+            &nbsp;&nbsp;[Symbol.asyncIterator]() { // (1)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ... Возвращает объект-итератор:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// далее for await...of работает только с этим объектом,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// запрашивая у него следующие значения вызовом next()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current: this.from,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;last: this.to,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// next() вызывается на каждой итерации цикла for await...of
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;async next() { // (2)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Должен возвращать значение как объект {done: ..., value: ...}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// (автоматически оборачивается в промис с помощью async)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Можно использовать await внутри для асинхронности:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;await new Promise(resolve => setTimeout(resolve, 1000)); // (3)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (this.current <= this.last) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return {done: false, value: this.current++};<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return {done: true};<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            (async () => {<br>
+            &nbsp;&nbsp;for await (let value of range) { // (4)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(value);<br>
+            &nbsp;&nbsp;}<br>
+            })()
+        </code>
+        <p>Как видим, структура похожа на обычные итераторы:</p>
+        <ol>
+            <li>
+                <p>Чтобы сделать объект асинхронно итерируемым, он должен иметь метод <code>Symbol.asyncIterator</code>
+                <code>(1)</code>.</p>
+            </li>
+            <li>
+                <p>Этот метод должен возвращать объект с методом <code>next()</code>, который в свою очередь возвращает
+                промис <code>(2)</code>.</p>
+            </li>
+            <li>
+                <p>Метод <code>next()</code> не обязательно должен быть <code>async</code>, он может быть обычным
+                методом, возвращающим промис, но <code>async</code> позволяет использовать <code>await</code>,
+                так что это удобно. Здесь мы просто делаем паузу на одну секунду <code>(3)</code>.</p>
+            </li>
+            <li>
+                <p>Для итерации мы используем <code>for await (let value of range)</code> <code>(4)</code>,
+                добавляя «await» после «for». Он вызовет <code>range[Symbol.asyncIterator]()</code> один раз,
+                а затем его метод <code>next()</code> для получения значений.</p>
+            </li>
+        </ol>
+        <p>Вот небольшая шпаргалка:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Итераторы</th>
+                    <th>Асинхронные итераторы</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>Метод для создания итерируемого объекта</td>
+                <td><code>Symbol.iterator</code></td>
+                <td><code>Symbol.asyncIterator</code></td>
+            </tr>
+            <tr>
+                <td><code>next()</code> возвращает</td>
+                <td>Любое значение</td>
+                <td>Промис</td>
+            </tr>
+            <tr>
+                <td>Для цикла используйте</td>
+                <td>for...of</td>
+                <td>for await...of</td>
+            </tr>
+        </table>
+
+        <article class="warning">
+            <h2>Оператор расширения <code>...</code> не работает асинхронно</h2>
+            <p>Функции, которые требуют обычных синхронных итераторов, не работают с асинхронными.</p>
+            <p>Например, оператор расширения (три точки <code>...</code>) не будет работать:</p>
+            <code>alert([...range]); // Ошибка, нет Symbol.iterator</code>
+            <p>Это естественно, так как он ожидает <code>Symbol.iterator</code>, как и <code>for...of</code> без
+            <code>await</code>. Ему не подходит <code>Symbol.asyncIterator</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Асинхронные генераторы</h2>
+        <p>Как мы уже знаем, в JavaScript есть генераторы, и они являются перебираемыми.</p>
+        <p>Давайте вспомним генератор последовательности из главы «Генераторы». Он генерирует последовательность
+        значений от <code>start</code> до <code>end</code>:</p>
+        <code>
+            function* generateSequence(start, end) {<br>
+            &nbsp;&nbsp;for (let i = start; start <= end; start++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;yield i;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            for (let value of generateSequence(1, 5)) {<br>
+            &nbsp;&nbsp;alert(value); // 1, потом 2, потом 3, потом 4, потом 5<br>
+            }
+        </code>
+        <p>В обычных генераторах мы не можем использовать <code>await</code>. Все значения должны поступать синхронно:
+        в <code>for...of</code> нет места для задержки, это синхронная конструкция.</p>
+        <p>Но что если нам нужно использовать <code>await</code> в теле генератора? Для выполнения сетевых запросов,
+        например.</p>
+        <p>Нет проблем, просто добавьте в начале <code>async</code>, например, вот так:</p>
+        <code>
+            async function* generateSequence(start, end) {<br>
+            &nbsp;&nbsp;for (let i = start, start <= end; i++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Ура, можно использовать await!<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;await new Promise(resolve => setTimeout(resolve, 1000));<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;yield 1;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            (async () => {<br>
+            &nbsp;&nbsp;let generator = generateSequence(1, 5);<br>
+            &nbsp;&nbsp;for await (let value of generator) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(value); // 1, потом 2, потом 3, потом 4, потом 5<br>
+            &nbsp;&nbsp;}<br>
+            })();
+        </code>
+        <p>Теперь у нас есть асинхронный генератор, который можно перебирать с помощью <code>for await...of</code>.</p>
+        <p>Это действительно очень просто. Мы добавляем ключевое слово <code>async</code>, и внутри генератора
+        теперь можно использовать <code>await</code>, а также промисы и другие асинхронные функции.</p>
+        <p>С технической точки зрения, еще одно отличие асинхронного генератора заключается в том, что его метод
+        <code>generator.next()</code> теперь тоже асинхронный и возвращает промисы.</p>
+        <p>Из обычного генератора мы можем получить значения при помощи <code>result = generator.next()</code>.
+        Для асинхронного нужно добавить <code>await</code>, вот так:</p>
+        <code>result = await generator.next(); // result = {value: ..., done: true/false}</code>
+    </article>
+
+    <article>
+        <h2>Асинхронно перебираемые объекты</h2>
+        <p>Как мы уже знаем, чтобы сделать объект перебираемым, нужно добавить к нему <code>Symbol.iterator</code>.</p>
+        <code>
+            let range = {<br>
+            &nbsp;&nbsp;from: 1,<br>
+            &nbsp;&nbsp;to: 5,<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;[Symbol.iterator]() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return &ltобъект с next, чтобы сделать range перебираемым&gt<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <p>Обычная практика для <code>Symbol.iterator</code> - возвращать генератор, а не простой объект с <code>next</code>,
+        как в предыдущем примере.</p>
+        <p>Давайте вспомним пример из главы «Генераторы»:</p>
+        <code>
+            let range = {<br>
+            &nbsp;&nbsp;from: 1,<br>
+            &nbsp;&nbsp;to: 5,<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;*[Symbol.iterator]() { // Сокращение для [Symbol.iterator]: function* ()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let value = this.from; value <= this.to; value++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yield value;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            for (let value of range) {<br>
+            &nbsp;&nbsp;alert(value); // 1, потом 2, потом 3, потом 4, потом 5<br>
+            }
+        </code>
+        <p>Здесь созданный объект <code>range</code> является перебираемым, а генератор <code>*[Symbol.iterator]</code>
+        реализует логику для перечисления значений.</p>
+        <p>Если хотим добавить асинхронные действия в генератор, нужно заменить <code>Symbol.iterator</code> на
+        асинхронный <code>Symbol.asyncIterator</code>:</p>
+        <code>
+            let range = {<br>
+            &nbsp;&nbsp;from: 1,<br>
+            &nbsp;&nbsp;to: 5,<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;async *[Symbol.asyncIterator]() { // То же, что и [Symbol.asyncIterator]: async function* ()<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let value = this.from; value <= this.to; value++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Пауза между значениями, ожидание<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;await new Promise(resolve => setTimeout(resolve, 1000));<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yield value;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            (async () => {<br>
+            &nbsp;&nbsp;for await (let value of range) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(value); // 1, потом 2, потом 3, потом 4, потом 5<br>
+            &nbsp;&nbsp;}<br>
+            })();
+        </code>
+        <p>Теперь значения поступают с задержкой в одну секунду между ними.</p>
+    </article>
+
+    <article>
+        <h2>Пример из реальной практики</h2>
+        <p>Есть много онлайн-сервисов, которые предоставляют данные постранично. Например, когда нам нужен список
+        пользователей, запрос возвращает определенное количество (например, 100) пользователей - «одну страницу», и
+        URL следующей страницы.</p>
+        <p>Этот подход очень распространен, и речь не только о пользователях, а о чем угодно. Например, GitHub
+        позволяет получать коммиты таким образом, с разбивкой по страницам:</p>
+        <ul>
+            <li>
+                <p>Нужно сделать запрос на URL в виде <code>https://api.github.com/repos/&ltrepo&gt/commits</code>.</p>
+            </li>
+            <li>
+                <p>В ответ придет JSON с 30 коммитами, а также со ссылкой на следующую страницу в заголовке <code>Link</code>.</p>
+            </li>
+            <li>
+                <p>Затем можно использовать эту ссылку для следующего запроса, чтобы получить дополнительную порцию
+                коммитов, и так далее.</p>
+            </li>
+        </ul>
+        <p>Но нам бы, конечно, хотелось вместо этого сложного взаимодействия иметь просто объект с коммитами,
+        которые можно перебирать вот так:</p>
+        <code>
+            let repo = 'javascript-tutorial/en.javascript.info'; // Репозиторий GitHub, откуда брать коммиты<br>
+            <br>
+            for await (let commit of fetchCommits(repo)) {<br>
+            &nbsp;&nbsp;// Обработка коммитов<br>
+            }
+        </code>
+        <p>Мы бы хотели сделать функцию <code>fetchCommits(repo)</code>, которая будет получать коммиты, делая запросы
+        всякий раз, когда это необходимо. И пусть она сама разбирается со всем, что касается нумерации страниц, для нас
+        это будет просто <code>for await...of</code>.</p>
+        <p>С асинхронными генераторами это довольно легко реализовать:</p>
+        <code>
+            async function* fetchCommits(repo) {<br>
+            &nbsp;&nbsp;let url = `https://api.github.com/repos/${repo}/commits`;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;while (url) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;const response = await fetch(url, { // (1)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;headers: {'User-Agent': 'Our-script'}, // GitHub требует заголовок user-agent<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;const body = await response.json(); // (2) ответ в формате JSON (массив коммитов)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// (3) Ссылка на следующую страницу находится в заголовках, извлекаем ее<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let nextPage = response.headers.get('Link').match(/<(.*?)>; rel="next"/);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;nextPage = nextPage && nextPage[1];<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;url = nextPage;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let commit of body) { // (4) вернуть коммиты один за другим, до окончания страницы<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yield commit;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <ol>
+            <li>
+                <p>Мы используем метод <code>fetch</code> браузера для загрузки с удаленного URL. Он позволяет при необходимости
+                добавлять авторизацию и другие заголовки, здесь GitHub требует <code>User-Agent</code>.</p>
+            </li>
+            <li>
+                <p>Результат <code>fetch</code> обрабатывается как JSON, это опять-таки метод, присущий <code>fetch</code>.</p>
+            </li>
+            <li>
+                <p>Нужно получить URL следующей страницы из заголовка ответа <code>Link</code>. Он имеет специальный формат,
+                поэтому мы используем регулярное выражение. URL следующей страницы может выглядеть как
+                <code>https://api.github.com/repositories/93253246/commits?page=2</code>, он генерируется самим GitHub.</p>
+            </li>
+            <li>
+                <p>Затем мы выдаем все полученные коммиты, а когда они закончатся - сработает следующая итерация
+                <code>while(url)</code>, которая сделает еще один запрос.</p>
+            </li>
+        </ol>
+        <p>Пример использования (показывает авторов коммитов в консоли):</p>
+        <code>
+            (async () => {<br>
+            &nbsp;&nbsp;let count = 0;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;for await (let commit of fetchCommits('javascript-tutorial/en.javascript.info')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;console.log(commit.author.login);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (++count === 100) { // Остановимся на 100 коммитах<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            })();
+        </code>
+        <p>Это именно то, что мы хотели. Внутренняя механика постраничных запросов снаружи не видна. Для нас это просто
+        асинхронный генератор, который возвращает коммиты.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Обычные итераторы и генераторы прекрасно работают с данными, которые не требуют времени для их создания или
+        получения.</p>
+        <p>Когда мы ожидаем, что данные будут поступать асинхронно, с задержками, можно использовать их асинхронные
+        аналоги и <code>for await...of</code> вместо <code>for...of</code>.</p>
+        <p>Синтаксические различия между асинхронными и обычными итераторами:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Перебираемый объект</th>
+                    <th>Асинхронно перебираемый</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>Метод для получения итератора</td>
+                <td><code>Symbol.iterator</code></td>
+                <td><code>Symbol.asyncIterator</code></td>
+            </tr>
+            <tr>
+                <td><code>next() возвращает</code></td>
+                <td><code>{value: ..., done: true/false}</code></td>
+                <td>Промис, который завершается с <code>{value: ..., done: true/false}</code></td>
+            </tr>
+        </table>
+        <p>Синтаксические различия между асинхронными и обычными генераторами:</p>
+        <table>
+            <thead>
+            <tr>
+                <th></th>
+                <th>Генераторы</th>
+                <th>Асинхронные генераторы</th>
+            </tr>
+            <tr>
+                <td>Объявление</td>
+                <td><code>function*</code></td>
+                <td><code>async function*</code></td>
+            </tr>
+            <tr>
+                <td>generator.next() возвращает</td>
+                <td><code>{value: ..., done: true/false}</code></td>
+                <td>Промис, который завершается с <code>{value: ..., done: true/false}</code></td>
+            </tr>
+            </thead>
+        </table>
+        <p>В веб-разработке мы часто встречаемся с потоками данных, когда они поступают по частям. Например, загрузка
+        или выгрузка большого файла.</p>
+        <p>Мы можем использовать асинхронные генераторы для обработки таких данных. Также заметим, что в некоторых
+        окружениях, например, браузерах, есть и другое API, называемое «Streams» (потоки), который предоставляет
+        специальные интерфейсы для работы с такими потоками данных, их преобразования и передачи из одного потока
+        в другой.</p>
+    </article>
+</body>
+</html>
+
+<script>
+    let repo = 'javascript-tutorial/en.javascript.info';
+    repo = 'akimov246/leetcode';
+
+    async function* fetchCommits(repo) {
+        let url = `https://api.github.com/repos/${repo}/commits`;
+
+        while(url) {
+            let response = await fetch(url);
+            let body = await response.json();
+
+            nextPage = response.headers.get('Link').match(/<(.*?)>; rel="next"/);
+
+            url = nextPage && nextPage[1];
+            //console.log(nextPage);
+            for (let commit of body) {
+                yield commit;
+            }
+        }
+    }
+
+    (async () => {
+        for await (let commit of fetchCommits(repo)) {
+            console.log(commit.commit.author.date);
+        }
+    })();
+</script>
