@@ -431,7 +431,7 @@
 
     (async () => {
         for await (let commit of fetchCommits(repo)) {
-            console.log(commit.commit.author.date);
+            console.log(commit.commit.message);
         }
     })();
 </script>
