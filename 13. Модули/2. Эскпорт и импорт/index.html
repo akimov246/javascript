@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Экспорт и импорт</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Экспорт и импорт</h2>
+        <p>Директивы экспорт и импорт имеют несколько вариантов вызова.</p>
+    </article>
+
+    <article>
+        <h2>Экспорт до объявления</h2>
+        <p>Мы можем пометить любое объявление как экспортируемое, разместив <code>export</code> перед ним, будь то
+        переменная, функция или класс.</p>
+        <p>Например, все следующие экспорты допустимы:</p>
+        <code>
+            // Экспорт массива<br>
+            export let months = ['Jan', 'Feb', 'Mar', 'Apr', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];<br>
+            <br>
+            // Экспорт константы<br>
+            export const MODULES_BECAME_STANDARD_YEAR = 2015;<br>
+            <br>
+            // Экспорт класса<br>
+            export class User {<br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+
+        <article class="note">
+            <h2>Не ставится точка с запятой после экспорта класса/функции</h2>
+            <p>Обратите внимание, что <code>export</code> перед классов и функцией не делает их функциональным
+            выражением. Это все также объявление функции, хотя и экспортируемое.</p>
+            <p>Большинство руководств по стилю кода в JavaScript не рекомендуют ставить точку с запятой после
+            объявлений функций или классов.</p>
+            <p>Поэтому в конце <code>export class</code> и <code>export function</code> не нужна точка с запятой:</p>
+            <code>
+                export function sayHi(user) {<br>
+                &nbsp;&nbsp;alert(`Hello, ${user}!`);<br>
+                } // Без ; в конце
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Экспорт отдельно от объявления</h2>
+        <p>Также можно написать <code>export</code> отдельно.</p>
+        <p>Здесь мы сначала объявляем, а затем экспортируем:</p>
+        <code>
+            // say.js<br>
+            function sayHi(user) {<br>
+            &nbsp;&nbsp;alert(`Hello, ${user}!`);<br>
+            }<br>
+            <br>
+            function sayBye(user) {<br>
+            &nbsp;&nbsp;alert(`Bye, ${user}!`);<br>
+            }<br>
+            <br>
+            export {sayHi, sayBye}; // Список экспортируемых переменных
+        </code>
+        <p>... Или, технически, мы также можем расположить <code>export</code> выше функций.</p>
+    </article>
+
+    <article>
+        <h2>Импорт *</h2>
+        <p>Обычно мы располагаем список того, что хотим импортировать, в фигурных скобках <code>import {...}</code>,
+        например, вот так:</p>
+        <code>
+            // main.js<br>
+            import {sayHi, sayBuy} from './say.js';<br>
+            <br>
+            sayHi('John'); // Hello, John!<br>
+            sayBye('John'); // Bye, John!
+        </code>
+        <p>Но если импортировать нужно много чего, мы можем импортировать все сразу в виде объекта, используя
+        <code>import * as &ltobj&gt</code>. Например:</p>
+        <code>
+            // main.js<br>
+            import * as say from './say.js';<br>
+            <br>
+            say.sayHi('John');<br>
+            say.sayBye('John');
+        </code>
+        <p>На первый взгляд «импортировать все» выглядит очень удобно, не надо писать лишнего, зачем нам вообще может
+        понадобиться явно перечислять список того, что нужно импортировать?</p>
+        <p>Для этого есть несколько причин.</p>
+        <ol>
+            <li>
+                <p>Современные инструменты сборки (webpack и другие) собирают модули вместе и оптимизируют их,
+                ускоряя загрузку и удаляя неиспользуемый код.</p>
+                <p>Предположим, мы добавили в наш проект стороннюю библиотеку <code>say.js</code> с множеством функций:</p>
+                <code>
+                    // say.js<br>
+                    export function sayHi() {...}<br>
+                    export function sayBye() {...}<br>
+                    export function becomeSilent() {...}<br>
+                </code>
+                <p>Теперь, если из этой библиотеке в проекте мы используем только одну функцию:</p>
+                <code>
+                    // main.js<br>
+                    import {sayHi} from './say.js';
+                </code>
+                <p>... Тогда оптимизатор увидит, что другие функции не используются, и удалит остальные из собранного
+                кода, тем самым делая код меньше. Это называется «tree-shaking».</p>
+            </li>
+            <li>
+                <p>Явно перечисляя то, что хотим импортировать, мы получаем более короткие имена функций:
+                <code>sayHi()</code> вместо <code>say.sayHi()</code>.</p>
+            </li>
+            <li>
+                <p>Явное перечисление импортов делает код более понятным, позволяет увидеть, что именно и где
+                используется. Это упрощает поддержку и рефакторинг кода.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Импорт «как»</h2>
+        <p>Мы также можем использовать <code>as</code>, чтобы импортировать под другими именами.</p>
+        <p>Например, для краткости импортируем <code>sayHi</code> в локальную переменную <code>hi</code>, а
+        <code>sayBye</code> импортируем как <code>bye</code>:</p>
+        <code>
+            // main.js<br>
+            import {sayHi as hi, sayBye as bye} from './say.js';<br>
+            <br>
+            hi('John'); // Hello, John!<br>
+            bye('John'); // Bye, John!
+        </code>
+    </article>
+
+    <article>
+        <h2>Экспортировать «как»</h2>
+        <p>Аналогичный синтаксис существует и для <code>export</code>.</p>
+        <p>Давайте экспортируем функции, как <code>hi</code> и <code>bye</code>:</p>
+        <code>
+            // say.js<br>
+            ...<br>
+            export {sayHi as hi, sayBye as bye};
+        </code>
+        <p>Теперь <code>hi</code> и <code>bye</code> - официальные имена для внешнего кода, их нужно использовать
+        при импорте:</p>
+        <code>
+            // main.js<br>
+            import * as say from './say.js';<br>
+            <br>
+            say.hi('John'); // Hello, John!<br>
+            say.bye('John'); // Bye, John!
+        </code>
+    </article>
+
+    <article>
+        <h2>Экспорт по умолчанию</h2>
+        <p>На практике модули встречаются в основном одного из двух видов:</p>
+        <ol>
+            <li>
+                <p>Модуль, содержащий библиотеку или набор функций, как <code>say.js</code> выше.</p>
+            </li>
+            <li>
+                <p>Модуль, который объявляет что-то одно, например модуль <code>user.js</code> экспортирует только
+                <code>class User</code>.</p>
+            </li>
+        </ol>
+        <p>По большей части, удобнее второй подход, когда важная «вещь» находится в своем собственном модуле.</p>
+        <p>Естественно, требуется много файлов, если для всего делать отдельный модуль, но это не проблема. Так
+        даже удобнее: навигация по проекту становится проще, особенно, если у файлов хорошие имена, и они структурированы
+        по папкам.</p>
+        <p>Модули предоставляют специальный синтаксис <code>export default</code> («экспорт по умолчанию»)
+        для второго подхода.</p>
+        <p>Ставим <code>export default</code> перед тем, что нужно экспортировать:</p>
+        <code>
+            // user.js<br>
+            export default class User {<br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <p>Заметим, в файле может быть не более одного <code>export default</code>.</p>
+        <p>... И потом импортируем без фигурных скобок:</p>
+        <code>
+            // main.js<br>
+            import User from './user.js'; // не {User}, просто User<br>
+            <br>
+            new User('John');
+        </code>
+        <p>Импорты без фигурных скобок выглядят красивее. Обычная ошибка начинающих: забывать про фигурные скобки.
+        Запомним: фигурные скобки необходимы в случае именованных экспортов, для <code>export default</code>
+        они не нужны.</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Именованный экспорт</th>
+                <th>Экспорт по умолчанию</th>
+            </tr>
+            </thead>
+            <tr>
+                <td><code>export class User {...}</code></td>
+                <td><code>export default class User {...}</code></td>
+            </tr>
+            <tr>
+                <td>import {User} from ...</td>
+                <td>import User from ...</td>
+            </tr>
+        </table>
+        <p>Технически в одном модуле может быть как экспорт по умолчанию, так и именованные экспорты, но на практике
+        обычно их не смешивают. То есть, в модуле находятся либо именованные экспорты, либо один экспорт по умолчанию.</p>
+        <p>Так как в файле может быть максимум один <code>export default</code>, то экспортируемая сущность не обязана
+        иметь имя.</p>
+        <p>Например, все это - полностью корректные экспорты по умолчанию:</p>
+        <code>
+            export default class { // У класса нет имени<br>
+            &nbsp;&nbsp;constructot() {...}<br>
+            }<br>
+        </code>
+        <code>
+            export default function(user) { // У функции нет имени<br>
+            &nbsp;&nbsp;alert(`Hello, ${user}!`);<br>
+            }<br>
+        </code>
+        <code>
+            // Экспортируем значение, не создавая переменную<br>
+            export default ['Jan', 'Feb', 'Mar','Apr', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        </code>
+        <p>Это нормально, потому что может быть только один <code>export default</code> на файл, так что <code>import</code>
+        без фигурных скобок всегда знает, что импортировать.</p>
+        <p>Без <code>default</code> такой экспорт выдал бы ошибку:</p>
+        <code>
+            export class { // Ошибка! (необходимо имя, если это не экспорт по умолчанию)<br>
+            &nbsp;&nbsp;constructor() {...}<br>
+            }
+        </code>
+    </article>
+
+    <article>
+        <h2>Имя «default»</h2>
+        <p>В некоторых ситуациях для обозначения экспорта по умолчанию в качестве имени используется <code>default</code>.</p>
+        <p>Например, чтобы экспортировать функцию отдельно от ее объявления:</p>
+        <code>
+            function sayHi(user) {<br>
+            &nbsp;&nbsp;alert(`Hello, ${user}!`);<br>
+            }<br>
+            <br>
+            // То же самое, как если бы мы добавили "export default" перед функцией<br>
+            export {sayHi as default};
+        </code>
+        <p>Или, еще ситуация, давайте представим следующее: модуль <code>user.js</code> экспортирует одну сущность
+        «по умолчанию» и несколько именованных (редкий, но возможный случай):</p>
+        <code>
+            // user.js<br>
+            export default class User {<br>
+            &nbsp;&nbsp;consructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            export function sayHi(user) {<br>
+            &nbsp;&nbsp;alert(`Hello, ${user}!`);<br>
+            }
+        </code>
+        <p>Вот как импортировать экспорт по умолчанию вместе с именованным экспортом:</p>
+        <code>
+            // main.js<br>
+            import {default as User, sayHi} from './user.js';<br>
+            <br>
+            new User('John');
+        </code>
+        <p>И, наконец, если мы импортируем все как объект <code>import *</code>, тогда его свойство <code>default</code> -
+        как раз и будет экспортом по умолчанию:</p>
+        <code>
+            // main.js<br>
+            import * as user from './user.js';<br>
+            <br>
+            let User = user.default; // Экспорт по умолчанию<br>
+            new User('John');
+        </code>
+    </article>
+
+    <article>
+        <h2>Довод против экспортов по умолчанию</h2>
+        <p>Именованные экспорты «включают в себя» свое имя. Эта информация является частью модуля, говорит нам,
+        что именно экспортируется.</p>
+        <p>Именованные экспорты вынуждают нас использовать правильное имя при импорте:</p>
+        <code>
+            import {User} from './user.js';<br>
+            // import {MyUSer} не сработает, должно быть именно имя {User}
+        </code>
+        <p>... В то время как для экспорта по умолчанию мы выбираем любое имя при импорте:</p>
+        <code>
+            import User from './user.js'; // Сработает<br>
+            import MyUser from './user.js'; // Тоже сработает<br>
+            // Можно импортировать с любым именем, и это будет работать
+        </code>
+        <p>Так что члены команды могут использовать разные имена для импорта одной и той же вещи, и это не очень хорошо.</p>
+        <p>Обычно, чтобы избежать этого и соблюсти единообразие кода, есть правило: имена импортируемых переменных
+        должны соответствовать именам файлов. Вот так:</p>
+        <code>
+            import User from './user.js';<br>
+            import LoginForm from './loginForm.js';<br>
+            import func from './func.js';
+        </code>
+        <p>Тем не менее, в некоторых командах это считают серьезным доводом против экспортов по умолчанию и предпочитают
+        использовать именованные экспорты везде. Даже если экспортируется только одна вещь, она все равно экспортируется
+        с именем, без использования <code>default</code>.</p>
+        <p>Это также немного упрощает реэкспорт.</p>
+    </article>
+
+    <article>
+        <h2>Реэкспорт</h2>
+        <p>Синтаксис «реэкспорта» <code>export ... from ...</code> позволяет импортировать что-то и тут же экспортировать,
+        возможно под другим именем, вот так:</p>
+        <code>
+            export {sayHi} from './say.js'; // Реэкспортировать sayHi<br>
+            <br>
+            export {default as User} from './user.js'; // Реэкспортировать default
+        </code>
+        <p>Зачем это нужно? Рассмотрим практический пример использования.</p>
+        <p>Представим, что мы пишем «пакет»: папку со множеством модулей, из которой часть функциональности экспортируется
+        наружу (инструменты вроде NPM позволяют нам публиковать и распространять такие пакеты), а многие модули -
+        просто вспомогательные, для внутреннего использования в других модулях пакета.</p>
+        <p>Структура файлов может быть такой:</p>
+        <code>
+            auth/<br>
+            &nbsp;&nbsp;index.js<br>
+            &nbsp;&nbsp;user.js<br>
+            &nbsp;&nbsp;helpers.js<br>
+            &nbsp;&nbsp;providers/<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;github.js<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;facebook.js<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;...
+        </code>
+        <p>Мы бы хотели сделать функциональность нашего пакета доступной через единую точку входа: «главный файл»
+        <code>auth/index.js</code>. Чтобы можно было использовать ее следующим образом:</p>
+        <code>import {login, logout} from 'auth/index.js';</code>
+        <p>Идея в том, что внешние разработчики, которые будут использовать наш пакет, не должны разбираться с его
+        внутренней структурой, рыться в файлах внутри нашего пакета. Все, что нужно, мы экспортируем в
+        <code>auth/index.js</code>, а остальное скрываем от любопытных взглядов.</p>
+        <p>Так как нужная функциональность может быть разбросана по модулям нашего пакета, мы можем импортировать их
+        в <code>auth/index.js</code> и тут же экспортировать наружу.</p>
+        <code>
+            // auth/index.js<br>
+            <br>
+            // Импортировать login/logout и тут же экспортировать<br>
+            import {login, logout} from './helpers.js';<br>
+            export {login, logout};<br>
+            <br>
+            // Импортировать экспорт по умолчанию как User и тут же экспортировать<br>
+            import User from './user.js';<br>
+            export {User};<br>
+            ...
+        </code>
+        <p>Теперь пользователи нашего пакета могут писать <code>import {login} from 'auth/index.js'</code>.</p>
+        <p>Запись <code>export ... from ...</code> - это просто более короткий вариант такого импорта-экспорта:</p>
+        <code>
+            // auth/index.js<br>
+            <br>
+            // Импортировать login/logout и тут же экспортировать<br>
+            export {login, logout} from './helpers.js';<br>
+            <br>
+            // Импортировать экспорт по умолчанию как User и тут же экспортировать<br>
+            export {default as User} from './user.js';<br>
+            ...
+        </code>
+    </article>
+
+    <article>
+        <h2>Реэкспорт экспорта по умолчанию</h2>
+        <p>При реэкспорте экспорт по умолчанию нужно обрабатывать особым образом.</p>
+        <p>Например, у нас есть <code>user.js</code>, из которого мы хотим реэкспортировать класс <code>User</code>:</p>
+        <code>
+            // user.js<br>
+            export default class User {<br>
+            &nbsp;&nbsp;// ...<br>
+            }
+        </code>
+        <ol>
+            <li>
+                <p><code>export User from './user.js'</code> не будет работать. Казалось бы, что такого? Но возникает
+                синтаксическая ошибка!</p>
+                <p>Чтобы реэкспортировать экспорт по умолчанию, мы должны написать <code>export {default as User}</code>,
+                как в примере выше. Такая вот особенность синтаксиса.</p>
+            </li>
+            <li>
+                <p><code>export * from './user.js'</code> реэкспортирует только именованные экспорты, исключая экспорт
+                по умолчанию.</p>
+                <p>Если мы хотим реэкспортировать и именованные экспорты и экспорты по умолчанию, то понадобятся
+                две инструкции:</p>
+                <code>
+                    export * from './user.js'; // Для реэкспорта именованных экспортов<br>
+                    export {default} from './user.js'; // Для реэкспорта по умолчанию
+                </code>
+            </li>
+        </ol>
+        <p>Такое особое поведение реэкспорта с экспортом по умолчанию - одна из причин того, почему некоторые разработчики
+        их не любят.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Вот все варианты <code>export</code>, которые мы разобрали в этой и предыдущих главах.</p>
+        <ul>
+            <li>
+                <p>Перед объявлением класса/функции/...:</p>
+                <ul>
+                    <li>
+                        <p><code>export [default] class/function/variable ...</code></p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Отдельный экспорт:</p>
+                <ul>
+                    <li>
+                        <p><code>export {x [as y], ...}</code></p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Реэкспорт:</p>
+                <ul>
+                    <li>
+                        <p><code>export {x [as y], ...} from "module"</code></p>
+                    </li>
+                    <li>
+                        <p><code>export * from "module"</code> (не реэкспортирует <code>export default</code>)</p>
+                    </li>
+                    <li>
+                        <p><code>export {default [as y]} from "module"</code> (реэкспортирует только <code>export default</code>)</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Импорт:</p>
+        <ul>
+            <li>
+                <p>Именованные экспорты из модуля:</p>
+                <ul>
+                    <li>
+                        <p><code>import {x [as y], ...} from "module"</code></p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Импорт по умолчанию:</p>
+                <ul>
+                    <li>
+                        <p><code>import x from "module"</code></p>
+                    </li>
+                    <li>
+                        <p><code>import {default as x} from "module"</code></p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Все сразу:</p>
+                <ul>
+                    <li>
+                        <p><code>import * as obj from "module"</code></p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Только подключить модуль (его код запустится), но не присваивать его переменной:</p>
+                <ul>
+                    <li>
+                        <p><code>import "module"</code></p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Мы можем поставить <code>import/export</code> в начало или конец скрипта, это не имеет значения.</p>
+        <p>То есть, технически, такая запись вполне корректна:</p>
+        <code>
+            sayHi();<br>
+            <br>
+            // ...<br>
+            <br>
+            import {sayHi} from './say.js'; // Импорт в конце файла
+        </code>
+        <p>На практике импорты, чаще всего, располагаются в начале файла. Но это только для большего удобства.</p>
+        <p><b>Обратите внимание, что инструкции <code>import/export</code> не работают внутри <code>{...}</code>.</b></p>
+        <p>Условный импорт, такой как ниже, работать не будет:</p>
+        <code>
+            if (something) {<br>
+            &nbsp;&nbsp;import {sayHi} from './say.js'; // Ошибка: импорт должен быть на верхнем уровне<br>
+            }
+        </code>
+    </article>
+</body>
+</html>
