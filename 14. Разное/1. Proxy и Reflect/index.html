@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proxy и Reflect</title>
+    <link href="../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Proxy и Reflect</h2>
+        <p>Объект <code>Proxy</code> «оборачивается» вокруг другого объекта и может перехватывать (и, при желании,
+        самостоятельно обрабатывать) разные действия с ним, например чтение/запись свойств и другие. Далее мы будем
+        называть такие объекты «прокси».</p>
+        <p>Прокси используются во многих библиотеках и некоторых браузерных фреймворках. В этой главе мы увидим много
+        случаев применения прокси в решении реальных задач.</p>
+        <p>Синтаксис:</p>
+        <code>let proxy = new Proxy(target, handler);</code>
+        <ul>
+            <li>
+                <p><code>target</code> - это объект, для которого нужно сделать прокси, может быть чем угодно, включая
+                функции.</p>
+            </li>
+            <li>
+                <p><code>handler</code> - конфигурация прокси: объект с «ловушками» («traps»): методами, которые перехватывают
+                разные операции, например, ловушка <code>get</code> - для чтения свойства из <code>target</code>,
+                ловушка <code>set</code> - для записи свойства в <code>target</code> и так далее.</p>
+            </li>
+        </ul>
+        <p>При операциях над <code>proxy</code>, если в <code>handler</code> имеется соответствующая «ловушка», то она
+        срабатывает, и прокси имеет возможность по-своему обработать ее, иначе операция будет совершена над оригинальным
+        объектом <code>target</code>.</p>
+        <p>В качестве начального примера создадим прокси без всяких ловушек:</p>
+        <code>
+            let target = {};<br>
+            let proxy = new Proxy(target, {}); // Пустой handler<br>
+            <br>
+            proxy.test = 5; // Записываем в proxy (1)<br>
+            alert(target.test); // 5, свойство появилось в target!<br>
+            <br>
+            alert(proxy.test); // 5, мы также можем прочитать его из прокси (2)<br>
+            <br>
+            for (let key in proxy) alert(key); // test, итерация работает (3)
+        </code>
+        <p>Так как нет ловушек, то все операции над <code>proxy</code> применяются к оригинальному объекту <code>target</code>.</p>
+        <ol>
+            <li>
+                <p>Запись свойства <code>proxy.test=</code> устанавливает значение на <code>target</code>.</p>
+            </li>
+            <li>
+                <p>Чтение свойства <code>proxy.test</code> возвращает значение из <code>target</code>.</p>
+            </li>
+            <li>
+                <p>Итерация по <code>proxy</code> возвращает значения из <code>target</code>.</p>
+            </li>
+        </ol>
+        <p>Как мы видим, без ловушек <code>proxy</code> является прозрачной оберткой над <code>target</code>.</p>
+        <p><code>Proxy</code> - это особый, «экзотический» объект, у него нет собственных свойств. С пустым
+        <code>handler</code> он просто перенаправляет все операции на <code>target</code>.</p>
+        <p>Чтобы активировать другие его возможности, добавим ловушки.</p>
+        <p>Что именно мы можем ими перехватить?</p>
+        <p>Для большинства действий с объектами в спецификации JavaScript есть так называемый «внутренний метод»,
+        который на самом низком уровне описывает, как его выполнять. Например, <code>[[Get]]</code> - внутренний
+        метод для чтения свойства, <code>[[Set]]</code> - для записи свойства, и так далее. Эти методы используются
+        только в спецификации, мы не можем обратиться напрямую к них по имени.</p>
+        <p>Ловушки как раз перехватывают вызовы этих внутренних методов. Полный список методов, которые можно перехватывать,
+        перечислен в <a target="_blank" href="https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots">спецификации
+        Proxy</a>, а также в таблице ниже.</p>
+        <p>Для каждого внутреннего метода в этой таблице указана ловушка, то есть имя метода, который мы можем добавить
+        в параметр <code>handler</code>, при создании <code>new Proxy</code>, чтобы перехватывать данную операцию:</p>
+        <table>
+            <thead>
+            <tr>
+                <td>Внутренний метод</td>
+                <td>Ловушка</td>
+                <td>Что вызывает</td>
+            </tr>
+            </thead>
+            <tr>
+                <td><code>[[Get]]</code></td>
+                <td><code>get</code></td>
+                <td>Чтение свойства</td>
+            </tr>
+            <tr>
+                <td><code>[[Set]]</code></td>
+                <td><code>set</code></td>
+                <td>Запись свойства</td>
+            </tr>
+            <tr>
+                <td><code>[[HasProperty]]</code></td>
+                <td><code>has</code></td>
+                <td>Оператор <code>in</code></td>
+            </tr>
+            <tr>
+                <td><code>[[Delete]]</code></td>
+                <td><code>deleteProperty</code></td>
+                <td>Оператор <code>delete</code></td>
+            </tr>
+            <tr>
+                <td><code>[[Call]]</code></td>
+                <td><code>apply</code></td>
+                <td>Вызов функции</td>
+            </tr>
+            <tr>
+                <td><code>[[Construct]]</code></td>
+                <td><code>construct</code></td>
+                <td>Оператор <code>new</code></td>
+            </tr>
+            <tr>
+                <td><code>[[GetPrototypeOf]]</code></td>
+                <td><code>getPrototypeOf</code></td>
+                <td><code>Object.getPrototypeOf</code></td>
+            </tr>
+            <tr>
+                <td><code>[[SetPrototypeOf]]</code></td>
+                <td><code>setPrototypeOf</code></td>
+                <td><code>Object.setPrototypeOf</code></td>
+            </tr>
+            <tr>
+                <td><code>[[IsExtensible]]</code></td>
+                <td><code>isExtensible</code></td>
+                <td><code>Object.IsExtensible</code></td>
+            </tr>
+            <tr>
+                <td><code>[[PreventExtensions]]</code></td>
+                <td><code>preventExtensions</code></td>
+                <td><code>Object.preventExtensions</code></td>
+            </tr>
+            <tr>
+                <td><code>[[DefineOwnProperty]]</code></td>
+                <td><code>defineProperty</code></td>
+                <td><code>Object.defineProperty, Object.defineProperties</code></td>
+            </tr>
+            <tr>
+                <td><code>[[GetOwnProperty]]</code></td>
+                <td><code>getOwnPropertyDescriptor</code></td>
+                <td><code>Object.getOwnPropertyDescriptor, for...in, Object.keys/values/entries</code></td>
+            </tr>
+            <tr>
+                <td><code>[[OwnPropertyKeys]]</code></td>
+                <td><code>ownKeys</code></td>
+                <td><code>Object.getOwnPropertyNames, Object.getOwnPropertySymbols, for...in, Object.keys/values/entries</code></td>
+            </tr>
+        </table>
+
+        <article class="warning">
+            <h2>Инварианты</h2>
+            <p>JavaScript налагает некоторые условия - инварианты на реализацию внутренних методов и ловушек.</p>
+            <p>Большинство из них касаются возвращаемых значений:</p>
+            <ul>
+                <li>
+                    <p>Метод <code>[[Set]]</code> должен возвращать <code>true</code>, если значение успешно записано,
+                    иначе <code>false</code>.</p>
+                </li>
+                <li>
+                    <p>Метод <code>[[Delete]]</code> должен возвращать <code>true</code>, если значение было успешно
+                    удалено, иначе <code>false</code>.</p>
+                </li>
+                <li>
+                    <p>... и так далее, мы увидим больше в примерах ниже.</p>
+                </li>
+            </ul>
+            <p>Есть и другие инварианты, например:</p>
+            <ul>
+                <li>
+                    <p>Метод <code>[[GetPrototypeOf]]</code>, примененный к прокси, должен возвращать то же значение,
+                    что и метод <code>[[GetPrototypeOf]]</code>, примеренный к оригинальному объекту. Другими словами,
+                    чтение прототипа объекта прокси всегда должно возвращать прототип оригинального объекта.</p>
+                </li>
+            </ul>
+            <p>Ловушки могут перехватывать вызовы этих методов, но должны выполнять указанные условия.</p>
+            <p>Инварианты гарантируют корректное и последовательное поведение конструкций и методов языка. Полный список
+            инвариантов можно найти в спецификации, хотя скорее всего вы не нарушите эти условия, если только не
+            соберетесь делать что-то совсем уж странное.</p>
+        </article>
+
+        <p>Теперь давайте посмотрим, как это все работает, на реальных примерах.</p>
+    </article>
+
+    <article>
+        <h2>Значение по умолчанию с ловушкой «get»</h2>
+        <p>Чаще всего используются ловушки на чтение/запись свойств.</p>
+        <p>Чтобы перехватить операцию чтения, <code>handler</code> должен иметь метод
+        <code>get(target, property, receiver)</code>.</p>
+        <p>Он срабатывает при попытке прочитать свойство объекта с аргументами:</p>
+        <ul>
+            <li>
+                <p><code>target</code> - это оригинальный объект, который передавался первым аргументом в конструктор
+                <code>new Proxy</code>.</p>
+            </li>
+            <li>
+                <p><code>property</code> - это имя свойства.</p>
+            </li>
+            <li>
+                <p><code>receiver</code> - если свойство объекта является геттером, то <code>receiver</code> - это
+                объект, который будет использован как <code>this</code> при его вызове. Обычно это сам объект прокси
+                (или наследующим от него объект).</p>
+            </li>
+        </ul>
+        <p>Давайте применим ловушку <code>get</code>, чтобы реализовать «значение по умолчанию» для свойства объекта.</p>
+        <p>Например, сделает числовой массив, так чтобы при чтении из него несуществующего элемента возвращался
+        <code>0</code>.</p>
+        <p>Обычно при чтении из массива несуществующего свойства возвращается <code>undefined</code>, но мы обернем
+        обычный массив в прокси, который перехватывает операцию чтения свойства из массива и возвращает <code>0</code>,
+        если такого элемента нет:</p>
+        <code>
+            let numbers = [0, 1, 2];<br>
+            <br>
+            numbers = new Proxy(numbers, {<br>
+            &nbsp;&nbsp;get(target, prop) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (prop in target) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return target[prop];<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return 0; // Значение по умолчанию<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            alert(numbers[1]); // 1<br>
+            alert(numbers[23]); // 0 (нет такого элемента)
+        </code>
+        <p>Как видно, это очень легко сделать при помощи ловушки <code>get</code>.</p>
+        <p>Мы модем использовать <code>Proxy</code> для реализации любой логики возврата значений по умолчанию.</p>
+        <p>Представим, что у нас есть объект-словарь с фразами на английском и их перевод на испанский:</p>
+        <code>
+            let dictionary = {<br>
+            &nbsp;&nbsp;'Hello': 'Hola',<br>
+            &nbsp;&nbsp;'Bye': 'Adios'<br>
+            };<br>
+            <br>
+            alert(dictionary['Hello']); // Hola<br>
+            alert(dictionary['Welcome']); // undefined<br>
+        </code>
+        <p>Сейчас, если фразы в <code>dictionary</code> нет, при чтении возвращается <code>undefined</code>. Но на
+        практике оставлять фразы непереведенными лучше, чем использовать <code>undefined</code>. Поэтому давайте
+        сделаем так, чтобы при отсутствии перевода возвращалась оригинальная фраза на английском, вместо
+        <code>undefined</code>.</p>
+        <p>Чтобы достичь этого, обернем <code>dictionary</code> в прокси, перехватывающий операцию чтения:</p>
+        <code>
+            let dictionary = {<br>
+            &nbsp;&nbsp;'Hello': 'Hola',<br>
+            &nbsp;&nbsp;'Bye': 'Adios'<br>
+            };<br>
+            <br>
+            dictionary = new Proxy(dictionary, {<br>
+            &nbsp;&nbsp;get(target, phrase) { // Перехватываем чтение свойства в dictionary<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (phrase in target) { // Если перевод для фразы есть в словаре<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return target[phrase]; // Возвращаем его<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Иначе возвращаем непереведенную фразу<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return phrase;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            // Запросим перевод произвольного выражения в словаре!<br>
+            // В худшем случае оно не будет переведено<br>
+            alert(dictionary('Hello')); // Hola<br>
+            alert(dictionary('Welcome to Proxy')); // Welcome to Proxy (нет перевода)
+        </code>
+
+        <article class="note">
+            <h2>Прокси следует использовать везде вместо <code>target</code></h2>
+            <p>Пожалуйста, обратите внимание: прокси перезаписывает переменную:</p>
+            <code>dictionary = new Proxy(dictionary, ...);</code>
+            <p>Прокси должен заменить собой оригинальный объект повсюду. Никто не должен ссылаться на оригинальный
+            объект после того, как он был проксирован. Иначе очень легко запутаться.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Валидация с ловушкой «set»</h2>
+        <p>Допустим, мы хотим сделать массив исключительно для чисел. Если в него добавляется значение иного типа,
+        то это должно приводить к ошибке.</p>
+        <p>Ловушка <code>set</code> срабатывает, когда происходит запись свойства.</p>
+        <p><code>set(target, property, value, receiver)</code>:</p>
+        <ul>
+            <li>
+                <p><code>target</code> - это оригинальный объект, который передавался первым аргументом в конструктор
+                <code>new Proxy</code>.</p>
+            </li>
+            <li>
+                <p><code>property</code> - имя свойства.</p>
+            </li>
+            <li>
+                <p><code>value</code> - значение свойства.</p>
+            </li>
+            <li>
+                <p><code>receiver</code> - аналогично ловушке <code>get</code>, этот аргумент имеет значение, только
+                если свойство - сеттер.</p>
+            </li>
+        </ul>
+        <p>Ловушка <code>set</code> должна вернуть <code>true</code>, если запись прошла успешно, и <code>false</code>
+        в противном случае (будет сгенерирована ошибка <code>TypeError</code>).</p>
+        <p>Давайте применим ее для проверки новых значений:</p>
+        <code>
+            let numbers = [];<br>
+            <br>
+            numbers = new Proxy(numbers, {<br>
+            &nbsp;&nbsp;set(target, prop, val) { // Для перехвата записи свойства<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (typeof val === 'number') {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;target[prop] = val;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;
+            &nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            numbers.push(1); // Добавилось успешно<br>
+            numbers.push(2); // Добавилось успешно<br>
+            alert('Длина: ' + numbers.length); // Длина: 2<br>
+            <br>
+            numbers.push('тест'); // TypeError (ловушка set на прокси вернула false)<br>
+            <br>
+            alert('Интерпретатор никогда не доходит до этой строки (из-за ошибки в строке выше)');
+        </code>
+        <p>Обратите внимание, что встроенная функциональность массива по-прежнему работает! Значения добавляются методом
+        <code>push</code>. Свойство <code>length</code> при этом увеличивается. Наш прокси ничего не ломает.</p>
+        <p>Нам не нужно переопределять методы массива <code>push</code> и <code>unshift</code> и другие, чтобы
+        добавлять туда проверку на тип, так как внутри себя они используют операцию <code>[[Set]]</code>, которая
+        перехватывает прокси.</p>
+        <p>Таким образом, код остается чистым и прозрачным.</p>
+
+        <article class="warning">
+            <h2>Не забывайте вернуть <code>true</code></h2>
+            <p>Как сказано ранее, нужно соблюдать инварианты.</p>
+            <p>Для <code>set</code> реализация ловушки должна возвращать <code>true</code> в случае успешной записи
+            свойства.</p>
+            <p>Если забыть это сделать или возвратить любое ложное значение, это приведет к ошибке <code>TypeError</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Перебор при помощи «ownKeys» и «getOwnPropertyDescriptor»</h2>
+        <p><code>Object.keys</code>, цикл <code>for...in</code> и большинство других методов, которые работают со списком
+        свойств объекта, используют внутренний метод <code>[[OwnPropertyKeys]]</code> (перехватываемый ловушкой
+        <code>ownKeys</code>) для их получения.</p>
+        <p>Такие методы различаются в деталях:</p>
+        <ul>
+            <li>
+                <p><code>Object.getOwnPropertyNames(obj)</code> возвращает не-символичные ключи.</p>
+            </li>
+            <li>
+                <p><code>Object.getOwnPropertySymbols(obj)</code> возвращает символичные ключи.</p>
+            </li>
+            <li>
+                <p><code>Object.keys/values()</code> возвращает не-символичные ключи/значения с флагом
+                <code>enumerable</code>.</p>
+            </li>
+            <li>
+                <p><code>for...in</code> перебирает не-символичные ключи с флагом <code>enumerable</code>, а также
+                ключи прототипов.</p>
+            </li>
+        </ul>
+        <p>... Но все они начинают с этого списка.</p>
+        <p>В примере ниже мы используем ловушку <code>ownKeys</code>, чтобы цикл <code>for...in</code> по объекту,
+        равно как <code>Object.keys</code> и <code>Object.values</code> пропускали свойства, начинающиеся с
+        подчеркивания <code>_</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'Вася',<br>
+            &nbsp;&nbsp;age: 30,<br>
+            &nbsp;&nbsp;_password: '***'<br>
+            };<br>
+            <br>
+            user = new Proxy(user, {<br>
+            &nbsp;&nbsp;ownKeys(target) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return Object.keys(target).filter(key => !key.startsWith('_'));<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            // ownKeys исключил _password<br>
+            for (let key in user) alert(key); // name, затем: age<br>
+            <br>
+            // Аналогичный эффект для этих методов:<br>
+            alert(Object.keys(user)); // name,age<br>
+            alert(Object.values(user)); // Вася,30
+        </code>
+        <p>Как видно, работает.</p>
+        <p>Впрочем, если мы попробуем возвратить ключ, которого в объекте на самом деле нет, то <code>Object.keys</code>
+        его не выдаст:</p>
+        <code>
+            let user = {};<br>
+            <br>
+            user = new Proxy(user, {<br>
+            &nbsp;&nbsp;ownKeys(target) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return ['a', 'b', 'c'];<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            alert(Object.keys(user)); // &ltпусто&gt
+        </code>
+        <p>Почему? Причина проста: <code>Object.keys</code> возвращает только свойства с флагом <code>enumerable</code>.
+        Для того, чтобы определить, есть ли этот флаг, он для каждого свойства вызывает внутренний метод
+        <code>[[GetOwnProperty]]</code>, который получает его дескриптор. А в данном случае свойство отсутствует,
+        его дескриптор пуст, флага <code>enumerable</code> нет, поэтому оно пропускается.</p>
+        <p>Чтобы <code>Object.keys</code> возвращал свойство, нужно либо чтобы свойство в объекте физически было,
+        причем с флагом <code>enumerable</code>, либо перехватить вызов <code>[[GetOwnProperty]]</code>
+        (это делает ловушка <code>getOwnPropertyDescriptor</code>), и там вернуть дескриптор с <code>enumerable: true</code>.</p>
+        <p>Вот так будет работать:</p>
+        <code>
+            let user = {};<br>
+            <br>
+            user = new Proxy(user, {<br>
+            &nbsp;&nbsp;ownKeys(target) { // Вызывается 1 раз для получения списка свойств<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return ['a', 'b', 'c'];<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;getOwnProperty(target, prop) { // Вызывается для каждого свойства<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enumerable: true,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;configurable: true,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ... другие флаги, возможно, value: ...<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            alert(Object.keys(user)); // a,b,c
+        </code>
+        <p>Еще раз заметим, что получение дескриптора нужно перехватывать только если свойство отсутствует в самом
+        объекте.</p>
+    </article>
+
+    <article>
+        <h2>Защищенные свойства с ловушкой «deleteProperty» и другими</h2>
+        <p>Существует широко распространенное соглашение о том, что свойства и методы, название которых начинается
+        с символа подчеркивания <code>_</code>, следует считать внутренним. К ним не следует обращаться снаружи объекта.</p>
+        <p>Однако технически это все равно возможно:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'Вася',<br>
+            &nbsp;&nbsp;age: 30,<br>
+            &nbsp;&nbsp;_password: 'secret'<br>
+            };<br>
+            <br>
+            alert(user.password); // secret
+        </code>
+        <p>Давайте применим прокси, чтобы защитить свойства, начинающиеся на <code>_</code>, от доступа извне.</p>
+        <p>Нам будут нужны следующие ловушки:</p>
+        <ul>
+            <li>
+                <p><code>get</code> - для того, чтобы сгенерировать ошибку при чтении такого свойства.</p>
+            </li>
+            <li>
+                <p><code>set</code> - для того, чтобы сгенерировать ошибку при записи.</p>
+            </li>
+            <li>
+                <p><code>deleteProperty</code> - для того, чтобы сгенерировать ошибку при удалении.</p>
+            </li>
+            <li>
+                <p><code>ownKeys</code> - для того, чтобы исключить такие свойства из <code>for...in</code> и методов
+                типа <code>Object.keys</code>.</p>
+            </li>
+        </ul>
+        <p>Вот соответствующий код:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'Вася',<br>
+            &nbsp;&nbsp;_password: 'secret'<br>
+            };<br>
+            <br>
+            user = new Proxy(user, {<br>
+            &nbsp;&nbsp;get(target, prop) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (prop.startsWith('_')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;throw new Error('Отказано в доступе');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let value = target[prop];<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return (typeof value === 'function') ? value.bind(target) : value; // (*)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;set(target, prop, val) { // Перехват записи свойства<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (prop.startsWith('_')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;throw new Error('Отказано в доступе');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;target[prop] = val;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;deleteProperty(target, prop) { // Перехватываем удаление свойства<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (prop.startsWith('_')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;throw new Error('Отказано в доступе');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;delete target[prop];<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return true;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;ownKeys(target) { // Перехватываем попытку итерации<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return Object.keys(target).filter(key => !prop.startsWith('_'));<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            // get не позволяет прочитать _password<br>
+            try {<br>
+            &nbsp;&nbsp;alert(user._password); // Error: Отказано в доступе<br>
+            } catch(e) {alert(e.message);}<br>
+            <br>
+            // set не позволяет записать _password<br>
+            try {<br>
+            &nbsp;&nbsp;user._password = 'test'; // Error: Отказано в доступе<br>
+            } catch(e) {alert(e.message);}<br>
+            <br>
+            // deleteProperty не позволяет удалить _password<br>
+            try {<br>
+            &nbsp;&nbsp;delete user[_password]; // Error: Отказано в доступе<br>
+            } catch(e) {alert(message(e));}<br>
+            <br>
+            // ownKeys исключает _password из списка видимых для итерации свойств<br>
+            for (let key in user) alert(key); // name
+        </code>
+        <p>Обратите внимание на важную деталь в ловушке <code>get</code> на строке <code>(*)</code>:</p>
+        <code>
+            get(target, prop) {<br>
+            &nbsp;&nbsp;// ...<br>
+            &nbsp;&nbsp;let value = target[prop];<br>
+            &nbsp;&nbsp;return (typeof value === 'function') ? value.bind(target) : value; // (*)<br>
+            }
+        </code>
+        <p>Зачем для функции вызывать <code>value.bind(target)</code>?</p>
+        <p>Все дело в том, что метод самого объекта, например <code>user.checkPassword()</code>, должен иметь доступ к
+        свойству <code>_password</code>:</p>
+        <code>
+            user = {<br>
+            &nbsp;&nbsp;// ...<br>
+            &nbsp;&nbsp;checkPassword(value) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Метод объекта должен иметь доступ на чтение _password<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return value === this._password;<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <p>Вызов <code>user.checkPassword()</code> получает проксированный объект <code>user</code> в качестве
+        <code>this</code> (объект перед точкой становится <code>this</code>), так что когда такой вызов обращается к
+        <code>this._password</code>, ловушка <code>get</code> вступает в действие (она срабатывает при любом чтении
+        свойства), и выбрасывается ошибка.</p>
+        <p>Поэтому мы привязываем контекст к методам объекта - оригинальный объект <code>target</code> в строке
+        <code>(*)</code>. Тогда их дальнейшие вызовы будут использовать <code>target</code> в качестве <code>this</code>,
+        без всяких ловушек.</p>
+        <p>Такое решение обычно работает, но не является идеальным, поскольку метод может передать оригинальный объект
+        куда-то еще, и возможна путаница: где изначальный объект, а где - проксированный.</p>
+        <p>К тому же, объект может проксироваться несколько раз (для добавления различных возможностей), и если
+        передавать методу исходный, то могут быть неожиданности.</p>
+        <p>Так что везде использовать такой прокси не стоит.</p>
+
+        <article class="note">
+            <h2>Приватные свойства в классах</h2>
+            <p>Современные интерпретаторы JavaScript поддерживают приватные свойства в классах. Названия таких свойств
+            должны начинаться с <code>#</code>. Для них не нужны подобные прокси.</p>
+            <p>Впрочем, приватные свойства имеют свои недостатки. В частности, они не наследуются.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>«В диапазоне» с ловушкой «has»</h2>
+        <p>Давайте посмотрим еще примеры.</p>
+        <p>Предположим, у нас есть объект <code>range</code>, описывающий диапазон:</p>
+        <code>
+            let range = {<br>
+            &nbsp;&nbsp;start: 1,<br>
+            &nbsp;&nbsp;end: 10<br>
+            };
+        </code>
+        <p>Мы бы хотели использовать оператор <code>in</code>, чтобы проверить, что некоторое число находится в указанном
+        диапазоне.</p>
+        <p>Ловушка <code>has</code> перехватывает вызовы <code>in</code>.</p>
+        <p><code>has(target, property)</code>:</p>
+        <ul>
+            <li>
+                <p><code>target</code> - это оригинальный объект, который передавался первым аргументом в конструктор
+                <code>new Proxy</code>.</p>
+            </li>
+            <li>
+                <p><code>property</code> - имя свойства.</p>
+            </li>
+        </ul>
+        <p>Вот демо:</p>
+        <code>
+            let range = {<br>
+            &nbsp;&nbsp;start: 1,<br>
+            &nbsp;&nbsp;end: 10<br>
+            };<br>
+            <br>
+            range = new Proxy(range, {<br>
+            &nbsp;&nbsp;has(target, prop) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return prop >= target.start && prop <= target.end;<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            alert(5 in range); // true<br>
+            alert(50 in range); // false
+        </code>
+        <p>Отлично выглядит, не правда ли? И очень просто в реализации.</p>
+    </article>
+
+    <article>
+        <h2>Оборачиваем функции: «apply»</h2>
+        <p>Мы можем оборачивать в прокси и функции.</p>
+        <p>Ловушка <code>apply(target, thisArg, args)</code> активируется при вызове прокси как функции:</p>
+        <ul>
+            <li>
+                <p><code>target</code> - это оригинальный объект (как мы помним, функция - это объект в языке JavaScript).</p>
+            </li>
+            <li>
+                <p><code>thisArg</code> - это контекст <code>this</code>.</p>
+            </li>
+            <li>
+                <p><code>args</code> - список аргументов.</p>
+            </li>
+        </ul>
+        <p>Например, давайте вспомним декоратор <code>delay(f, ms)</code>, созданный нами в главе
+        <a target="_blank" href="../../6.%20Продвинутая%20работа%20с%20функциями/9.%20Декораторы%20и%20переадресация%20вызова,%20call,%20apply/index.html">
+            Декораторы и переадресация вызова, call/apply
+        </a>.</p>
+        <p>Тогда мы обошлись без создания прокси. Вызов <code>delay(f, ms)</code> возвращал функцию, которая передавала
+        вызовы <code>f</code> после <code>ms</code> миллисекунд.</p>
+        <p>Вот предыдущая реализация на основе функции:</p>
+        <code>
+            function delay(f, ms) {<br>
+            &nbsp;&nbsp;// Возвращает обертку, которая вызывает функцию f через таймаут<br>
+            &nbsp;&nbsp;return function() { // (*)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => f.apply(this, arguments), ms);<br>
+            &nbsp;&nbsp;};<br>
+            }<br>
+            <br>
+            function sayHi(user) {<br>
+            &nbsp;&nbsp;alert(`Привет, ${user}!`);<br>
+            }<br>
+            <br>
+            // После обертки вызовы sayHi будут срабатывать c задержкой в 3 секунды<br>
+            sayHi = delay(sayHi, 3000);<br>
+            <br>
+            sayHi('Вася'); // Привет, Вася! (через 3 секунды)
+        </code>
+        <p>Как мы уже видели, это в целом работает. Функция-обертка в строке <code>(*)</code> вызывает нужную функцию
+        с указанной задержкой.</p>
+        <p>Но наша функция-обертка не перенаправляет операции чтения/записи свойства и другие. После обертывания
+        доступ к свойствам оригинальной функции, таким как <code>name</code>, <code>length</code> и другим, будет потерян.</p>
+        <code>
+            function delay(f, ms) {<br>
+            &nbsp;&nbsp;return function() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => f.apply(this, arguments), ms);<br>
+            &nbsp;&nbsp;};<br>
+            }<br>
+            <br>
+            function sayHi(user) {<br>
+            &nbsp;&nbsp;alert(`Привет, ${user}!`);<br>
+            }<br>
+            <br>
+            alert(sayHi.length); // 1 (в функции length - это число аргументов в ее объявлении)<br>
+            <br>
+            sayHi = delay(sayHi, 3000);<br>
+            <br>
+            alert(sayHi.length); // 0 (в объявлении функции-обертки ноль аргументов
+        </code>
+        <p>Прокси куда более мощные в этом смысле, поскольку они перенаправляют все к оригинальному объекту.</p>
+        <p>Давайте используем прокси вместо функции-обертки:</p>
+        <code>
+            function delay(f, ms) {<br>
+            &nbsp;&nbsp;return new Proxy(f, {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;apply(target, thisArg, args) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => target.apply(thisArg, args), ms);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;});<br>
+            }<br>
+            <br>
+            function sayHi(user) {<br>
+            &nbsp;&nbsp;alert(`Привет, ${user}!`);<br>
+            }<br>
+            <br>
+            sayHi = delay(sayHi, 3000);<br>
+            <br>
+            alert(sayHi.length); // 1 (*) прокси перенаправляет чтение свойства length на исходную функцию<br>
+            <br>
+            sayHi('Вася'); // Привет, Вася! (через 3 секунды)
+        </code>
+        <p>Результат такой же, но сейчас не только вызовы, но и другие операции на прокси перенаправляются к оригинальной
+        функции. Таким образом, операция чтения свойства <code>sayHi.length</code> возвращает корректное значение в
+        строке <code>(*)</code> после проксирования.</p>
+        <p>Мы получили лучшую обертку.</p>
+        <p>Существуют и другие ловушки: полный список есть в начале этой главы. Использовать их можно по аналогии с
+        вышеописанными.</p>
+    </article>
+</body>
+</html>
+
+<script>
+    let user = {
+        name: 'Leo',
+        _password: 'secret',
+
+        showPass() {
+            console.log(`${this._password}`);
+        }
+    };
+
+    let user = new Proxy(user, {
+        get(target, prop) {
+            if (prop.startsWith('_')) {
+                throw new Error('Отказано в доступе');
+            }
+            let value = target[prop];
+            return value;
+            return (typeof value === 'function') ? value.bind(target) : value;
+        }
+    });
+
+    console.log(user.name);
+    console.log(user.showPass.bind(user)());
+</script>
