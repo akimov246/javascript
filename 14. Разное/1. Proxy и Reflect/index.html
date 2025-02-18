@@ -681,30 +681,473 @@
         <p>Существуют и другие ловушки: полный список есть в начале этой главы. Использовать их можно по аналогии с
         вышеописанными.</p>
     </article>
+
+    <article>
+        <h2>Reflect</h2>
+        <p><code>Reflect</code> - встроенный объект, упрощающий создание прокси.</p>
+        <p>Ранее мы говорили о том, что внутренние методы, такие как <code>[[Get]]</code>, <code>[[Set]]</code> и другие,
+        существуют только в спецификации, что к ним нельзя обратиться напрямую.</p>
+        <p>Объект <code>Reflect</code> делает это возможным. Его методы - минимальные обертки вокруг внутренних методов.</p>
+        <p>Вот примеры операций и вызовы <code>Reflect</code>, которые делают то же самое:</p>
+        <table>
+            <thead>
+            <tr>
+                <td>Операция</td>
+                <td>Вызов <code>Reflect</code></td>
+                <td>Внутренний метод</td>
+            </tr>
+            </thead>
+            <tr>
+                <td><code>obj[prop]</code></td>
+                <td><code>Reflect.get(obj, prop)</code></td>
+                <td><code>[[Get]]</code></td>
+            </tr>
+            <tr>
+                <td><code>obj[prop] = set</code></td>
+                <td><code>Reflect.set(obj, prop, value)</code></td>
+                <td><code>[[Set]]</code></td>
+            </tr>
+            <tr>
+                <td><code>delete obj[prop]</code></td>
+                <td><code>Reflect.deleteProperty(obj, prop)</code></td>
+                <td><code>[[Delete]]</code></td>
+            </tr>
+            <tr>
+                <td><code>new F(value)</code></td>
+                <td><code>Reflect.construct(F, value)</code></td>
+                <td><code>[[Construct]]</code></td>
+            </tr>
+            <tr>
+                <td>...</td>
+                <td>...</td>
+                <td>...</td>
+            </tr>
+        </table>
+        <p>Например:</p>
+        <code>
+            let user = {};<br>
+            <br>
+            Reflect.set(user, 'name', 'Вася');<br>
+            <br>
+            alert(user.name); // Вася
+        </code>
+        <p>В частности, <code>Reflect</code> позволяет вызвать оператор (<code>new</code>, <code>delete</code>...)
+        как функции (<code>Reflect.construct</code>, <code>Reflect.deleteProperty</code>, ...). Это интересная возможность,
+        но здесь нам важно другое.</p>
+        <p><b>Для каждого внутреннего метода, перехватываемого <code>Proxy</code>, есть соответствующий метод в
+        <code>Reflect</code>, который имеет такое же имя и те же аргументы, что и ловушки <code>Proxy</code>.</b></p>
+        <p>Поэтому мы можем использовать <code>Reflect</code>, чтобы перенаправить операцию на исходный объект.</p>
+        <p>В этом примере обе ловушки <code>get</code> и <code>set</code> прозрачно (как будто их нет) перенаправляют
+        операции чтения и записи на объект, при этом выводя сообщение:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'Вася'<br>
+            };<br>
+            <br>
+            user = new Proxy(user, {<br>
+            &nbsp;&nbsp;get(target, prop, receiver) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`GET ${prop}`);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return Reflect.get(target, prop, receiver); // (1)<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;set(target, prop, value, receiver) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`SET ${prop}=${value}`);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return Reflect.set(target, prop, value, receiver); // (2)<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            let name = user.name; // Выводит "GET name"<br>
+            user.name = 'Петя'; // Выводит "SET name=Петя"
+        </code>
+        <p>Здесь:</p>
+        <ol>
+            <li>
+                <p><code>Reflect.get</code> читает свойство объекта.</p>
+            </li>
+            <li>
+                <p><code>Reflect.set</code> записывает свойство и возвращает <code>true</code> при успехе,
+                иначе <code>false</code>.</p>
+            </li>
+        </ol>
+        <p>То есть, все очень просто - если ловушка хочет перенаправить вызов на объект, то достаточно вызвать
+        <code>Reflect.&ltметод&gt</code> с теме же аргументами.</p>
+        <p>В большинстве случаев мы можем сделать все то же самое и без <code>Reflect</code>, например, чтение свойства
+        <code>Reflect.get(target, prop, receiver)</code> можно заменить на <code>target[prop]</code>. Но некоторые
+        нюансы легко упустить.</p>
+    </article>
+
+    <article>
+        <h2>Прокси для геттера</h2>
+        <p>Рассмотрим конкретный пример, демонстрирующий, чем лучше <code>Reflect.get</code>, и заодно разберемся,
+        зачем в <code>get/set</code> нужен третий аргумент <code>receiver</code>, мы его ранее не использовали.</p>
+        <p>Допустим, у нас есть объект <code>user</code> со свойством <code>_name</code> и геттером для него.</p>
+        <p>Сделаем вокруг <code>user</code> прокси:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;_name: 'Гость',<br>
+            &nbsp;&nbsp;get name() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this._name;<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let userProxy = new Proxy(user, {<br>
+            &nbsp;&nbsp;get(target, prop, receiver) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return target[prop];<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            alert(userProxy.name); // Гость
+        </code>
+        <p>Ловушка <code>get</code> здесь «прозрачная», она возвращает свойство исходного объекта и больше ничего не
+        делает. Для нашего примера этого вполне достаточно.</p>
+        <p>Казалось бы, все в порядке. Но давайте немного усложним пример.</p>
+        <p>Если мы унаследуем от проксированного <code>user</code> объект <code>admin</code>, то мы увидим, что он
+        ведет себя некорректно:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;_name: 'Гость',<br>
+            &nbsp;&nbsp;get name() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this._name;<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let userProxy = new Proxy(user, {<br>
+            &nbsp;&nbsp;get(target, prop, receiver) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return target[prop]; // (*) target = user<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            let admin = {<br>
+            &nbsp;&nbsp;__proto__: userProxy,<br>
+            &nbsp;&nbsp;_name: 'Админ'<br>
+            };<br>
+            <br>
+            // Ожидается: Админ<br>
+            alert(admin.name); // Выводится Гость (?!?)
+        </code>
+        <p>Обращение к свойству <code>admin.name</code> должно возвращать строку <code>'Админ'</code>, а выводит
+        <code>'Гость'</code>!</p>
+        <p>В чем дело? Можем быть, мы делаем что-то не так с наследованием?</p>
+        <p>Но если убрать прокси, то все будет работать как ожидается.</p>
+        <p>На самом деле, проблема в прокси, в строке <code>(*)</code>.</p>
+        <ol>
+            <li>
+                <p>При чтении <code>admin.name</code>, так как в объекте <code>admin</code> нет свойства
+                <code>name</code>, оно ищется в прототипе.</p>
+            </li>
+            <li>
+                <p>Прототипом является прокси <code>userProxy</code>.</p>
+            </li>
+            <li>
+                <p>При чтении из прокси свойства <code>name</code> срабатывает ловушка <code>get</code> и возвращает
+                его из исходного объекта как <code>target[prop]</code> в строке <code>(*)</code>.</p>
+                <p>Вызов <code>target[prop]</code>, если <code>prop</code> - это геттер, запускает его в код
+                в контексте <code>this=target</code>. Поэтому результатом является <code>this._name</code> из исходного
+                объекта <code>target</code>, то есть из <code>user</code>.</p>
+            </li>
+        </ol>
+        <p>Именно для исправления таких ситуаций нужен <code>receiver</code>, третий аргумент ловушки <code>get</code>.
+        В нем хранится ссылка на правильный контекст <code>this</code>, который нужно передать геттеру. В данном случае
+        это <code>admin</code>.</p>
+        <p>Как передать геттеру контекст? Для обычной функции мы могли бы использовать <code>call/apply</code>, но это
+        же геттер, его не вызывают, просто читают значение.</p>
+        <p>Это может сделать <code>Reflect.get</code>. Все будет работать верно, если использовать его.</p>
+        <p>Вот исправленный вариант:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;_name: 'Гость',<br>
+            &nbsp;&nbsp;get name() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this._name;<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let userProxy = new Proxy(user, {<br>
+            &nbsp;&nbsp;get(target, prop, receiver) { // receiver = admin<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return Reflect.get(target, prop, receiver); // (*)<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            let admin = {<br>
+            &nbsp;&nbsp;__proto__: userProxy,<br>
+            &nbsp;&nbsp;_name: 'Админ'<br>
+            };<br>
+            <br>
+            alert(admin.name); // Админ
+        </code>
+        <p>Сейчас <code>receiver</code>, содержащий ссылку на корректный <code>this</code> (то есть на <code>admin</code>),
+        передается геттеру посредством <code>Reflect.get</code> в строке <code>(*)</code>.</p>
+        <p>Можно переписать ловушку и короче:</p>
+        <code>
+            get(target, prop, receiver) {<br>
+            &nbsp;&nbsp;return Reflect.get(...arguments);<br>
+            }
+        </code>
+        <p>Методы в <code>Reflect</code> имеют те же названия, что и соответствующие ловушки, и принимают такие же
+        аргументы. Это было специально задумано при разработке спецификации JavaScript.</p>
+        <p>Так что <code>return Reflect...</code> дает простую и безопасную возможность перенаправить операцию
+        на оригинальный объект и при этом предохраняет нас от возможных ошибок, связанных с этим действием.</p>
+    </article>
+
+    <article>
+        <h2>Ограничения прокси</h2>
+        <p>Прокси - уникальное средство для настройки поведения объектов на самом низком уровне. Но они не идеальны,
+        есть некоторые ограничения.</p>
+        <h3>Встроенные объекты: внутренние слоты</h3>
+        <p>Многие встроенные объекты, например <code>Map</code>, <code>Set</code>, <code>Date</code>, <code>Promise</code>
+        и другие используют так называемые «внутренние слоты».</p>
+        <p>Это как свойства, но только для внутреннего использования в самой спецификации. Например, <code>Map</code>
+        хранит элементы во внутреннем слоте <code>[[MapData]]</code>. Встроенные методы обращаются к слотам напрямую,
+        не через <code>[[Get]]/[[Set]]</code>. Таким образом, прокси не может перехватить их.</p>
+        <p>Почему это имеет значение? Они же все равно внутренние!</p>
+        <p>Есть один нюанс. Есть встроенный объект проксируется, то в прокси не будет этих «внутренних слотов»,
+        так что попытка вызвать на таком прокси внутренний метод приведет к ошибке.</p>
+        <p>Пример:</p>
+        <code>
+            let map = new Map();<br>
+            <br>
+            let proxy = new Proxy(map, {});<br>
+            <br>
+            proxy.set('test', 1); // Будет ошибка
+        </code>
+        <p>Внутри себя объект типа <code>Map</code> хранит все данные во внутреннем слоте <code>[[MapData]]</code>.
+        Прокси не имеет такого слота. Встроенный метод <code>Map.prototype.set</code> пытается получить доступ
+        к своему внутреннему свойству <code>this.[[MapData]]</code>, но так как <code>this=proxy</code>, то не может
+        его найти и завершается с ошибкой.</p>
+        <p>К счастью, есть способ исправить это:</p>
+        <code>
+            let map = new Map();<br>
+            <br>
+            let proxy = new Proxy(map, {<br>
+            &nbsp;&nbsp;get(target, prop, receiver) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let value = Reflect.get(...arguments);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return typeof value === 'function' ? value.bind(target) : value;<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            proxy.set('test', 1);<br>
+            alert(proxy.get('test')); // 1 (работает!)
+        </code>
+        <p>Сейчас все сработало, потому что <code>get</code> привязывает свойства-функции, такие как <code>map.set</code>,
+        к оригинальному объекту <code>map</code>. Таким образом, когда реализация метода <code>set</code> попытается
+        получить доступ к встроенному слоту <code>this.[[MapData]]</code>, то все пройдет благополучно.</p>
+
+        <article class="note">
+            <h2>Объект <code>Array</code> не использует внутренние слоты</h2>
+            <p>Важным исключением является встроенный объект <code>Array</code>: он не использует внутренние слоты.
+            Так сложилось исторически, ведь массивы были добавлены в язык очень давно.</p>
+            <p>То есть описанная выше проблема не возникнет при проксировании массивов.</p>
+        </article>
+
+        <h3>Приватные поля</h3>
+        <p>Нечто похожее происходит и с приватными полями классов.</p>
+        <p>Например, метод <code>getName()</code> осуществляет доступ к приватному полю <code>#name</code>, после
+        проксирования он перестает работать:</p>
+        <code>
+            class User {<br>
+            &nbsp;&nbsp;#name = 'Гость';<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;getName() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this.#name;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let user = new User();<br>
+            <br>
+            user = new Proxy(user, {});<br>
+            <br>
+            alert(user.getName()); // Ошибка
+        </code>
+        <p>Причина все та же: приватные поля реализованы с использованием внутренних слотов. JavaScript не использует
+        <code>[[Get]]]/[[Set]]</code> при доступе к ним.</p>
+        <p>В вызове <code>getName()</code> значением <code>this</code> является проксированный <code>user</code>,
+        в котором нет внутреннего слота с приватными полями.</p>
+        <p>Решением, как и в предыдущем случае, является привязка контекста к методу:</p>
+        <code>
+            class User {<br>
+            &nbsp;&nbsp;#name: 'Гость';<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;getName() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this.#name;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let user = new User();<br>
+            <br>
+            user = new Proxy(user, {<br>
+            &nbsp;&nbsp;get(target, prop, receiver) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let value = Reflect.get(...arguments);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return if typeof value === 'function' ? value.bind(target) : value;<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            alert(user.getName()); // Гость
+        </code>
+        <p>Однако, такое решение имеет ряд недостатков, о которых уже говорилось: методу передается оригинальный
+        объект, который может быть передан куда-то еще, и это может поломать всю функциональность проксирования.</p>
+
+        <h3>Прокси != оригинальный объект</h3>
+        <p>Прокси и объект, который проксируется, являются двумя разными объектами. Это естественно, не правда ли?</p>
+        <p>Если мы используем оригинальный объект как ключ, а затем проксируем его, то прокси не будет найден:</p>
+        <code>
+            let allUsers = new Set();<br>
+            <br>
+            class User {<br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;allUsers.add(this);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            let user = new User('Вася');<br>
+            <br>
+            alert(allUsers.has(user)); // true<br>
+            <br>
+            user = new Proxy(user, {});<br>
+            <br>
+            alert(allUsers.has(user)); // false
+        </code>
+        <p>Как мы видим, после проксирования не получится найти объект <code>user</code> внутри множества
+        <code>allUsers</code>, потому что прокси - это другой объект.</p>
+
+        <article class="warning">
+            <h2>Прокси не перехватывают проверку на строгое равенство <code>===</code></h2>
+            <p>Прокси способны перехватывать много операторов, например <code>new</code> (ловушка <code>construct</code>),
+            <code>in</code> (ловушка <code>has</code>), delete (ловушка <code>deleteProperty</code>) и так далее.</p>
+            <p>Но нет способа перехватить проверку на строгое равенство. Объект строго равен только самому себе,
+            и никаким другим значениям.</p>
+            <p>Так что все операции и встроенный классы, которые используют строгую проверку объектов на равенство,
+            отличат прокси от изначального объекта. Прозрачной замены в данном случае не произойдет.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Отключаемые прокси</h2>
+        <p><i>Отключаемый</i> (revocable) прокси - это прокси, который может быть отключен вызовом специальной функции.</p>
+        <p>Допустим, у нас есть какой-то ресурс, и мы бы хотели иметь возможность закрыть к нему доступ в любой момент.</p>
+        <p>Для того, чтобы решить поставленную задачу, мы можем использовать отключаемый прокси, без ловушек.
+        Такой прокси будет передавать все операции на проксируемый объект, и у нас будет возможность в любой момент
+        отключить это.</p>
+        <p>Синтаксис:</p>
+        <code>let {proxy, revoke} = Proxy.revocable(target, handler);</code>
+        <p>Вызов возвращает объект с <code>proxy</code> и функцией <code>revoke</code>, которая отключает его.</p>
+        <p>Вот пример:</p>
+        <code>
+            let object = {<br>
+            &nbsp;&nbsp;data: 'Важные данные'<br>
+            };<br>
+            <br>
+            let {proxy, revoke} = Proxy.revocable(object, {});<br>
+            <br>
+            // Передаем прокси куда-нибудь вместо оригинального объекта...<br>
+            alert(proxy.data); // Важные данные<br>
+            <br>
+            // Позже в коде<br>
+            revoke();<br>
+            <br>
+            // Прокси больше не работает (отключен)<br>
+            alert(proxy.data); // Ошибка
+        </code>
+        <p>Вызов <code>revoke()</code> удаляет все внутренние ссылки на оригинальный объект из прокси, так что между
+        ними больше нет связи, и оригинальный объект теперь может быть очищен сборщиком мусора.</p>
+        <p>Мы можем хранить функцию <code>revoke</code> в <code>WeakMap</code>, чтобы легко найти ее по объекту прокси:</p>
+        <code>
+            let revokes = new WeakMap();<br>
+            <br>
+            let object = {<br>
+            &nbsp;&nbsp;data: 'Важные данные'<br>
+            };<br>
+            <br>
+            let {proxy, revoke} = Proxy.revocable(object, {});<br>
+            <br>
+            revokes.set(proxy, revoke);<br>
+            <br>
+            // Позже в коде<br>
+            revoke = revokes.get(proxy);<br>
+            revoke();<br>
+            <br>
+            alert(proxy.data); // Ошибка (прокси отключен)
+        </code>
+        <p>Преимущество такого подхода в том, что мы не должны таскать функцию <code>revoke</code> повсюду. Мы получаем
+        ее при необходимости из <code>revokes</code> по объекту прокси.</p>
+        <p>Мы использовали <code>WeakMap</code> вместо <code>Map</code>, чтобы не блокировать сборку мусора.
+        Если прокси объект становится недостижимым (то есть на него больше нет ссылок), то <code>WeakMap</code>
+        позволяет сборщику мусора удалить его из памяти вместе с соответствующей функцией <code>revoke</code>,
+        которая в этом случае больше не нужна.</p>
+    </article>
+
+    <article>
+        <h2>Ссылки</h2>
+        <ul>
+            <li>
+                <p>Спецификация: <a target="_blank" href="https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots">Proxy</a>
+                <a target="_blank" href="https://tc39.es/ecma262/#sec-reflection">Reflect</a>.</p>
+            </li>
+            <li>
+                <p>MDN: <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Proxy">Proxy</a>
+                <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Reflect">Reflect</a>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Прокси - это обертка вокруг объекта, которая «по умолчанию» перенаправляет операции над ней на объект,
+        но имеет возможность перехватывать их.</p>
+        <p>Проксировать можно любой объект, включая классы и функции.</p>
+        <p>Синтаксис:</p>
+        <code>
+            let proxy = new Proxy(target, {<br>
+            &nbsp;&nbsp;// Ловушки<br>
+            };
+        </code>
+        <p>... Затем обычно используют прокси везде вместо оригинального объекта <code>target</code>. Прокси не имеет
+        собственных свойств или методов. Он просто перехватывает операцию, если имеется соответствующая ловушка,
+        а иначе перенаправляет ее сразу на объект <code>target</code>.</p>
+        <p>Мы можем перехватывать:</p>
+        <ul>
+            <li>
+                <p>Чтение (<code>get</code>), запись (<code>set</code>), удаление (<code>deleteProperty</code>)
+                свойства (даже не существующего).</p>
+            </li>
+            <li>
+                <p>Вызов функции (<code>apply</code>).</p>
+            </li>
+            <li>
+                <p>Оператор <code>new</code> (ловушка <code>construct</code>).</p>
+            </li>
+            <li>
+                <p>И многие другие операции (полный список приведен в начале главы, а также в документации).</p>
+            </li>
+        </ul>
+        <p>Это позволяет нам создавать «виртуальные» свойства и методы, реализовывать значения по умолчанию,
+        наблюдаемые объекты, функции-декораторы и многое другое.</p>
+        <p>Мы также можем оборачивать один и тот же объект много раз в разные прокси, добавляя ему различные
+        аспекты функциональности.</p>
+        <p><code>Reflect</code> API создано как дополнение к <code>Proxy</code>. Для любой ловушки из <code>Proxy</code>
+        существует метод в <code>Reflect</code> с такими же аргументами. Нам следует использовать его, если нужно
+        перенаправить вызов на оригинальный объект.</p>
+        <p>Прокси имеют некоторые ограничения:</p>
+        <ul>
+            <li>
+                <p>Встроенные объекты используют так называемые «внутренние слоты», доступ к которым нельзя проксировать.
+                Однако, ранее в этой главе был показан один способ, как обойти это ограничение.</p>
+            </li>
+            <li>
+                <p>То же самое можно сказать и о приватных полях классов, так как они реализованы на основе слотов.
+                То есть вызовы проксированных методов должны иметь оригинальный объект в качестве <code>this</code>,
+                чтобы получить к ним доступ.</p>
+            </li>
+            <li>
+                <p>Проверка объектов на строгое равенство <code>===</code> не может быть перехвачена.</p>
+            </li>
+            <li>
+                <p>Производительность: конкретные показатели зависят от интерпретатора, но в целом получение свойства
+                с помощью простейшего прокси занимает в несколько раз больше времени. В реальности это имеет значение
+                только для некоторых «особо нагруженных» объектов.</p>
+            </li>
+        </ul>
+    </article>
 </body>
 </html>
 
-<script>
-    let user = {
-        name: 'Leo',
-        _password: 'secret',
-
-        showPass() {
-            console.log(`${this._password}`);
-        }
-    };
-
-    let user = new Proxy(user, {
-        get(target, prop) {
-            if (prop.startsWith('_')) {
-                throw new Error('Отказано в доступе');
-            }
-            let value = target[prop];
-            return value;
-            return (typeof value === 'function') ? value.bind(target) : value;
-        }
-    });
-
-    console.log(user.name);
-    console.log(user.showPass.bind(user)());
-</script>
+<script src="script.js"></script>
