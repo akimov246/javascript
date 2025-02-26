@@ -33,6 +33,7 @@ table, th, td {
     border: black 1px solid;
     border-collapse: collapse;
     text-align: center;
+    padding: 5px;
 }
 
 th {

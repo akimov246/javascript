@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Промисы</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Промисы</h2>
+        <ol>
+            <li>
+                <p>Есть «создающий» код, который делает что-то, что занимает время. Например, загружает данные по сети.</p>
+            </li>
+            <li>
+                <p>Есть «потребляющий» код, который хочет получить результат «создающего» кода, когда он будет готов.
+                Он может быть необходим более чем одной функции.</p>
+            </li>
+            <li>
+                <p><code>Promise</code> - это специальный объект в JavaScript, который связывает «создающий» и
+                «потребляющий» коды вместе. «Создающий» код может выполняться сколько потребуется, чтобы получить
+                результат, а <i>промис</i> делает результат доступным для кода, который подписан на него, когда результат
+                готов.</p>
+            </li>
+        </ol>
+        <p>Синтаксис создания <code>Promise</code>:</p>
+        <code>
+            let promise = new Promise(function(resolve, reject)) {<br>
+            &nbsp;&nbsp;// Функция-исполнитель (executor)<br>
+            });
+        </code>
+        <p>Функция, переданная в конструкцию <code>new Promise</code>, называется <i>исполнитель</i> (executor).
+        Когда <code>Promise</code> создается, она запускается автоматически. Она должна содержать «создающий» код,
+        который когда-нибудь создаст результат.</p>
+        <p>Ее аргументы <code>resolve</code> и <code>reject</code> - это колбэки, которые предоставляет сам JavaScript.
+        Наш код - только внутри исполнителя.</p>
+        <p>Когда он получает результат, сейчас или позже - не важно, он должен вызвать один из этих колбэков:</p>
+        <ul>
+            <li><code>resolve(value)</code> - если работа завершилась успешно, с результатом <code>value</code>.</li>
+            <li><code>reject(error)</code> - если произошла ошибка, <code>error</code> - объект ошибки.</li>
+        </ul>
+        <p>Итак, исполнитель запускается автоматически, он должен выполнить работу, а затем вызвать <code>resolve</code>
+        или <code>reject</code>.</p>
+        <p>У объекта <code>promise</code>, возвращаемого конструктором <code>new Promise</code>, есть внутренние свойства:</p>
+        <ul>
+            <li>
+                <p><code>state</code> («состояние») - вначале <code>"pending"</code> («ожидание»), потом меняется на
+                <code>"fulfilled"</code> («выполнено успешно») при вызове <code>resolve</code> или на <code>"rejected"</code>
+                («выполнено с ошибкой») при вызове <code>reject</code>.</p>
+            </li>
+            <li>
+                <p><code>result</code> («результат») - вначале <code>undefined</code>, далее изменяется на <code>value</code>
+                при вызове <code>resolve(value)</code> или на <code>error</code> при вызове <code>reject(error)</code>.</p>
+            </li>
+        </ul>
+        <p>Ниже пример конструктора <code>Promise</code> и простого исполнителя с кодом, дающим результат с задержкой
+        (через <code>setTimeout</code>):</p>
+        <code>
+            let promise = new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;// Эта функция выполнится автоматически, при вызове new Promise<br>
+            <br>
+            &nbsp;&nbsp;// Через 1 секунду сигнализировать, что задача выполнена с результатом "done"<br>
+            &nbsp;&nbsp;setTimeout(() => resolve("done"), 1000);<br>
+            });
+        </code>
+        <p>Мы можем наблюдать две вещи, запустив код выше:</p>
+        <ol>
+            <li>
+                <p>Функция-исполнитель запускается сразу же при вызове <code>new Promise</code>.</p>
+            </li>
+            <li>
+                <p>Исполнитель получает два аргумента: <code>resolve</code> и <code>reject</code> - это функции,
+                встроенные в JavaScript, поэтому нам не нужно их писать. Нам нужно лишь позаботиться, чтобы исполнитель
+                вызвал одну из них по готовности.</p>
+            </li>
+        </ol>
+        <p>Спустя одну секунду «обработки» исполнитель вызове <code>resolve("done")</code>, чтобы передать результат.</p>
+        <p>Это был пример успешно выполненной задачи, в результате мы получили «успешно выполненный» промис.</p>
+        <p>А теперь пример, в котором исполнитель сообщит, что задача выполнена с ошибкой:</p>
+        <code>
+            let promise = new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;// Спустя одну секунду будет сообщено, что задача выполнена с ошибкой<br>
+            &nbsp;&nbsp;setTimeout(() => reject(new Error("Whoops!")), 1000);<br>
+            });
+        </code>
+        <p>Подведем промежуточные итоги: исполнитель выполняет задачу (что-то, что обычно требует времени),
+        затем вызывает <code>resolve</code> или <code>reject</code>, чтобы изменить состояние соответствующего
+        <code>Promise</code>.</p>
+        <p>Промис - и успешный, и отклоненный будем называть «завершенным», в отличие от изначального промиса «в ожидании».</p>
+
+        <article class="note">
+            <h2>Может быть что-то одно: либо результат, либо ошибка</h2>
+            <p>Исполнитель должен вызвать что-то одно: <code>resolve</code> или <code>reject</code>. Состояние промиса
+            может быть изменено только один раз.</p>
+            <p>Все последующие вызовы <code>resolve</code> и <code>reject</code> будут проигнорированы:</p>
+            <code>
+                let promise = new Promise(function(resolve, reject) {<br>
+                &nbsp;&nbsp;resolve("done");<br>
+                <br>
+                &nbsp;&nbsp;reject(new Error("...")); // Игнорируется<br>
+                &nbsp;&nbsp;setTimeout(() => resolve("...")); // Игнорируется<br>
+                });
+            </code>
+            <p>Идея в том, что задача, выполняемая исполнителем, может иметь только один итог: результат или ошибку.</p>
+            <p>Также заметим, что функция <code>resolve</code>/<code>reject</code> ожидает только один аргумент(или ни одного).
+            Все дополнительные аргументы будут проигнорированы.</p>
+        </article>
+
+        <article class="note">
+            <h2>Вызывайте <code>reject</code> с объектом <code>Error</code></h2>
+            <p>В случае, если что-то пошло не так, мы должны вызвать <code>reject</code>. Это можно сделать с аргументом
+            любого типа (как и <code>resolve</code>), но рекомендуется использовать объект <code>Error</code>
+            (или унаследованный от него).</p>
+        </article>
+
+        <article class="note">
+            <h2>Вызов <code>resolve</code>/<code>reject</code> сразу</h2>
+            <p>Обычно исполнитель делает что-то асинхронное и после этого вызывает <code>resolve</code>/<code>reject</code>,
+            то есть через какое-то время. Но это не обязательно, <code>resolve</code> или <code>reject</code> могут быть
+            вызваны сразу:</p>
+            <code>
+                let promise = new Promise(function(resolve, reject) {<br>
+                &nbsp;&nbsp;// Задача, не требующая времени<br>
+                &nbsp;&nbsp;resolve(123); // Мгновенно выдаст результат: 123<br>
+                });
+            </code>
+            <p>Это может случиться, например, когда мы начали выполнять какую-то задачу, но тут же увидели, что ранее
+            ее уже выполняли, и результат закеширован.</p>
+            <p>Такая ситуация нормальна. Мы сразу получим успешно завершенный <code>Promise</code>.</p>
+        </article>
+
+        <article class="note">
+            <h2>Свойства <code>state</code> и <code>result</code> - внутренние</h2>
+            <p>Свойства <code>state</code> и <code>result</code> - это внутренние свойства объекта <code>Promise</code>
+            и мы не имеем к ним прямого доступа. Для обработки результата следует использовать методы
+            <code>.then</code>/<code>.catch</code>/<code>.finally</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Потребители: then, catch</h2>
+        <p>Объект <code>Promise</code> служит связующим звеном между исполнителем и функциями-потребителями, которые
+        получают либо результат, либо ошибку. Функции-потребители могут быть зарегистрированы (подписаны) с помощью
+        методов <code>.then</code> и <code>.catch</code>.</p>
+        <h3>then</h3>
+        <p>Наиболее важный и фундаментальный метод - <code>.then</code>.</p>
+        <p>Синтаксис:</p>
+        <code>
+            promise.then(<br>
+            &nbsp;&nbsp;function(result) { /* обработает успешное выполнение */ },<br>
+            &nbsp;&nbsp;function(error) { /* обработает ошибку */ }<br>
+            );
+        </code>
+        <p>Первый аргумент метода <code>.then</code> - функция, которая выполняется, когда промис переходит в состояние
+        «выполнен успешно», и получает результат.</p>
+        <p>Второй аргумент <code>.then</code> - функция, которая выполняется, когда промис переходит в состояние
+        «выполнен с ошибкой», и получает ошибку.</p>
+        <p>Например, вот реакция на успешно выполненный промис:</p>
+        <code>
+            let promise = new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;setTimeout(() => resolve("done"), 1000);<br>
+            });<br>
+            <br>
+            // resolve запустит первую функцию, переданную в .then<br>
+            promise.then(<br>
+            &nbsp;&nbsp;(result) => alert(result), // Выведет "done" через одну секунду<br>
+            &nbsp;&nbsp;(error) => alert(error) // Не будет запущена<br>
+            );
+        </code>
+        <p>Выполнилась первая функция.</p>
+        <p>А в случае ошибки в промисе - выполнится вторая.</p>
+        <p>Если мы заинтересованы только в результате успешного выполнения задачи, то в <code>then</code> можно передать
+        только одну функцию:</p>
+        <code>
+            let promise = new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;setTimeout(() => resolve("done"), 1000);<br>
+            });<br>
+            <br>
+            promise.then(alert); // Выведет "done" спустя одну секунду
+        </code>
+
+        <h3>catch</h3>
+        <p>Если мы хотели бы только обработать ошибку, то можно использовать <code>null</code> в качестве первого
+        аргумента: <code>.then(null, errorHandlingFunction)</code>. Или можно воспользоваться методом
+        <code>.catch(errorHandlingFunction)</code>, который сделает то же самое:</p>
+        <code>
+            let promise = new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;setTimeout(() => reject(new Error("Ошибка!")), 1000);<br>
+            });<br>
+            <br>
+            // .catch(f) это то же самое, что promise.then(null, f)<br>
+            promise.catch(alert); // Выведет: "Error: Ошибка!" спустя одну секунду
+        </code>
+        <p>Вызов <code>.catch(f)</code> - это сокращенный, «укороченный» вариант <code>.then(null, f)</code>.</p>
+    </article>
+
+    <article>
+        <h2>Очистка: finally</h2>
+        <p>По аналогии с блоком <code>finally</code> из обычного <code>try {...} catch {...}</code>, у промисов также
+        есть метод <code>finally</code>.</p>
+        <p>Вызов <code>.finally(f)</code> похож на <code>.then(f, f)</code> в том смысле, что <code>f</code> выполнится
+        в любом случае, когда промис завершится: успешно или с ошибкой.</p>
+        <p>Идея <code>finally</code> состоит в том, чтобы настроить обработчик для выполнения очистки/доведения после
+        завершения предыдущих операций.</p>
+        <p>Например, остановка индикаторов загрузки, закрытие больше не нужных соединений и т.д.</p>
+        <p>Код может выглядеть следующим образом:</p>
+        <code>
+            new Promise(function(resolve, reject) => {<br>
+            &nbsp;&nbsp;/* сделать что-то, что займет время, и после вызвать resolve или может reject */<br>
+            })<br>
+            &nbsp;&nbsp;// Выполнится, когда промис завершится, независимо от того, успешно или нет<br>
+            &nbsp;&nbsp;.finally(() => остановить индикатор загрузки)<br>
+            &nbsp;&nbsp;// Таким образом, индикатор загрузки всегда останавливается, прежде чем мы продолжим<br>
+            &nbsp;&nbsp;.then(result => показать результат, err => показать ошибку)
+        </code>
+        <p>Обратите внимание, что <code>finally(f)</code> - это не совсем псевдоним <code>then(f, f)</code>, как можно
+        было подумать.</p>
+        <p>Есть важные различия:</p>
+        <ol>
+            <li>
+                <p>Обработчик, вызываемый из <code>finally</code>, не имеет аргументов. В <code>finally</code> мы не знаем,
+                как был завершен промис. И это нормально, потому что обычно наша задача - выполнить «общие» завершающие
+                процедуры.</p>
+            </li>
+            <li>
+                <p>Обработчик <code>finally</code> «пропускает» результат или ошибку дальше, к последующим обработчикам.</p>
+                <p>Например, здесь результат проходит через <code>finally</code> к <code>then</code>:</p>
+                <code>
+                    new Promise((resolve, reject) => {<br>
+                    &nbsp;&nbsp;setTimeout(() => resolve("value"), 2000);<br>
+                    })<br>
+                    &nbsp;&nbsp;.finally(() => alert("Промис завершен")) // Срабатывает первым
+                    &nbsp;&nbsp;.then(result => alert(result)); // <-- .then показывает "value"
+                </code>
+                <p>Как вы можете видеть, значение возвращаемое первым промисом, передается через <code>finally</code>
+                к следующему <code>then</code>.</p>
+                <p>Это очень удобно, потому что <code>finally</code> не предназначен для обработки результата промиса.
+                Как уже было сказано, это место для проведения общей чистки, независимо от того, каков был результат.</p>
+                <p>А здесь ошибка из промиса проходит через <code>finally</code> к <code>catch</code>:</p>
+                <code>
+                    new Promise(function(resolve, reject) {<br>
+                    &nbsp;&nbsp;throw new Error("error");<br>
+                    })<br>
+                    &nbsp;&nbsp;.finally(() => alert("Промис завершен")) // Срабатывает первым<br>
+                    &nbsp;&nbsp;.catch(err => alert(err)); // <-- .catch показывает ошибку
+                </code>
+            </li>
+            <li>
+                <p>Обработчик <code>finally</code> также не должен ничего возвращать. Если это так, то возвращаемое
+                значение молча игнорируется.</p>
+                <p>Единственным исключением из этого правила является случай, когда обработчик <code>finally</code>
+                выдает ошибку. Затем эта ошибка передается следующему обработчику вместо любого предыдущего результата.</p>
+            </li>
+        </ol>
+        <p>Подведем итог:</p>
+        <ul>
+            <li>Обработчик <code>finally</code> не получает результат предыдущего обработчика (у него нет аргументов).
+            Вместо этого этот результат передается следующему подходящему обработчику.</li>
+            <li>Если обработчик <code>finally</code> возвращает что-то, это игнорируется.</li>
+            <li>Когда <code>finally</code> выдает ошибку, выполнение переходит к ближайшему обработчику ошибок.</li>
+        </ul>
+        <p>Эти функции полезны и заставляют все работать правильно, если мы используем <code>finally</code> так,
+        как предполагается: для общих процедур очистки.</p>
+
+        <article class="note">
+            <h2>На завершенных промисах обработчики запускаются сразу</h2>
+            <p>Если промис в состоянии ожидания, обработчики в <code>.then/catch/finally</code> будут ждать его.</p>
+            <p>Иногда может случиться так, что промис уже выполнен, когда мы добавляем к нему обработчик.</p>
+            <p>В таком случае эти обработчики просто запускаются немедленно:</p>
+            <code>
+                // При создании промиса он сразу переводится в состояние «успешно завершен»<br>
+                let promise = new Promise(resolve => resolve('Готово'));<br>
+                <br>
+                promise.then(alert); // Готово (выведется сразу)
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Пример: loadScript</h2>
+        <p>У нас есть функция <code>loadScript</code> для загрузки скрипта из предыдущей главы.</p>
+        <p>Давайте вспомним, как выглядел вариант с колбэками:</p>
+        <code>
+            function loadScript(src, callback) {<br>
+            &nbsp;&nbsp;let script = document.createElement('script');<br>
+            &nbsp;&nbsp;script.src = src;<br>
+            <br>
+            &nbsp;&nbsp;script.onload = () => callback(null, script);<br>
+            &nbsp;&nbsp;script.onerror = () => callback(new Error(`Ошибка загрузки скрипта ${src}`));<br>
+            <br>
+            &nbsp;&nbsp;document.head.append(script);<br>
+            }
+        </code>
+        <p>Теперь перепишем ее, используя <code>Promise</code>.</p>
+        <p>Новой функции <code>loadScript</code> более не нужен аргумент <code>callback</code>. Вместо этого она будет
+        создавать и возвращать объект <code>Promise</code>, который перейдет в состояние «успешно завершен», когда
+        загрузка закончится. Внешний код может добавлять обработчики, используя <code>.then</code>:</p>
+        <code>
+            function loadScript(src) {<br>
+            &nbsp;&nbsp;return new Promise(function(resolve, reject) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let script = document.createElement('script');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;script.src = src;<br>
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;script.onload = () => resolve(script);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;script.onerror = () => reject(new Error(`Ошибка загрузки скрипта ${src}`));<br>
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.head.append(script);<br>
+            &nbsp;&nbsp;});<br>
+            }
+        </code>
+        <p>Применение:</p>
+        <code>
+            let promise = loadScript("https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.js");<br>
+            <br>
+            promise.then(<br>
+            &nbsp;&nbsp;script => alert(`${script.src} загружен!`),<br>
+            &nbsp;&nbsp;error => alert(`Ошибка: ${error.message}`)<br>
+            );<br>
+            <br>
+            promise.then(script => alert('Еще один обработчик...'));
+        </code>
+        <p>Сразу заметно несколько преимуществ перед подходом с использованием колбэков:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Промисы</th>
+                    <th>Колбэки</th>
+                </tr>
+            </thead>
+            <tr>
+                <td>Промисы позволяют делать вещи в естественном порядке. Сперва мы запускаем <code>loadScript(src)</code>,
+                и затем (<code>.then</code>) мы пишем, что делать с результатом.</td>
+                <td>
+                    У нас должна быть функция <code>callback</code> на момент вызова <code>loadScript(src, callback)</code>.
+                    Другими словами, нам нужно знать что делать с результатом до того, как вызовется <code>loadScript</code>.
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    Мы можем вызывать <code>.then</code> у <code>Promise</code> столько раз, сколько захотим. Каждый раз
+                    мы добавляем новую функцию-подписчика.
+                </td>
+                <td>
+                    Колбэк может быть только один.
+                </td>
+            </tr>
+        </table>
+        <p>Таким образом, промисы позволяют улучшить порядок кода и дают нам гибкость.</p>
+    </article>
+</body>
+</html>
+
+<script src="script.js"></script>

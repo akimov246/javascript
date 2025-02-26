@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойства - геттеры и сеттеры</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Свойства - геттеры и сеттеры</h2>
+        <p>Есть два типа свойств объекта.</p>
+        <p>Первый тип это <i>свойства-данные</i>. Мы уже знаем, как работать с ними. Все свойства, которые мы использовали
+        до текущего момента, были свойствами-данными.</p>
+        <p>Второй тип свойств мы еще не рассматривали. Это <i>свойства-аксессоры</i>. По своей сути это функции,
+        которые используются для присвоения и получения значения, но во внешнем коде они выглядят как обычные свойства
+        объекта.</p>
+    </article>
+
+    <article>
+        <h2>Геттеры и сеттеры</h2>
+        <p>Свойства-аксессоры представлены методами: «геттер» - для чтения и «сеттер» - для записи. При литеральном
+        объявлении объекта они обозначаются <code>get</code> и <code>set</code>:</p>
+        <code>
+            let obj = {<br>
+            &nbsp;&nbsp;get propName() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Геттер, срабатывает при чтении obj.propName<br>
+            &nbsp;&nbsp;},<br>
+            <br>
+            &nbsp;&nbsp;set propName(value) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Сеттер, срабатывает при записи obj.propName = value<br>
+            &nbsp;&nbsp;}<br>
+            };
+        </code>
+        <p>Геттер срабатывает, когда <code>obj.propName</code> читается, сеттер - когда значение присваивается.</p>
+        <p>Например, у нас есть объект <code>user</code> со свойствами <code>name</code> и <code>surname</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John',<br>
+            &nbsp;&nbsp;surname: 'Smith'<br>
+            };
+        </code>
+        <p>А теперь добавим свойство объекта <code>fullName</code> для полного имени, которое в нашем случае
+        <code>'John Smith'</code>. Само собой, мы не хотим дублировать уже имеющуюся информацию, так что реализуем
+        его при помощи аксессора:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John',<br>
+            &nbsp;&nbsp;surname: 'Smith',<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;get fullName() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return `${this.name} ${this.surname}`;
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            alert(user.fullName); // 'John Smith'
+        </code>
+        <p>Снаружи свойство-аксессор выглядит как обычное свойство. В этом и заключается смысл свойств-аксессоров.
+        Мы не вызываем <code>user.fullName</code> как функцию, а читаем как обычное свойство: геттер выполнит всю работу
+        за кулисами.</p>
+        <p>На данный момент у <code>fullName</code> есть только геттер. Если мы попытаемся назначить
+        <code>user.fullName=</code>, произойдет ошибка.</p>
+        <p>Давайте исправим это, добавив сеттер для <code>user.fullName</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John',<br>
+            &nbsp;&nbsp;surname: 'Smith',<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;get fullName() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return `${this.name} ${this.surname}`;
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;set fullName(value) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;[this.name, this.surname] = value.split(' ');
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            user.fullName = 'Alice Cooper';<br>
+            <br>
+            alert(user.name); // 'Alice'<br>
+            alert(user.surname); // 'Cooper'<br>
+        </code>
+        <p>В итоге мы получили «виртуальное» свойство <code>fullName</code>. Его можно прочитать и изменить.</p>
+    </article>
+
+    <article>
+        <h2>Дескрипторы свойств доступа</h2>
+        <p>Дескрипторы свойств-аксессоров отличаются от «обычных» свойств-данных.</p>
+        <p>Свойства-аксессоры не имеют <code>value</code> и <code>writable</code>, но взамен предлагают функции
+        <code>get</code> и <code>set</code>.</p>
+        <p>То есть, дескриптор аксессора может иметь:</p>
+        <ul>
+            <li><code>get</code> - функция без аргументов, которая сработает при чтении свойства.</li>
+            <li><code>set</code> - функция, принимающая один аргумент, вызываемая при присвоении свойства.</li>
+            <li><code>enumerable</code> - то же самое, что и для свойств-данных.</li>
+            <li><code>configurable</code> - то же самое, что и для свойств-данных.</li>
+        </ul>
+        <p>Например, для создания аксессора <code>fullName</code> при помощи <code>defineProperty</code> мы можем
+        передать дескриптор с использованием <code>get</code> и <code>set</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;name: 'John',<br>
+            &nbsp;&nbsp;surname: 'Smith'<br>
+            };<br>
+            <br>
+            Object.defineProperty(user, 'fullName', {<br>
+            &nbsp;&nbsp;get() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return `${this.name} ${this.surname}`;<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;set(value) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;[this.name, this.surname] = value.split(' ');<br>
+            &nbsp;&nbsp;}<br>
+            });<br>
+            <br>
+            alert(user.fullName); // 'John Smith'<br>
+            <br>
+            for (let key in user) alert(key); // name, surname
+        </code>
+        <p>Еще раз заметим, что свойство объекта может быть либо свойство-аксессором (с методами <code>get/set</code>),
+        либо свойством-данным (со значением <code>value</code>).</p>
+        <p>При попытке указать и <code>get</code>, и <code>value</code> в одном дескрипторе будет ошибка.</p>
+    </article>
+
+    <article>
+        <h2>Умные геттеры/сеттеры</h2>
+        <p>Геттеры/сеттеры можно использовать как обертки над «реальными» значениями свойств, чтобы получить больше
+        контроля над операциями с ними.</p>
+        <p>Например, если мы хотим запретить устанавливать короткое имя для <code>user</code>, мы можем использовать
+        сеттер <code>name</code> для проверки, а само значение хранить в отдельном свойстве <code>_name</code>:</p>
+        <code>
+            let user = {<br>
+            &nbsp;&nbsp;get name() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return this._name;<br>
+            &nbsp;&nbsp;},<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;set name(value) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (value.length < 4) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Имя слишком короткое, должно быть более 3 символов');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this._name = value;<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            user.name = 'Pete';<br>
+            alert(user.name); // Pete<br>
+            <br>
+            user.name = 'Leo'; // Имя слишком короткое
+        </code>
+        <p>Таким образом, само имя хранится в <code>_name</code>, доступ к которому производится через геттер и сеттер.</p>
+        <p>Технически, внешний код все еще может получить доступ к имени напрямую с помощью <code>user._name</code>,
+        но существует широко известное соглашение о том, что свойства, которые начинаются с символа <code>'_'</code>,
+        являются внутренними, и к ним не следует обращаться из-за пределов объекта.</p>
+    </article>
+
+    <article>
+        <h2>Использование для совместимости</h2>
+        <p>У аксессоров есть интересная область применения - они позволяют в любой момент взять «обычное» свойство
+        и изменить его поведение, поменяв на геттер и сеттер.</p>
+        <p>Например, представим, что мы начали реализовывать объект <code>user</code>, используя свойства-данные имя
+        <code>name</code> и возраст <code>age</code>:</p>
+        <code>
+            function User(name, age) {<br>
+            &nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;this.age = age;<br>
+            }<br>
+            <br>
+            let john = new User('John', 25);<br>
+            <br>
+            alert(john.age); // 25
+        </code>
+        <p>... Но рано или поздно все может измениться. Взамен возраста <code>age</code> мы можем решить хранить дату
+        рождения <code>birthday</code>, потому что так более точно и удобно:</p>
+        <code>
+            function User(name, birthday) {<br>
+            &nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;this.birthday = birthday;<br>
+            }<br>
+            <br>
+            let john = new User('John', new Date(1992, 6, 1));
+        </code>
+        <p>Что нам делать со старым кодом, который использует свойство <code>age</code>?</p>
+        <p>Мы можем попытаться найти все такие места и изменить их, но это отнимет время и может быть невыполнимо,
+        если код используется другими людьми. И кроме того, <code>age</code> - это отличное свойство для <code>user</code>,
+        верно?</p>
+        <p>Давайте его сохраним.</p>
+        <p>Добавление геттера для <code>age</code> решит проблему:</p>
+        <code>
+            function User(name, birthday) {<br>
+            &nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;this.birthday = birthday;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Возраст рассчитывается из текущей даты и дня рождения<br>
+            &nbsp;&nbsp;Object.defineProperty(this, 'age', {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;get() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let todayYear = new Date().getFullYear();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return todayYear - this.birthday.getFullYear();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;});<br>
+            }<br>
+            <br>
+            let john = new User('John', new Date(1992, 6, 1));<br>
+            alert(john.birthday);<br>
+            alert(john.age);
+        </code>
+        <p>Теперь старый код тоже работает, и у нас есть отличное дополнительное свойство!</p>
+    </article>
+</body>
+</html>

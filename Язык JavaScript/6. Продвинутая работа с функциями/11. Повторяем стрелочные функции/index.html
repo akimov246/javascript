@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Повторяем стрелочные функции</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Повторяем стрелочные функции</h2>
+        <p>Стрелочные функции - это не просто «сокращение», чтобы меньше писать. У них есть ряд других полезных особенностей.</p>
+        <p>При написании JavaScript-кода часто возникают ситуации, когда нам нужно написать небольшую функцию,
+        которая будет выполнена где-то еще.</p>
+        <p>Это очень в духе JavaScript - создать функцию и передать ее куда-нибудь.</p>
+        <p>И в таких функциях мы обычно не хотим выходить из текущего контекста. Здесь как раз и полезны стрелочные функции.</p>
+    </article>
+
+    <article>
+        <h2>У стрелочных функций нет «this»</h2>
+        <p>У стрелочных функций нет <code>this</code>. Если происходит обращение к <code>this</code>, его значение берется
+        снаружи.</p>
+        <p>Например, мы можем использовать это для итерации внутри метода объекта:</p>
+        <code>
+            let group = {<br>
+            &nbsp;&nbsp;title: 'Our Group',<br>
+            &nbsp;&nbsp;students: ['John', 'Pete', 'Alice'],<br>
+            <br>
+            &nbsp;&nbsp;showList() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.students.forEach(<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;student => alert(this.title + ': ' + student)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            group.showList();
+        </code>
+        <p>Здесь внутри <code>forEach</code> использована стрелочная функция, таким образом <code>this.title</code> в ней
+        будет иметь точно такое же значение, как в методе <code>showList</code>: <code>group.title</code>.</p>
+        <p>Если бы мы использовали обычную функцию, была бы ошибка:</p>
+        <code>
+            let group = {<br>
+            &nbsp;&nbsp;title: 'Our Group',<br>
+            &nbsp;&nbsp;students: ['John', 'Pete', 'Alice'],<br>
+            <br>
+            &nbsp;&nbsp;showList() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.students.forEach(function(student) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Error: Cannot read property 'title' of undefined<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(this.title + ': ' + student);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            group.showList();
+        </code>
+        <p>Ошибка возникает потому что <code>forEach</code> по умолчанию выполняет функции с <code>this</code>,
+        равным <code>undefined</code>, и в итоге мы пытаемся обратиться к <code>undefined.title</code>.</p>
+        <p>Это не влияет на стрелочные функции, потому что у них просто нет <code>this</code>.</p>
+
+        <article class="warning">
+            <h2>Стрелочные функции нельзя использовать с <code>new</code></h2>
+            <p>Отсутствие <code>this</code> естественным образом ведет к другому ограничению: стрелочные функции не могут
+            быть использованы как конструкторы. Они не могут быть вызваны с <code>new</code>.</p>
+        </article>
+
+        <article class="note">
+            <h2>Стрелочные функции VS bind</h2>
+            <p>Существует тонкая разница между стрелочной функцией <code>=></code> и обычной функцией, вызванной с
+            <code>.bind(this)</code>:</p>
+            <ul>
+                <li><code>.bind(this)</code> создает «связанную версию» функции.</li>
+                <li>Стрелка <code>=></code> ничего не привязывает. У функции просто нет <code>this</code>. При получении
+                значения <code>this</code> - оно, как обычная переменная, берется из внешнего лексического окружения.</li>
+            </ul>
+        </article>
+    </article>
+
+    <article>
+        <h2>Стрелочные функции не имеют «arguments»</h2>
+        <p>У стрелочных функций также нет переменной <code>arguments</code>.</p>
+        <p>Это отлично подходит для декораторов, когда нам нужно пробросить вызов с текущими <code>this</code> и
+        <code>arguments</code>.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Стрелочные функции:</p>
+        <ul>
+            <li>Не имеют <code>this</code>.</li>
+            <li>Не имеют <code>arguments</code>.</li>
+            <li>Не могут быть вызваны с <code>new</code>.</li>
+            <li>(У них также нет <code>super</code>)</li>
+        </ul>
+        <p>Все это потому что они предназначены для небольшого кода, который не имеет своего контекста, выполняясь в текущем.</p>
+    </article>
+</body>
+</html>

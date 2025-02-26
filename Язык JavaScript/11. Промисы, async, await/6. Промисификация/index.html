@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Промисификация</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Промисификация</h2>
+        <p>Промисификация - это длинное слово для простого преобразования. Мы берем функцию, которая принимает
+        колбэк и меняем ее, чтобы она вместо этого возвращала промис.</p>
+        <p>Такие преобразования часто необходимы в реальной жизни, так как многие функции и библиотеки основаны на
+        колбэках, а использование промисов более удобно, поэтому есть смысл «промисифицировать» их.</p>
+        <p>Например, у нас есть <code>loadScript(src, callback)</code> из главы «Введение: колбэки».</p>
+        <code>
+            function loadScript(src, callback) {<br>
+            &nbsp;&nbsp;let script = document.createElement('script');<br>
+            &nbsp;&nbsp;script.src = src;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;script.onload = () => callback(null, script);<br>
+            &nbsp;&nbsp;script.onerror = () => callback(new Error(`Ошибка загрузки скрипта ${src}`));<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;document.head.append(script);<br>
+            }<br>
+            <br>
+            // Использование:<br>
+            loadScript('path/script.js', (err, script) => {...});
+        </code>
+        <p>Давайте промисифицируем ее. Новая функция <code>loadScriptPromise(src)</code> будет делать то же самое,
+        но будет принимать только <code>src</code> (не <code>callback</code>) и возвращать промис.</p>
+        <code>
+            let loadScriptPromise = function(src) {<br>
+            &nbsp;&nbsp;return new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;loadScript(src, (err, script)) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (err) reject(err)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else resolve(script);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;})<br>
+            }<br>
+            <br>
+            // Использование:<br>
+            loadScriptPromise('path/script.js').then(...);
+        </code>
+        <p>Теперь <code>loadScriptPromise</code> хорошо вписывается в код, основанный на промисах.</p>
+        <p>Как видно, она передает всю работу исходной функции <code>loadScript</code>, предоставляя ей колбэк,
+        по вызову которого происходит <code>resolve/reject</code> промиса.</p>
+        <p>На практике нам, скорее всего, понадобится промисифицировать не одну функцию, поэтому имеет смысл
+        сделать для этого специальную «функцию-помощник».</p>
+        <p>Мы назовем ее <code>promisify(f)</code> - она принимает функцию для промисификации <code>f</code> и
+        возвращает функцию-обертку.</p>
+        <p>Эта функция-обертка делает то же самое, что и код выше: возвращает промис и передает вызов оригинальной
+        <code>f</code>, отслеживая результат в своем колбэке:</p>
+        <code>
+            function promisify(f) {<br>
+            &nbsp;&nbsp;return function(...args) { // Возвращает функцию-обертку<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;function callback(err, result) { // Наш специальный колбэк для f<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (err) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reject(err);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve(result);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args.push(callback); // Добавляем колбэк в конце аргументов f<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f.call(this, ...args); // Вызываем оригинальную функцию<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;};<br>
+            };<br>
+            <br>
+            // Использование:<br>
+            let loadScriptPromise = promisify(loadScript);<br>
+            loadScriptPromise(...).then(...);
+        </code>
+        <p>Здесь мы предполагаем, что исходная функция ожидает колбэк с двумя аргументами <code>(err, result)</code>.
+        Это то, с чем мы чаще всего сталкиваемся. Тогда наш колбэк - в правильном формате, и <code>promisify</code>
+        отлично работает для такого случая.</p>
+        <p>Но что, если исходная функция <code>f</code> ожидает колбэк с большим количеством аргументов
+        <code>callback(err, res1, res2, ...)</code>?</p>
+        <p>Ниже описана улучшенная функция <code>promisify</code>: при вызове <code>promisify(f, true)</code>
+        результатом промиса будет массив результатов <code>[res1, res2, ...]</code>:</p>
+        <code>
+            // promisify(f, true), чтобы получить массив результатов<br>
+            function promisify(f, manyArgs = false) {<br>
+            &nbsp;&nbsp;return function(...args) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;function callback(err, ...results) { // Наш специальный колбэк f<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (err) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reject(err);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resolve(manyArgs ? results : results[0]);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;args.push(callback);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;f.call(this, ...args);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;};<br>
+            };<br>
+            <br>
+            // Использование:<br>
+            f = promisify(f, true);<br>
+            f(...).then(arrayOfResults => ..., err => ...);
+        </code>
+        <p>Для более экзотических форматов колбэка, например без <code>err</code>: <code>callback(result)</code>,
+        мы можем промисифицировать функции без помощника, «вручную».</p>
+        <p>Также существуют модули с более гибкой промисификацией, например, <code>es6-promisify</code> или встроенная
+        функция <code>util.promisify</code> в Node.js.</p>
+
+        <article class="note">
+            <h2>На заметку:</h2>
+            <p>Промисификация - это отличный подход, особенно, если вы будете использовать <code>async/await</code>, но
+            она не является тотальной заменой колбэков.</p>
+            <p>Помните, промис может иметь только один результат, но колбэк технически может вызываться сколько угодно
+            раз.</p>
+            <p>Поэтому промисификация используется для функций, которые вызывают колбэк только один раз. Последующие
+            вызовы колбэка будут проигнорированы.</p>
+        </article>
+    </article>
+</body>
+</html>

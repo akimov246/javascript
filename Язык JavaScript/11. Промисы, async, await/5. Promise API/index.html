@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Promise API</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Promise API</h2>
+        <p>В классе <code>Promise</code> есть 6 статических методов. Давайте познакомимся с ними.</p>
+    </article>
+
+    <article>
+        <h2>Promise.all</h2>
+        <p>Допустим, нам нужно запустить множество промисов параллельно и дождаться, пока все они выполнятся.</p>
+        <p>Например, параллельно загрузить несколько файлов и обработать результат, когда он готов.</p>
+        <p>Для этого как раз и пригодится <code>Promise.all</code>.</p>
+        <p>Синтаксис:</p>
+        <code>let promise = Promise.all(iterable);</code>
+        <p>Метод <code>Promise.all</code> принимает массив промисов (может принимать любой перебираемый объект, но обычно
+        используется массив) и возвращает новый промис.</p>
+        <p>Новый промис завершится, когда завершится весь переданный список промисов, и его результатом будет массив
+        их результатов.</p>
+        <p>Например, <code>Promise.all</code>, представленный ниже, выполнится спустя 3 секунды, его результатом будет
+        массив <code>[1, 2, 3]</code>:</p>
+        <code>
+            Promise.all([<br>
+            &nbsp;&nbsp;new Promise(resolve => setTimeout(() => resolve(1), 3000)), // 1<br>
+            &nbsp;&nbsp;new Promise(resolve => setTimeout(() => resolve(2), 2000)), // 2<br>
+            &nbsp;&nbsp;new Promise(resolve => setTimeout(() => resolve(3), 1000)), // 3<br>
+            ]).then(alert); // Когда все промисы выполнятся, результат будет 1,2,3<br>
+            // Каждый промис дает элемент массива
+        </code>
+        <p>Обратите внимание, что порядок элементов массива в точности соответствует порядку исходных промисов. Даже если
+        первый промис будет выполняться дольше всех, его результат все равно будет первым в массиве.</p>
+        <p>Часто применяемый трюк - пропустить массив данных через map-функцию, которая для каждого элемента создаст
+        задачу-промис, и затем обернуть получившийся массив в <code>Promise.all</code>.</p>
+        <p>Например, если у нас есть массив ссылок, то мы можем загрузить их вот так:</p>
+        <code>
+            let urls = [<br>
+            &nbsp;&nbsp;'https://api.github.com/users/iliakan',<br>
+            &nbsp;&nbsp;'https://api.github.com/users/akimov246',<br>
+            &nbsp;&nbsp;'https://api.github.com/users/jeresig',<br>
+            ];<br>
+            <br>
+            // Преобразуем каждый URL в промис, возвращенный fetch<br>
+            let requests = urls.map(url => fetch(url));<br>
+            <br>
+            // Promise.all будет ожидать выполнения всех промисов<br>
+            Promise.all(requests)<br>
+            &nbsp;&nbsp;.then(responses => responses.forEach(<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;response => alert(`${response.url}: ${response.status}`)<br>
+            &nbsp;&nbsp;));
+        </code>
+        <p>А вот пример побольше, с получением информации о пользователях GitHub по их логинам из массива:</p>
+        <code>
+            let names = ['iliakan', 'akimov246', 'jeresig'];<br>
+            <br>
+            let requests = names.map(name => fetch(`https://api.github.com/users/${name}`));<br>
+            <br>
+            Promise.all(requests)<br>
+            &nbsp;&nbsp;.then(responses => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Все промисы успешно завершены<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let response of responses) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(`${response.url}: ${response.status}`); // Покажет 200 для каждой ссылки<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return responses;<br>
+            &nbsp;&nbsp;})<br>
+            &nbsp;&nbsp;// Преобразовать массив ответов response в response.json(),<br>
+            &nbsp;&nbsp;// чтобы прочитать содержимое каждого<br>
+            &nbsp;&nbsp;.then(responses => Promise.all(responses.map(r => r.json())))<br>
+            &nbsp;&nbsp;// Все JSON-ответы обработаны, users - массив с результатами<br>
+            &nbsp;&nbsp;.then(users => users.forEach(user => alert(user.login)));
+        </code>
+        <p><b>Если любой из промисов завершится с ошибкой, то промис, возвращенный <code>Promise.all</code>, немедленно
+        завершается с этой ошибкой.</b></p>
+        <p>Например:</p>
+        <code>
+            Promise.all([<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => resolve(1), 1000)),<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => reject(new Error('Ошибка!', 2000)),<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => resolve(3), 3000))<br>
+            ]).catch(alert); // Error: Ошибка!
+        </code>
+        <p>Здесь второй промис завершится с ошибкой через 2 секунды. Это приведет к немедленной ошибке в <code>Promise.all</code>,
+        так что выполнится <code>.catch</code>: ошибка этого промиса становится ошибкой всего <code>Promise.all</code>.</p>
+
+        <article class="warning">
+            <h2>В случае ошибки, остальные результаты игнорируются</h2>
+            <p>Если один промис завершится с ошибкой, то весь <code>Promise.all</code> завершится с ней, полностью
+            забывая про остальные промисы в списке. Их результаты игнорируются.</p>
+            <p>Например, если сделано несколько вызовов <code>fetch</code>, как в примере выше, и один не прошел,
+            то остальные будут все еще выполняться, но <code>Promise.all</code> за ними уже не смотрит. Скорее всего,
+            они так или иначе завершатся, но их результаты будут проигнорированы.</p>
+            <p><code>Promise.all</code> ничего не делает для их отмены, так как в промисах вообще нет концепции
+            «отмены».</p>
+        </article>
+
+        <article class="note">
+            <h2><code>Promise.all(iterable)</code> разрешает передавать не-промисы в <code>iterable</code> (перебираемом
+            объекте)</h2>
+            <p>Обычно, <code>Promise.all(...)</code> принимает перебираемый объект промисов (чаще всего массив).
+            Но если любой из этих объектов не является промисом, он передается в итоговый массив «как есть».</p>
+            <p>Например, здесь результат: <code>[1, 2, 3]</code></p>
+            <code>
+                Promise.all([<br>
+                &nbsp;&nbsp;new Promise((resolve, reject) => {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => resolve(1), 1000);<br>
+                &nbsp;&nbsp;}),<br>
+                &nbsp;&nbsp;2,<br>
+                &nbsp;&nbsp;3<br>
+                ]).then(alert); // 1, 2, 3
+            </code>
+            <p>Таким образом, мы можем передавать уже готовые значения, которые не являются промисами, в
+            <code>Promise.all</code>, иногда это бывает удобно.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Promise.allSettled</h2>
+        <p>Синтаксис:</p>
+        <code>let promise = Promise.allSettled(iterable);</code>
+        <p><code>Promise.all</code> завершается с ошибкой, если она возникает в любом из переданных промисов.
+        Это подходит для ситуации «все или ничего», когда нам нужны все результаты для продолжения:</p>
+        <code>
+            Promise.all([<br>
+            &nbsp;&nbsp;fetch('/template.html'),<br>
+            &nbsp;&nbsp;fetch('/style.css'),<br>
+            &nbsp;&nbsp;fetch('/data.json')<br>
+            ]).then(render); // Методы render нужны результаты всех fetch
+        </code>
+        <p>Метод <code>Promise.allSettled</code> всегда ждет завершения всех промисов. В массиве результатов будет</p>
+        <ul>
+            <li>
+                <p><code>{status: "fulfilled", value: result}</code> для успешных завершений</p>
+            </li>
+            <li>
+                <p><code>{status: "rejected", reason: error</code> для ошибок</p>
+            </li>
+        </ul>
+        <p>Например, мы хотели бы загрузить информацию о множестве пользователей. Даже если в каком-то запросе ошибка,
+        нас все равно интересуют остальные.</p>
+        <p>Используем для этого <code>Promise.allSettled</code>:</p>
+        <code>
+            let urls = [<br>
+            &nbsp;&nbsp;'https://api.github.com/users/iliakan',<br>
+            &nbsp;&nbsp;'https://api.github.com/users/akimov246',<br>
+            &nbsp;&nbsp;'https://no-such-url'<br>
+            ];<br>
+            <br>
+            Promise.allSettled(urls.map(url => fetch(url)))<br>
+            &nbsp;&nbsp;.then(results => { // (*)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;results.forEach((result, num) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (result.status === 'fulfilled') {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(`${urls[num]}: ${result.value.status}`);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (result.status === 'rejected') {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(`${urls[num]}: ${result.reason}`);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;});
+        </code>
+        <p>Массив <code>results</code> в строке <code>(*)</code> будет таким:</p>
+        <code>
+            [<br>
+            &nbsp;&nbsp;{status: 'fulfilled', value: ...объект ответа...},<br>
+            &nbsp;&nbsp;{status: 'fulfilled', value: ...объект ответа...},<br>
+            &nbsp;&nbsp;{status: 'rejected', reason: ...объект ошибки...}<br>
+            ]
+        </code>
+        <p>То есть, для каждого промиса у нас есть его статус и значение/ошибка.</p>
+    </article>
+
+    <article>
+        <h2>Полифил</h2>
+        <p>Если браузер не поддерживает <code>Promise.allSettled</code>, для него легко сделать полифил:</p>
+        <code>
+            if (!Promise.allSettled) {<br>
+            &nbsp;&nbsp;Promise.allSettled = function(promises) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return Promise.all(promises.map(p => Promise.resolve(p).then(value => ({<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status: 'fulfilled',<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value: value<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}), error => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;status: 'rejected',<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reason: error<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}))));<br>
+            &nbsp;&nbsp;};<br>
+            }
+        </code>
+        <p>В этом коде <code>promises.map</code> берет аргументы, превращает их в промисы (на всякий случай) и добавляет
+        каждому обработчик <code>.then</code>.</p>
+        <p>Этот обработчик превращает успешный результат <code>value</code> в
+        <code>{state: 'fulfilled', value: value}</code>, а ошибку <code>error</code> в
+        <code>{state: 'rejected', reason: error}</code>. Это как раз и есть формат результатов <code>Promise.allSettled</code>.</p>
+        <p>Затем мы можем использовать <code>Promise.allSettled</code>, чтобы получить результаты всех промисов,
+        даже если при выполнении какого-то возникает ошибка.</p>
+    </article>
+
+    <article>
+        <h2>Promise.race</h2>
+        <p>Метод очень похож на <code>Promise.all</code>, но ждет только первый <i>выполненный</i> промис, из которого
+        берет результат (или ошибку).</p>
+        <p>Синтаксис:</p>
+        <code>let promise = Promise.race(iterable);</code>
+        <p>Например, тут результат будет <code>1</code>:</p>
+        <code>
+            Promise.race([<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => resolve(1), 1000)),<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => reject(new Error('Ошибка!')), 2000)),<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => resolve(3), 3000))<br>
+            ]).then(alert); // 1
+        </code>
+        <p>Быстрее всех выполнится первый промис, он и дал результат. После этого остальные промисы игнорируются.</p>
+    </article>
+
+    <article>
+        <h2>Promise.any</h2>
+        <p>Метод очень похож на <code>Promise.race</code>, но ждет только первый <i>успешно выполненный</i> промис,
+        из которого берет результат.</p>
+        <p>Если ни один из переданных промисов не завершится успешно, тогда возвращенный объект Promise будет отклонен
+        с помощью <code>AggregateError</code> - специального объекта ошибок, который хранит все ошибки промисов
+        в своем свойстве <code>errors</code>.</p>
+        <p>Синтаксис:</p>
+        <p>let promise = Promise.any(iterable);</p>
+        <p>Например, здесь результатом будет <code>1</code>:</p>
+        <code>
+            Promise.any([<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => reject(new Error('Ошибка!')), 1000)),<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => resolve(1), 2000)),<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => resolve(3), 3000))<br>
+            ]).then(alert); // 1
+        </code>
+        <p>Первый промис в этом примере был самым быстрым, но он был отклонен, поэтому результатом стал второй.
+        После того как первый успешно выполненный промис «выиграл гонку», все дальнейшие результаты будут проигнорированы.</p>
+        <p>Вот пример, в котором все промисы отклоняются:</p>
+        <code>
+            Promise.any([<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => reject(new Error('Ошибка!')), 1000)),<br>
+            &nbsp;&nbsp;new Promise((resolve, reject) => setTimeout(() => reject(new Error('Еще одна ошибка!')), 2000))<br>
+            ]).catch(error => {<br>
+            &nbsp;&nbsp;console.log(error.constructor.name); // AggregateError<br>
+            &nbsp;&nbsp;console.log(error.errors[0]); // Error: Ошибка!<br>
+            &nbsp;&nbsp;console.log(error.errors[1]); // Error: Еще одна ошибка!<br>
+            });
+        </code>
+        <p>Как вы можете видеть, объекты ошибок для отклоненных промисов доступны в свойстве <code>errors</code>
+        объекта <code>AggregateError</code>.</p>
+    </article>
+
+    <article>
+        <h2>Promise.resolve/reject</h2>
+        <p>Методы <code>Promise.resolve</code> и <code>Promise.reject</code> редко используются в современном коде,
+        так как синтаксис <code>async/await</code> делает их, в общем-то, не нужными.</p>
+        <h3>Promise.resolve</h3>
+        <ul>
+            <li>
+                <p><code>Promise.resolve(value)</code> создает успешно выполненный промис с результатом <code>value</code>.</p>
+            </li>
+        </ul>
+        <p>То же самое, что:</p>
+        <code>let promise = new Promise(resolve => resolve(value));</code>
+        <p>Этот метод используется для совместимости: когда ожидается, что функция возвратит именно промис.</p>
+        <p>Например, функция <code>loadCached</code> ниже загружает URL и запоминает (кеширует) его содержимое.
+        При будущих вызовах с тем же URL он тут же читает предыдущее содержимое из кеша, но использует
+        <code>Promise.resolve</code>, чтобы сделать из него промис, для того, чтобы возвращаемое значение всегда было
+        промисом:</p>
+        <code>
+            let cache = new Map();<br>
+            <br>
+            function loadCached(url) {<br>
+            &nbsp;&nbsp;if (cache.has(url)) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return Promise.resolve(cache.get(url)); // (*)<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;return fetch(url)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;.then(response => response.text())<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;.then(text => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cache.set(url, text);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return text;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            }
+        </code>
+        <p>Мы можем писать <code>loadCached(url).then(...)</code>, потому что <code>loadCached</code> всегда возвращает
+        промис. Мы всегда можем использовать <code>.then</code> после <code>loadCached</code>. Это и есть цель
+        использования <code>Promise.resolve</code> в строке <code>(*)</code>.</p>
+        <h3>Promise.reject</h3>
+        <ul>
+            <li>
+                <p><code>Promise.reject(error)</code> создает промис, завершенный с ошибкой <code>error</code>.</p>
+            </li>
+        </ul>
+        <p>То же самое, что:</p>
+        <code>let promise = new Promise((resolve, reject) => reject(error));</code>
+        <p>На практике этот метод почти никогда не используется.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Мы ознакомились с шестью статическими методами класса <code>Promise</code>:</p>
+        <ol>
+            <li>
+                <p><code>Promise.all(promises)</code> - ожидает выполнения всех промисов и возвращает массив с результатами.
+                Если любой из указанных промисов вернет ошибку, то результатом работы <code>Promise.all</code> будет
+                эта ошибка, результаты остальных промисов будут игнорироваться.</p>
+            </li>
+            <li>
+                <p><code>Promise.allSettled(promises)</code> - ждет, пока все промисы завершатся и возвращает их
+                результаты в виде массива с объектами, у каждого объекта два свойства:</p>
+                <ul>
+                    <li>
+                        <p><code>status</code>: <code>"fulfilled"</code>, если выполнен успешно или <code>"rejected"</code>,
+                        если ошибка.</p>
+                    </li>
+                    <li>
+                        <p><code>value</code> - результат, если успешно или <code>reason</code>, если ошибка.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>Promise.race(promises)</code> - ожидает первый <i>выполненный</i> (успешно или с ошибкой) промис,
+                который становится его результатом, остальные игнорируются.</p>
+            </li>
+            <li>
+                <p><code>Promise.any(promises)</code> - ожидает первый <i>успешно выполненный</i> промис,
+                который становится его результатом, остальные игнорируются. Если все переданные промисы отклонены,
+                <code>AggregateError</code> становится ошибкой <code>Promise.any</code>.</p>
+            </li>
+            <li>
+                <p><code>Promise.resolve(value)</code> - возвращает успешно выполнившийся промис с результатом <code>value</code>.</p>
+            </li>
+            <li>
+                <p><code>Promise.reject(error)</code> - возвращает промис с ошибкой <code>error</code>.</p>
+            </li>
+        </ol>
+        <p>Из всех перечисленных методов, самый часто используемый - это, пожалуй, <code>Promise.all</code>.</p>
+    </article>
+</body>
+</html>
+
+
+<script>
+    let urls = [
+        'https://api.github.com/users/iliakan',
+        'https://api.github.com/users/akimov246',
+        'https://api.github.com/users/white_lord_1488'
+    ]
+
+    let cache = new Map();
+
+    function loadCached(url) {
+        if (cache.has(url)) {
+            return Promise.resolve(cache.get(url));
+        }
+
+        return fetch(url)
+            .then(response => response.text())
+            .then(text => {
+                cache.set(url, text);
+                return text;
+            });
+    }
+
+    console.log(loadCached('https://api.github.com/users/akimov246'));
+    console.log(loadCached('https://api.github.com/users/akimov246'));
+</script>

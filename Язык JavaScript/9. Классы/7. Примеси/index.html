@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Примеси</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Примеси</h2>
+        <p>В JavaScript можно наследовать только от одного объекта. Объект имеет единственный <code>[[Prototype]]</code>.
+        И класс может расширить только один другой класс.</p>
+        <p>Иногда это может ограничить нас. Например, у нас есть класс <code>StreetSweeper</code> и класс <code>Bicycle</code>,
+        а мы хотим создать их смесь: <code>StreetSweepBicycle</code>.</p>
+        <p>Или у нас есть класс <code>User</code>, который реализует пользователей, и класс <code>EventEmitter</code>,
+        реализующий события. Мы хотели бы добавить функциональность класса <code>EventEmitter</code> к <code>User</code>,
+        чтобы пользователи могли легко генерировать события.</p>
+        <p>Для таких случаев существуют «примеси».</p>
+        <p>Примесь - это класс, методы которого предназначены для использования в других классах, причем без наследования
+        от примеси.</p>
+        <p>Другими словами, примесь определяет методы, которые реализуют определенное поведение. Мы не используем примесь
+        саму по себе, а используем ее, чтобы добавить функциональность другим классам.</p>
+    </article>
+
+    <article>
+        <h2>Пример примеси</h2>
+        <p>Простейший способ реализовать примесь в JavaScript - это создать объект с полезными методами, которые
+        затем могут быть легко добавлены в прототип любого класса.</p>
+        <p>В примере ниже примесь <code>sayHiMixin</code> имеет методы, которые придают объектам класса <code>User</code>
+        возможности вести разговор:</p>
+        <code>
+            // Примесь<br>
+            let sayHiMixin = {<br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Привет, ${this.name}!`);<br>
+            &nbsp;&nbsp;},<br>
+            <br>
+            &nbsp;&nbsp;sayBye() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Пока, ${this.name}!`);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            // Использование:<br>
+            class User = {<br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            // Копируем методы<br>
+            Object.assign(User.prototype, sayHiMixin);<br>
+            <br>
+            // Теперь User может сказать Привет<br>
+            new User('Вася').sayHi(); // Привет, Вася!
+        </code>
+        <p>Это не наследование, а просто копирование методов. Таким образом, класс <code>User</code> может наследовать
+        от другого класса, но при этом включать в себя примеси, «подмешивающие» другие метода, например:</p>
+        <code>
+            class User extends Person {<br>
+            &nbsp;&nbsp;// ...<br>
+            }<br>
+            <br>
+            Object.assign(User.prototype, sayHiMixin);
+        </code>
+        <p>Примеси могут наследовать друг друга.</p>
+        <p>В примере ниже <code>sayHiMixin</code> наследует от <code>sayMixin</code>:</p>
+        <code>
+            let sayMixin {<br>
+            &nbsp;&nbsp;say(phrase) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(phrase);<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            let sayHiMixin {<br>
+            &nbsp;&nbsp;__proto__: sayMixin, // (или мы можем использовать Object.setPrototypeOf для задания прототипа)<br>
+            <br>
+            &nbsp;&nbsp;sayHi() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super.say(`Привет, ${this.name}!`); // (*)<br>
+            &nbsp;&nbsp;},<br>
+            <br>
+            &nbsp;&nbsp;sayBye() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;super.say(`Пока, ${this.name}!`); // (*)<br>
+            &nbsp;&nbsp;}<br>
+            };<br>
+            <br>
+            class User {<br>
+            &nbsp;&nbsp;constructor(name) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.name = name;<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            // Копируем методы<br>
+            Object.assign(User.prototype, sayHiMixin);<br>
+            <br>
+            // Теперь User может сказать Привет<br>
+            new User('Вася').sayHi(); // Привет, Вася!
+        </code>
+        <p>Обратите внимание, что при вызове родительского метода <code>super.say()</code> из <code>sayHiMixin</code>
+        (строки, помеченные <code>(*)</code>) этот метод ищется в прототипе самой примеси, а не класса.</p>
+        <p>Это связано с тем, что методы <code>sayHi</code> и <code>sayBye</code> были изначально созданы в объекте
+        <code>sayHiMixin</code>. Несмотря на то, что они скопированы, их внутреннее свойство <code>[[HomeObject]]</code>
+        ссылается на <code>SayHiMixin</code>.</p>
+        <p>Так как <code>super</code> ищет родительские методы в <code>[[HomeObject]].[[Prototype]]</code>,
+        это означает, что он ищет <code>sayHiMixin.[[Prototype]]</code>.</p>
+    </article>
+
+    <article>
+        <h2>EventMixin</h2>
+        <p>Многие объекты в браузерной разработке (и не только) обладают важной способностью - они могут генерировать
+        события. События - отличный способ передачи информации всем, кто в ней заинтересован. Давайте создадим примесь,
+        которая позволит легко добавлять функциональность по работу с событиями любым классам/объектам.</p>
+        <ul>
+            <li>Примесь добавит метод <code>.trigger(name, [...data])</code> для генерации события.
+            Аргумент <code>name</code> - это имя события, за которым могут следовать дополнительные аргументы
+            с данными для события.</li>
+            <li>Также будет добавлен метод <code>.on(name, handler)</code>, который назначает обработчик для события
+            с заданным именем. Обработчик будет вызван, когда произойдет событие с указанным именем <code>name</code>,
+            и получит данные из <code>.trigger</code>.</li>
+            <li>... И метод <code>.off(name, handler)</code>, который удаляет обработчик указанного события.</li>
+        </ul>
+        <p>После того как все методы примеси будут добавлены, объект <code>user</code> сможем сгенерировать событие
+        <code>'login'</code> после входа пользователя в личный кабинет. А другой объект, к примеру, <code>calendar</code>
+        сможет использовать это событие, чтобы показать зашедшему пользователю актуальный для него календарь.</p>
+        <p>Или <code>menu</code> может генерировать событие <code>'select'</code>, когда элемент меню выбран, а другие
+        объекты могут назначать обработчики, чтобы реагировать на это событие и т.п.</p>
+        <p>Вот код примеси:</p>
+        <code>
+            let eventMixin = {<br>
+            &nbsp;&nbsp;/**<br>
+            &nbsp;&nbsp; * Подписаться на событие, использование:<br>
+            &nbsp;&nbsp; * menu.on('select', function (item) {...}<br>
+            &nbsp;&nbsp; */<br>
+            &nbsp;&nbsp;on(eventName, handler) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (!this._eventHandlers) this._eventHandlers = {};<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (!this._eventHandlers[eventName]) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this._eventHandlers[eventName] = [];<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this._eventHandlers[eventName].push(handler);<br>
+            &nbsp;&nbsp;},<br>
+            <br>
+            &nbsp;&nbsp;/**<br>
+            &nbsp;&nbsp; * Отменить подписку, использование:<br>
+            &nbsp;&nbsp; * menu.off('select', handler)<br>
+            &nbsp;&nbsp; */<br>
+            &nbsp;&nbsp;off(eventName, handler) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let handlers = this._eventHandlers?.[eventName];<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (!handlers) return;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let i = 0; i < handlers.length; i++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (handlers[i] === handler) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;handlers.splice(i--, 1);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;},<br>
+            <br>
+            &nbsp;&nbsp;/**<br>
+            &nbsp;&nbsp; * Сгенерировать событие с указанным именем и данными<br>
+            &nbsp;&nbsp; * this.trigger('select', data1, data2);<br>
+            &nbsp;&nbsp; */<br>
+            &nbsp;&nbsp;trigger(eventName, ...args) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (!this._eventHandlers?.[eventName]) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return; // Обработчиков для этого события нет<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            <br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Вызовем обработчики<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this._eventHandlers[eventName].forEach(handler => handler.apply(this, args));<br>
+            &nbsp;&nbsp;}<br>
+            };
+        </code>
+        <p>Итак, у нас есть 3 метода:</p>
+        <ol>
+            <li>
+                <p><code>.on(eventName, handler)</code> - назначает функцию <code>handler</code>, чтобы обработать
+                событие с заданным именем.</p>
+                <p>Технически существует свойство <code>_eventHandlers</code>, в котором хранится массив обработчиков
+                для каждого имени события, и оно просто добавляет это событие в список.</p>
+            </li>
+            <li>
+                <p><code>.off(eventName, handler)</code> - убирает функцию из списка обработчиков.</p>
+            </li>
+            <li>
+                <p><code>.trigger(eventName, ...args)</code> - генерирует событие: все назначенные обработчики из
+                <code>_eventHandlers[eventName]</code> вызываются, и <code>...args</code> передаются им в качестве
+                аргументов.</p>
+            </li>
+        </ol>
+        <p>Использование:</p>
+        <code>
+            // Создадим класс<br>
+            class Menu {<br>
+            &nbsp;&nbsp;choose(value) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;this.trigger('select', value);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            // Добавим примесь с методами для событий<br>
+            Object.assign(Menu.prototype, eventMixin);<br>
+            <br>
+            let menu = new Menu();<br>
+            <br>
+            // Добавим обработчик, который будет вызван при событии 'select':<br>
+            menu.on('select', value => alert('Выбранное значение ${value}`));<br>
+            <br>
+            // Генерирует событие => обработчик выше запускается и выводит:
+            menu.choose(123); // Выбранное значение: 123
+        </code>
+        <p>Теперь если у нас есть код, заинтересованный в событии <code>'select'</code>, то он может слушать его
+        с помощью <code>menu.on(...)</code>.</p>
+        <p>А <code>eventMixin</code> позволяет легко добавить такое поведение в любой класс без вмешательства
+        в цепочку наследования.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p><i>Примесь</i> - общий термин в объектно-ориентированном программировании: класс (объект), который содержит в себе
+        методы для других классов.</p>
+        <p>Некоторые другие языки допускают множественное наследование. JavaScript не поддерживает множественное наследование,
+        но с помощью примесей мы можем реализовать нечто похожее, скопировав методы в прототип.</p>
+        <p>Мы можем использовать примеси для расширения функциональности классов, например, для обработки событий,
+        как мы сделали это выше.</p>
+        <p>С примесями могут возникнуть конфликты, если они перезаписывают существующие методы класса. Стоит помнить об
+        этом и быть внимательнее при выборе имен методов примеси, чтобы их избежать.</p>
+    </article>
+</body>
+</html>
+
+<script>
+    let eventMixin = {
+        on(eventName, handler) {
+            if (!this._eventHandlers) this._eventHandlers = {};
+            if (!this._eventHandlers[eventName]) this._eventHandlers[eventName] = [];
+            this._eventHandlers[eventName].push(handler);
+        },
+
+        off(eventName, handler) {
+            let handlers = this._eventHandlers?.[eventName];
+            if (!handlers) return;
+            for (let i = 0; i < handlers.length; i++) {
+                if (handlers[i] === handler) {
+                    this._eventHandlers.splice(i--, 1);
+                }
+            }
+        },
+
+        trigger(eventName, ...args) {
+            if (!this._eventHandlers?.[eventName]) return;
+            this._eventHandlers[eventName].forEach((handler) => handler.call(this, ...args));
+        }
+    }
+
+    class Menu {
+        choose(value) {
+            this.trigger('select', value);
+        }
+    }
+
+    Object.assign(Menu.prototype, eventMixin);
+
+    let menu = new Menu();
+    menu.on('select', (value) => console.log(`Значение ${value}`));
+    menu.choose(123);
+</script>

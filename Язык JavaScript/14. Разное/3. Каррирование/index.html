@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Каррирование</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Каррирование</h2>
+        <p>Каррирование - продвинутая техника для работы с функциями. Она используется не только в JavaScript, но и в
+        других языках.</p>
+        <p>Каррирование - это трансформация функций таким образом, чтобы они принимали аргументы не как
+        <code>f(a, b, c)</code>, а как <code>f(a)(b)(c)</code>.</p>
+        <p>Каррирование не вызывает функцию, Оно просто трансформирует ее.</p>
+        <p>Давайте сначала посмотрим на пример, чтобы лучше понять, о чем речь, а потом на практическое применение
+        каррирования.</p>
+        <p>Создадим вспомогательную функцию <code>curry(f)</code>, которая выполняет каррирование функции <code>f</code>
+        с двумя аргументами. Другими словами, <code>curry(f)</code> для функции <code>f(a, b)</code> трансформирует
+        ее в <code>f(a)(b)</code>.</p>
+        <code>
+            function curry(f) { // curry(f) выполняет каррирование<br>
+            &nbsp;&nbsp;return function(a) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return function(b) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return f(a, b);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;};<br>
+            }<br>
+            <br>
+            // Использование<br>
+            function sum(a, b) {<br>
+            &nbsp;&nbsp;return a + b;<br>
+            }<br>
+            <br>
+            let curriedSum = curry(sum);<br>
+            <br>
+            alert(curriedSum(1)(2)); // 3
+        </code>
+        <p>Как вы видите, реализация довольно проста: это две обертки.</p>
+        <ul>
+            <li>
+                <p>Результат <code>curry(func)</code> - обертка <code>function(a)</code>.</p>
+            </li>
+            <li>
+                <p>Когда она вызывается как <code>sum(1)</code>, аргумент сохраняется в лексическом окружении и
+                возвращается новая обертка <code>function(b)</code>.</p>
+            </li>
+            <li>
+                <p>Далее уже эта обертка вызывается с аргументом <code>2</code> и передает вызов к оригинальной функции
+                <code>sum</code>.</p>
+            </li>
+        </ul>
+        <p>Более продвинутые реализации каррирования, как например <code>_.curry</code> из библиотеки lodash, возвращают
+        обертку, которая позволяет запустить функцию как обычным образом, так и частично.</p>
+        <code>
+            function sum(a, b) {<br>
+            &nbsp;&nbsp;return a + b;<br>
+            }<br>
+            <br>
+            let curriedSum = _.curry(sum); // Используем _.curry из lodash<br>
+            <br>
+            alert(curriedSum(a, b)); // 3, можно вызывать как обычно<br>
+            alert(curriedSum(a)(b)); // 3, а можно частично
+        </code>
+    </article>
+
+    <article>
+        <h2>Каррирование? Зачем?</h2>
+        <p>Чтобы понять пользу от каррирования, нам определенно нужен пример из реальной жизни.</p>
+        <p>Например, у нас есть функция логирования <code>log(date, importance, message)</code>, которая форматирует
+        и выводит информацию. В реальных проектах у таких функций есть много полезных возможностей, например,
+        посылать логи по сети, здесь для простоты используем <code>alert</code>:</p>
+        <code>
+            function log(date, importance, message) {<br>
+            &nbsp;&nbsp;alert(`[${date.getHours()}:${date.getMinutes()}] [${importance}] ${message}`);<br>
+            }
+        </code>
+        <p>А теперь давайте применим к ней каррирование!</p>
+        <code>log = _.curry(log);</code>
+        <p>После этого <code>log</code> продолжает работать нормально:</p>
+        <code>log(new Date(), 'DEBUG', 'some debug'); // log(a, b, c)</code>
+        <p>Но также работает вариант с каррированием:</p>
+        <code>log(new Date())('DEBUG')('some debug'); // log(a)(b)(c)</code>
+        <p>Давайте сделаем удобную функцию для логов с текущим временем:</p>
+        <code>
+            // logNow будет частичным применением функции log с фиксированным первым аргументом<br>
+            let logNow = log(new Date());<br>
+            <br>
+            // Используем ее<br>
+            logNow('INFO', 'message'); // [HH:mm] INFO message
+        </code>
+        <p>Теперь <code>logNow</code> - это <code>log</code> с фиксированным первым аргументом, иначе говоря,
+        «частично примененная» или «частичная» функция.</p>
+        <p>Мы можем пойти дальше и сделать удобную функцию для именно отладочных логов с текущим временем:</p>
+        <code>
+            let debugNow = logNow('DEBUG');<br>
+            <br>
+            debugNow('message'); // [HH:mm] 'DEBUG' message
+        </code>
+        <p>Итак:</p>
+        <ol>
+            <li>
+                <p>Мы ничего не потеряли после каррирования: <code>log</code> все также можно вызывать нормально.</p>
+            </li>
+            <li>
+                <p>Мы можем легко создавать частично примененные функции, как сделали для логов с текущим временем.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Продвинутая реализация каррирования</h2>
+        <p>В случае, если вам интересны детали, вот «продвинутая» реализация каррирования для функций с множеством
+        аргументов, которую мы могли бы использовать выше.</p>
+        <p>Она очень короткая:</p>
+        <code>
+            function curry(func) {<br>
+            &nbsp;&nbsp;return function curried(...args) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (args.length >= f.length) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return f.call(this, ...args);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return function(...args2) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return curried.call(this, ...args, ...args2);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;};<br>
+            }
+        </code>
+        <p>Примеры использования:</p>
+        <code>
+            function sum(a, b, c) {<br>
+            &nbsp;&nbsp;return a + b + c;<br>
+            }<br>
+            <br>
+            let curriedSum = curry(sum);<br>
+            <br>
+            alert(curriedSum(1, 2, 3)); // 6, все еще можно вызывать нормально<br>
+            alert(curriedSum(1)(2, 3)); // 6, каррирование первого аргумента<br>
+            alert(curriedSum(1)(2)(3)); // 6, каррирование всех аргументов
+        </code>
+        <p>Новое <code>curry</code> выглядит сложновато, но на самом деле его легко понять.</p>
+        <p>Результат вызова <code>curry(func)</code> - это обертка <code>curried</code>, которая выглядит так:</p>
+        <code>
+            // func - функция, которую мы трансформируем<br>
+            function curried(...args) {<br>
+            &nbsp;&nbsp;if (args.length >= func.length) { // (1)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return func.call(this, ...args);<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;return function pass(...args2) { // (2)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return curried.call(this, ...args, ...args2);<br>
+            &nbsp;&nbsp;};<br>
+            }
+        </code>
+        <p>Когда мы запускаем ее, есть две ветви выполнения <code>if</code>:</p>
+        <ol>
+            <li>
+                <p>Вызвать сейчас: если количество переданных аргументов <code>args</code> совпадает с количеством
+                аргументов при объявлении функции (<code>func.length</code>) или больше, тогда вызов просто переходит
+                к ней.</p>
+            </li>
+            <li>
+                <p>Частичное применение: в противном случае <code>func</code> не вызывается сразу. Вместо этого,
+                возвращается другая обертка <code>pass</code>, которая снова применит <code>curried</code>,
+                передав предыдущие аргументы вместе с новыми. Затем при новом вызове мы опять получим либо новое
+                частичное применение (если аргументов недостаточно), либо, наконец, результат.</p>
+            </li>
+        </ol>
+        <p>Например, давайте посмотрим, что произойдет в случае <code>sum(a, b, c)</code>. У нее три аргумента, так что
+        <code>sum.length = 3</code>.</p>
+        <p>Для вызова <code>curried(1)(2)(3)</code>:</p>
+        <ol>
+            <li>
+                <p>Первый вызов <code>curried(1)</code> запоминает <code>1</code> в своем лексическом окружении
+                и возвращает обертку <code>pass</code>.</p>
+            </li>
+            <li>
+                <p>Обертка <code>pass</code> вызывается с <code>(2)</code>: она берет предыдущие аргументы (<code>1</code>),
+                объединяет их с тем, что получила сама <code>(2)</code> и вызывает <code>curried(1, 2)</code>
+                со всеми ними. Так как число аргументов все еще меньше 3-х, <code>curry</code> возвращает <code>pass</code>.</p>
+            </li>
+            <li>
+                <p>Обертка <code>pass</code> вызывается снова с <code>(3)</code>. Для следующего вызова <code>pass(3)</code>
+                берет предыдущие аргументы <code>(1, 2)</code> и добавляет к ним <code>3</code>, делая вызов
+                <code>curried(1, 2, 3)</code> - наконец 3 аргумента, и они передаются оригинальной функции.</p>
+            </li>
+        </ol>
+
+        <article class="note">
+            <h2>Только функции с фиксированным количеством аргументов</h2>
+            <p>Для каррирования необходима функция с фиксированным количеством аргументов.</p>
+            <p>Функцию, которая использует остаточные параметры, типа <code>f(...args)</code>, так каррировать не получится.</p>
+        </article>
+
+        <article class="note">
+            <h2>Немного больше, чем каррирование</h2>
+            <p>По определению, каррирование должно превращать <code>sum(a, b, c)</code> в <code>sum(a)(b)(c)</code>.</p>
+            <p>Но, как было описано, большинство реализаций каррирования в JavaScript более продвинуты: они также
+            оставляют вариант вызова функции с несколькими аргументами.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p><i>Каррирование</i> - это трансформация, которая превращает вызов <code>f(a, b, c)</code> в
+        <code>f(a)(b)(c)</code>. В JavaScript реализация обычно позволяет выполнять функцию обоими вариантами: либо
+        нормально, либо возвращает частично примененную функцию, если количество аргументов недостаточно.</p>
+        <p>Каррирование позволяет легко получать частичные функции. Как мы видели в примерах с логами: универсальная
+        функция <code>log(date, importance, message)</code> после каррирования возвращает нам частично примененную
+        функцию, когда вызывается с одним аргументом, как <code>log(date)</code> или двумя аргументами,
+        как <code>log(date, importance)</code>.</p>
+    </article>
+</body>
+</html>
+
+<script src="script.js"></script>

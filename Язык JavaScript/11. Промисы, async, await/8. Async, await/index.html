@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Async/await</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Async/await</h2>
+        <p>Существует специальный синтаксис для работы с промисами, который называется «async/await». Он удивительно
+        прост для понимания и использования.</p>
+    </article>
+
+    <article>
+        <h2>Асинхронные функции</h2>
+        <p>Начнем с ключевого слова <code>async</code>. Оно ставится перед функцией, вот так:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;return 1;<br>
+            }
+        </code>
+        <p>У слова <code>async</code> один простой смысл: эта функция всегда возвращает промис. Значения других типов
+        оборачиваются в завершившийся успешно промис автоматически.</p>
+        <p>Например, эта функция возвратит выполненный промис с результатом <code>1</code>:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;return 1;<br>
+            }<br>
+            <br>
+            f().then(alert); // 1
+        </code>
+        <p>Можно и явно вернуть промис, результат будет одинаковым:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;return Promise.resolve(1);<br>
+            }<br>
+            <br>
+            f().then(alert); // 1
+        </code>
+        <p>Так что ключевое слово <code>async</code> перед функцией гарантирует, что эта функция в любом случае вернет
+        промис. Согласитесь, достаточно просто? Но это еще не все. Есть другое ключевое слово - <code>await</code>,
+        которое можно использовать только внутри <code>async</code>-функций.</p>
+    </article>
+
+    <article>
+        <h2>Await</h2>
+        <p>Синтаксис:</p>
+        <code>
+            // Работает только внутри async-функций<br>
+            let value = await promise;
+        </code>
+        <p>Ключевое слово <code>await</code> заставит интерпретатор JavaScript ждать до тех пор, пока промис справа
+        от <code>await</code> не выполнится. После чего оно вернет его результат, и выполнение кода продолжится.</p>
+        <p>В этом примере промис успешно выполнится через 1 секунду:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;let promise = new Promise((resolve, reject) => {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => resolve('Готово'), 1000)<br>
+            &nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let result = await promise; // Будет ждать, пока промис не выполнится (*)<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;alert(result); // Готово<br>
+            }<br>
+            <br>
+            f();
+        </code>
+        <p>В данном примере выполнение функции остановится на строке <code>(*)</code> до тех пор, пока промис не
+        выполнится. Это произойдет через секунду после запуска функции. После чего в переменную <code>result</code>
+        будет записан результат выполнения промиса, и браузер отобразит alert-окно «Готово».</p>
+        <p>Обратите внимание, хотя <code>await</code> и заставляет JavaScript дожидаться выполнения промиса, это не
+        отнимает ресурсов процессора. Пока промис не выполнится, JS-движок может заниматься другими задачами: выполнять
+        прочие скрипты, обрабатывать события и т.п.</p>
+        <p>По сути, это просто «синтаксический сахар» для получения результата промиса, более наглядный, чем
+        <code>promise.then</code>.</p>
+
+        <article class="warning">
+            <h2><code>await</code> нельзя использовать в обычных функциях</h2>
+            <p>Если мы попробуем использовать <code>await</code> внутри функции, объявленной без <code>async</code>,
+            получим синтаксическую ошибку:</p>
+            <code>
+                function f() {<br>
+                &nbsp;&nbsp;let promise = Promise.resolve(1);<br>
+                &nbsp;&nbsp;let result = await promise; // SyntaxError<br>
+                }
+            </code>
+            <p>Ошибки не будет, если мы укажем ключевое слово <code>async</code> перед объявление функции. Как было
+            сказано раньше, <code>await</code> можно использовать только внутри <code>async</code>-функций.</p>
+        </article>
+
+        <p>Давайте перепишем пример <code>showAvatar()</code> из раздела «Цепочка промисов» с помощью <code>async/await</code>:</p>
+        <ol>
+            <li>
+                <p>Нам нужно заменить вызовы <code>.then</code> на <code>await</code>.</p>
+            </li>
+            <li>
+                <p>И добавить ключевое слово <code>async</code> перед объявление функции.</p>
+            </li>
+        </ol>
+        <code>
+            async function showAvatar() {<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Запрашиваем JSON с данными пользователя<br>
+            &nbsp;&nbsp;let promise = await fetch('user.json');<br>
+            &nbsp;&nbsp;let user = await promise.json();<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Запрашиваем информацию об этом пользователе из github<br>
+            &nbsp;&nbsp;let githubResponse = await fetch(`https://api.github.com/users/${user.login}`);<br>
+            &nbsp;&nbsp;let githubUser = await githubResponse.json();<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Отображаем аватар пользователя<br>
+            &nbsp;&nbsp;let img = document.createElement('img');<br>
+            &nbsp;&nbsp;img.src = githubUser.avatar_url;<br>
+            &nbsp;&nbsp;document.body.append(img);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Ждем 3 секунды и затем скрываем аватар<br>
+            &nbsp;&nbsp;await new Promise((resolve, reject) => setTimeout(resolve, 3000));<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;img.remove();<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;return githubUser;<br>
+            }<br>
+            <br>
+            showAvatar();
+        </code>
+
+        <article class="note">
+            <h2><code>await</code> нельзя использовать на верхнем уровне вложенности</h2>
+            <p>Программисты, узнав об <code>await</code>, часто пытаются использовать эту возможность на верхнем уровне
+            вложенности (вне тела функции). Но из-за того, что <code>await</code> работает только внутри
+            <code>async</code>-функций, так сделать не получится:</p>
+            <code>
+                // SyntaxError на верхнем уровне вложенности<br>
+                let response = await fetch('user.json');<br>
+                let user = await response.json();<br>
+            </code>
+            <p>Можно обернуть этот код в анонимную <code>async</code>-функцию, тогда все заработает:</p>
+            <code>
+                (async () => {<br>
+                &nbsp;&nbsp;let response = await fetch('user.json');<br>
+                &nbsp;&nbsp;let user = await response.json();<br>
+                &nbsp;&nbsp;...<br>
+                })();
+            </code>
+        </article>
+
+        <article class="note">
+            <h2><code>await</code> работает с «thenable»-объектами</h2>
+            <p>Как и <code>promise.then</code>, <code>await</code> позволяет работать с промис-совместимыми объектами.
+            Идея в том, что если у объекта можно вызвать метод <code>then</code>, этого достаточно, чтобы использовать
+            его с <code>await</code>.</p>
+            <p>В примере ниже, экземпляры класса <code>Thenable</code> будут работать вместе с <code>await</code>:</p>
+            <code>
+                class Thenable {<br>
+                &nbsp;&nbsp;constructor(num) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;this.num = num;<br>
+                &nbsp;&nbsp;}<br>
+                &nbsp;&nbsp;then(resolve, reject) {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert(resolve);<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// Выполнить resolve со значением this.num * 2 через 1000мс<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => resolve(this.num * 2), 1000); // (*)<br>
+                &nbsp;&nbsp;}<br>
+                }<br>
+                <br>
+                async function f() {<br>
+                &nbsp;&nbsp;// Код будет ждать 1 секунду,<br>
+                &nbsp;&nbsp;// после чего значение result станет равным 2<br>
+                &nbsp;&nbsp;let result = await new Thenable(1);<br>
+                &nbsp;&nbsp;alert(result);<br>
+                }<br>
+                <br>
+                f();
+            </code>
+            <p>Когда <code>await</code> получает объект с <code>.then</code>, не являющийся промисом, JavaScript
+            автоматически запускает этот метод, передавая ему аргументы - встроенные функции <code>resolve</code>
+            и <code>reject</code>. Затем <code>await</code> приостановит дальнейшее выполнение кода, пока любая
+            из этих функций не будет вызвана (в примере это строка <code>(*)</code>). После чего выполнение кода
+            продолжится с результатом <code>resolve</code> или <code>reject</code> соответственно.</p>
+        </article>
+
+        <article>
+            <h2>Асинхронные методы классов</h2>
+            <p>Для добавления асинхронного метода достаточно написать <code>async</code> перед именем:</p>
+            <code>
+                class Waiter {<br>
+                &nbsp;&nbsp;async wait() {<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;return await Promise.resolve(1);<br>
+                &nbsp;&nbsp;}<br>
+                }<br>
+                <br>
+                new Waiter()<br>
+                &nbsp;&nbsp;.wait()<br>
+                &nbsp;&nbsp;.then(alert); // 1
+            </code>
+            <p>Как и в случае с асинхронными функциями, такой метод гарантированно возвращает промис, и в его теле
+            можно использовать <code>await</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Обработка ошибок</h2>
+        <p>Когда промис завершается успешно, <code>await promise</code> возвращает результат. Когда завершается с ошибкой -
+        будет выброшено исключение. Как если бы на этом месте находилось выражение <code>throw</code>.</p>
+        <p>Такой код:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;await Promise.reject(new Error('Упс!'));<br>
+            }
+        </code>
+        <p>Делает то же самое, что и такой:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;throw new Error('Упс!');<br>
+            }
+        </code>
+        <p>Но есть отличие: на практике промис может завершиться с ошибкой не сразу, а через некоторое время. В этом случае
+        будет задержка, а затем <code>await</code> выбросит исключение.</p>
+        <p>Такие ошибки можно ловить, используя <code>try...catch</code>, как с обычным <code>throw</code>:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;try {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let response = await fetch('http://no-such-url');<br>
+            &nbsp;&nbsp;} catch(err) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(err); // TypeError: failed to fetch<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            f();
+        </code>
+        <p>В случае ошибки выполнение <code>try</code> прерывается и управление прыгает в начало блока <code>catch</code>.
+        Блоком <code>try</code> можно обернуть несколько строк:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;try {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let response = await fetch('/no-user-here');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let user = await response.json();<br>
+            &nbsp;&nbsp;} catch(err) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Перехватит любую ошибку в блоке try: и в fetch, и в response.json<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(err);<br>
+            &nbsp;&nbsp;}<br>
+            }<br>
+            <br>
+            f();
+        </code>
+        <p>Если у нас нет <code>try...catch</code>, асинхронная функция будет возвращать завершившийся с ошибкой промис
+        (в состоянии <code>rejected</code>). В этом случае мы можем использовать метод <code>.catch</code> промиса,
+        чтобы обработать ошибку:</p>
+        <code>
+            async function f() {<br>
+            &nbsp;&nbsp;let response = await fetch('http://no-such-url');<br>
+            }<br>
+            <br>
+            // f() вернет промис в состоянии rejected<br>
+            f().catch(alert); // TypeError: failed to fetch (*)
+        </code>
+        <p>Если забыть добавить <code>.catch</code>, то будет сгенерирована ошибка «Uncaught promise error» и
+        информация об этом будет выведена в консоль. Такие ошибки можно поймать глобальным обработчиком.</p>
+
+        <article class="note">
+            <h2><code>async/await</code> и <code>promise.then/catch</code></h2>
+            <p>При работе с <code>async/await</code>, <code>.then</code> используется нечасто, так как <code>await</code>
+            автоматически ожидает завершения выполнения промиса. В таком случае обычно (но не всегда) гораздо удобнее
+            перехватывать ошибки, используя <code>try...catch</code>, нежели чем <code>.catch</code>.</p>
+            <p>Но на верхнем уровне вложенности (вне <code>async</code>-функций) <code>await</code> использовать нельзя,
+            поэтому <code>.then/catch</code> для обработки финального результата или ошибок - обычная практика.</p>
+            <p>Так сделано в строке <code>(*)</code> в примере выше.</p>
+        </article>
+
+        <article class="note">
+            <h2><code>async/await</code> отлично работает с <code>Promise.all</code></h2>
+            <p>Когда необходимо подождать несколько промисов одновременно, можно обернуть их в <code>Promise.all</code>,
+            и затем <code>await</code>:</p>
+            <code>
+                // await будет ждать массив с результатами выполнения всех промисов<br>
+                let results = await Promise.all([<br>
+                &nbsp;&nbsp;fetch(url1),<br>
+                &nbsp;&nbsp;fetch(url2),<br>
+                &nbsp;&nbsp;...<br>
+                ]);
+            </code>
+            <p>В случае ошибки она будет передаваться как обычно: от завершившегося с ошибкой промиса к <code>Promise.all</code>.
+            А после будет сгенерировано исключение, которое можно отловить, обернув выражение в <code>try...catch</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Ключевое слово <code>async</code> перед объявлением функции:</p>
+        <ol>
+            <li>
+                <p>Обязывает ее всегда возвращать промис.</p>
+            </li>
+            <li>
+                <p>Позволяет использовать <code>await</code> в теле этой функции.</p>
+            </li>
+        </ol>
+        <p>Ключевое слово <code>await</code> перед промисом заставит JavaScript дождаться его выполнения, после чего:</p>
+        <ol>
+            <li>
+                <p>Если промис завершился с ошибкой, будет сгенерировано исключение, как если бы на этом месте находилось
+                <code>throw</code>.</p>
+            </li>
+            <li>
+                <p>Иначе вернет результат промиса.</p>
+            </li>
+        </ol>
+        <p>Вместе они предоставляют отличный каркас для написания асинхронного кода. Такой код легко писать, и читать.</p>
+        <p>Хотя при работе с <code>async/await</code> можно обходиться без <code>promise.then/catch</code>, иногда
+        все-таки приходится использовать эти методы (на верхнем уровне вложенности, например). Также <code>await</code>
+        отлично работает в сочетании с <code>Promise.all</code>, если необходимо выполнить несколько задач параллельно.</p>
+    </article>
+</body>
+</html>
+
+<script src="script.js"></script>
+<script>
+    async function showAvatar(nickname, seconds) {
+        let githubResponse = await fetch(`https://api.github.com/users/${nickname}`);
+        let githubUser = await githubResponse.json();
+
+        let img = document.createElement('img');
+        img.src = githubUser.avatar_url;
+        img.style.position = 'fixed';
+        img.style.top = '50%';
+        img.style.left = '50%';
+        img.style.transform = 'translate(-50%, -50%)';
+        document.body.append(img);
+
+        setTimeout(() => {
+            img.style.display = 'none';
+        }, seconds * 1000);
+
+        return githubUser;
+    }
+
+    showAvatar('akimov246', 1);
+</script>
