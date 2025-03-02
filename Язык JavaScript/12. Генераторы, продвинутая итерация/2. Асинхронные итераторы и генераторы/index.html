@@ -66,7 +66,7 @@
             &nbsp;&nbsp;from: 1,<br>
             &nbsp;&nbsp;to: 5,<br>
             &nbsp;&nbsp;<br>
-            &nbsp;&nbsp;// for await...of вызывает этот метод один раз в самом начале
+            &nbsp;&nbsp;// for await...of вызывает этот метод один раз в самом начале<br>
             &nbsp;&nbsp;[Symbol.asyncIterator]() { // (1)<br>
             &nbsp;&nbsp;&nbsp;&nbsp;// ... Возвращает объект-итератор:<br>
             &nbsp;&nbsp;&nbsp;&nbsp;// далее for await...of работает только с этим объектом,<br>
@@ -75,7 +75,7 @@
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current: this.from,<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;last: this.to,<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// next() вызывается на каждой итерации цикла for await...of
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// next() вызывается на каждой итерации цикла for await...of<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;async next() { // (2)<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Должен возвращать значение как объект {done: ..., value: ...}<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// (автоматически оборачивается в промис с помощью async)<br>
