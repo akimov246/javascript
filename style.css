@@ -48,3 +48,8 @@ article a {
     text-decoration: none;
     color: #436ebd;
 }
+
+img {
+    width: 80%;
+    height: auto;
+}
