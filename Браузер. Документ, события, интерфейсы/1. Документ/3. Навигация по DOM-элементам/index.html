@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Навигация по DOM-элементам</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Навигация по DOM-элементам</h2>
+        <p>DOM позволяет нам делать что угодно с элементами и их содержимым, но для начала нужно получить
+        соответствующий DOM-объект.</p>
+        <p>Все операции с DOM начинаются с объекта <code>document</code>. Это главная «точка входа» в DOM. Из него
+        мы можем получить доступ к любому узлу.</p>
+        <p>Так выглядят основные ссылки, по которым можно переходить между узлами DOM:</p>
+        <img src="https://learn.javascript.ru/article/dom-navigation/dom-links.svg" alt style="width: 30%">
+        <p>Поговорим об этом подробнее.</p>
+    </article>
+
+    <article>
+        <h2>Сверху: documentElement и body</h2>
+        <p>Самые верхние элементы дерева доступны как свойства объекта <code>document</code>:</p>
+        <p><code>&lthtml&gt</code> = <code>document.documentElement</code></p>
+        <p>Самый верхний узел документа: <code>documentElement</code>. В DOM он соответствует тегу <code>&lthtml&gt</code>.</p>
+        <p><code>&ltbody&gt</code> = <code>document.body</code></p>
+        <p>Другой часто используемый DOM-узел - узел тега <code>&ltbody&gt</code>: <code>document.body</code>.</p>
+        <p><code>&lthead&gt</code> = <code>document.head</code></p>
+        <p>Тег <code>&lthead&gt</code> доступен как <code>document.head</code>.</p>
+
+        <article class="warning">
+            <h2>Есть одна тонкость: <code>document.body</code> может быть равен <code>null</code></h2>
+            <p>Нельзя получить доступ к элементу, которого еще не существует в момент выполнения скрипта.</p>
+            <p>В частности, скрипт находится в <code>&lthead&gt</code>, <code>document.body</code> в нем недоступен,
+            потому что браузер его еще не прочитал.</p>
+            <p>Поэтому в примере ниже первый <code>alert</code> выведет <code>null</code>:</p>
+            <code>
+                &lthtml&gt<br>
+                &lthead&gt<br>
+                &nbsp;&nbsp;&ltscript&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert('Из HEAD: ' + document.body); // null, &ltbody&gt еще нет<br>
+                &nbsp;&nbsp;&lt/script&gt<br>
+                &lt/head&gt<br>
+                &ltbody&gt<br>
+                &nbsp;&nbsp;&ltscript&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert('Из BODY: ' + document.body); // HTMLBodyElement, теперь он есть<br>
+                &nbsp;&nbsp;&lt/script&gt<br>
+                &lt/body&gt<br>
+                &lt/html&gt
+            </code>
+        </article>
+
+        <article class="note">
+            <h2>В мире DOM <code>null</code> означает «не существует»</h2>
+            <p>В DOM значение <code>null</code> значит «не существует» или «такого узла нет».</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Дети: childNodes, firstChild, lastChild</h2>
+        <p>Здесь и далее мы будем использовать два принципиально разных термина:</p>
+        <ul>
+            <li>
+                <p><b>Дочерние узлы (или дети)</b> - элементы, которые являются непосредственно детьми узла. Другими
+                словами, элементы, которые лежат непосредственно внутри данного. Например, <code>&lthead&gt</code>
+                и <code>&ltbody&gt</code> являются детьми элемента <code>&lthtml&gt</code>.</p>
+            </li>
+            <li>
+                <p><b>Потомки</b> - все элементы, которые лежат внутри данного, включая детей, их детей и т.д.</p>
+            </li>
+        </ul>
+        <p>В примере ниже детьми тега <code>&ltbody&gt</code> являются теги <code>&ltdiv&gt</code> и <code>&ltul&gt</code>
+        (и несколько пустых текстовых узлов):</p>
+        <code>
+            &lthtml&gt<br>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltdiv&gtНачало&lt/div&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltul&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&ltli&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltb&gtИнформация&lt/b&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lt/li&gt<br>
+            &nbsp;&nbsp;&lt/ul&gt<br>
+            &lt/body&gt<br>
+            &lt/html&gt
+        </code>
+        <p>... А потомки <code>&ltbody&gt</code> - это и прямые дети <code>&ltdiv&gt</code>, <code>&ltul&gt</code> и
+        вложенные в них: <code>&ltli&gt</code> (ребенок <code>&ltul&gt</code>) и <code>&ltb&gt</code> (ребенок
+        <code>&ltli&gt</code>) - в общем, все элементы поддерева.</p>
+        <p><b>Коллекция <code>childNodes</code> содержит список всех детей, включая текстовые узлы.</b></p>
+        <p>Пример ниже последовательно выведет детей <code>document.body</code>:</p>
+        <code>
+            &lthtml&gt<br>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltdiv&gtНачало&ltdiv&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltul&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&ltli&gtИнформация&lt/li&gt<br>
+            &nbsp;&nbsp;&lt/ul&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltdiv&gtКонец&lt/div&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let i = 0; i < document.body.length; i++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.childNodes[i]); // Text, DIV, Text, UL, ..., SCRIPT<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &nbsp;&nbsp;... какой-то HTML-код...<br>
+            &lt/body&gt<br>
+            &lt/html&gt
+        </code>
+        <p>Обратим внимание на маленькую деталь. Если запустить пример выше, то последним будет выведен элемент
+        <code>&ltscript&gt</code>. На самом деле, в документе есть еще «какой-то HTML-код», но на момент выполнения
+        скрипта браузер еще до него не дошел, поэтому скрипт не видит его.</p>
+        <p><b>Свойства <code>firstChild</code> и <code>lastChild</code> обеспечивают быстрый доступ к первому и последнему
+        дочернему элементу.</b></p>
+        <p>Они, по сути, являются всего лишь сокращениями. Если у тега есть дочерние узлы, условие ниже всегда верно:</p>
+        <code>
+            elem.childNodes[0] === elem.firstChild<br>
+            elem.childNodes[elem.childNodes.length - 1] === elem.lastChild
+        </code>
+        <p>Для проверки наличия дочерних узлов существует также специальная функция <code>elem.hasChildNodes()</code>.</p>
+    </article>
+
+    <article>
+        <h2>DOM-коллекции</h2>
+        <p>Как мы уже видели, <code>childNodes</code> похож на массив. На самом деле это не массив, а <i>коллекция</i> -
+        особый перебираемый объект-псевдомассив.</p>
+        <p>И есть два важных следствия из этого:</p>
+        <ol>
+            <li>
+                <p>Для перебора <i>коллекции</i> мы можем использовать <code>for...of</code>:</p>
+                <code>
+                    for (let node of document.body.childNodes) {<br>
+                    &nbsp;&nbsp;alert(node); // Покажет все узлы из коллекции<br>
+                    }
+                </code>
+                <p>Это работает, потому что коллекция является перебираемым объектом (есть требуемый для этого метод
+                <code>Symbol.iterator</code>).</p>
+            </li>
+            <li>
+                <p>Методы массивов не будут работать, потому что коллекция - это не массив:</p>
+                <code>
+                    alert(document.body.childNodes.filter); // undefined (у коллекции нет метода filter)
+                </code>
+            </li>
+        </ol>
+        <p>Первый пункт - это хорошо для нас. Второй - бывает неудобен, но можно пережить. Если нам хочется
+            использовать именно методы массива, то мы можем создать настоящий массив из коллекции, используя
+            <code>Array.from</code>:</p>
+        <code>
+            alert(Array.from(document.body.childNodes).filter); // Сделали массив
+        </code>
+
+        <article class="warning">
+            <h2>DOM-коллекции - только для чтения</h2>
+            <p>DOM-коллекции, и даже более - <i>все</i> навигационные свойства, перечисленные в этой главе,
+            доступны только для чтения.</p>
+            <p>Мы не можем заменить один дочерний узел на другой, просто написав <code>childNodes[i] = ...</code>.</p>
+            <p>Для изменения DOM требуются другие методы. Мы увидим их в следующей главе.</p>
+        </article>
+
+        <article class="warning">
+            <h2>DOM-коллекции живые</h2>
+            <p>Почти все DOM-коллекции, за небольшим исключением, <i>живые</i>. Другими словами, они отражают
+            текущее состояние DOM.</p>
+            <p>Если мы сохраним ссылку на <code>elem.childNodes</code> и добавим/удалим узлы в DOM, то они появятся
+            в сохраненной коллекции автоматически.</p>
+        </article>
+
+        <article class="warning">
+            <h2>Не используйте цикл <code>for...in</code> для перебора коллекций</h2>
+            <p>Коллекции перебираются циклом <code>for...of</code>. Некоторые начинающие разработчики пытаются использовать
+            для этого цикл <code>for...in</code>.</p>
+            <p>Не делайте так. Цикл <code>for...in</code> перебираем все перечисляемые свойства. А у коллекций есть
+            некоторые «лишние», редко используемые свойства, которые обычно нам не нужны:</p>
+            <code>
+                &ltbody&gt<br>
+                &ltscript&gt<br>
+                &nbsp;&nbsp;// Выводит 0, 1, length, item, values и другие свойства<br>
+                &nbsp;&nbsp;for (let prop in document.body.childNodes) alert(prop);<br>
+                &lt/script&gt<br>
+                &lt/body&gt
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Соседи и родитель</h2>
+        <p><i>Соседи</i> - это узлы, у которых один и тот же родитель.</p>
+        <p>Например, здесь <code>&lthead&gt</code> и <code>&ltbody&gt</code> соседи:</p>
+        <code>
+            &lthtml&gt<br>
+            &nbsp;&nbsp;&lthead&gt...&lt/head&gt&ltbody&gt...&lt/body&gt<br>
+            &lt/html&gt
+        </code>
+        <ul>
+            <li>
+                <p>Говорят, что <code>&ltbody&gt</code> - «следующий» или «правый» сосед <code>&lthead&gt</code>.</p>
+            </li>
+            <li>
+                <p>Также можно сказать, что <code>&lthead&gt</code> «предыдущий» или «левый» сосед <code>&ltbody&gt</code>.</p>
+            </li>
+        </ul>
+        <p>Следующий узел того же родителя (следующий сосед) - в свойстве <code>nextSibling</code>, а предыдущий - в
+        <code>previousSibling</code>.</p>
+        <p>Родитель доступен через <code>parentNode</code>.</p>
+        <p>Например:</p>
+        <code>
+            // Родителем &ltbody&gt является &lthtml&gt<br>
+            alert(document.body.parentNode === document.documentElement); // true<br>
+            <br>
+            // После &lthead&gt идет &ltbody&gt<br>
+            alert(document.head.nextSibling); // HTMLBodyElement<br>
+            <br>
+            // Перед &ltbody&gt находится &lthead&gt<br>
+            alert(document.body.previousSibling); // HTMLHeadElement
+        </code>
+    </article>
+
+    <article>
+        <h2>Навигация только по элементам</h2>
+        <p>Навигационные свойства, описанные выше, относятся ко <i>всем</i> узлам в документе. В частности, в
+        <code>childNodes</code> находятся и текстовые узлы и узлы-элементы, и узлы-комментарии, если они есть.</p>
+        <p>Но для большинства задач текстовые узлы и узлы-комментарии нам не нужны. Мы хотим манипулировать
+        узлами-элементами, которые представляют собой теги и формируют структуру страницы.</p>
+        <p>Поэтому давайте рассмотрим дополнительный набор ссылок, которые учитывают только <i>узлы-элементы</i>:</p>
+        <img src="https://learn.javascript.ru/article/dom-navigation/dom-links-elements.svg" alt style="width: 30%">
+        <p>Эти ссылки похожи на те, что раньше, только в ряде мест стоит слово <code>Element</code>:</p>
+        <ul>
+            <li>
+                <p><code>children</code> - коллекция детей, которые являются элементами.</p>
+            </li>
+            <li>
+                <p><code>firstElementChild</code>, <code>lastElementChild</code> - первый и последний дочерний элемент.</p>
+            </li>
+            <li>
+                <p><code>previousElementSibling</code>, <code>nextElementSibling</code> - соседи-элементы.</p>
+            </li>
+            <li>
+                <p><code>parentElement</code> - родитель-элемент.</p>
+            </li>
+        </ul>
+
+        <article class="note">
+            <h2>Зачем нужен <code>parentElement</code>? Разве может родитель быть <i>не</i> элементом?</h2>
+            <p>Свойство <code>parentElement</code> возвращает родитель-элемент, а <code>parentNode</code> возвращает
+            «любого родителя». Обычно эти свойства одинаковы: они оба получают родителя.</p>
+            <p>За исключением <code>document.documentElement</code>:</p>
+            <code>
+                alert(document.documentElement.parentNode); // document<br>
+                alert(document.documentElement.parentElement); // null
+            </code>
+            <p>Причина в том, что родителем корневого узла <code>document.documentElement</code> (<code>&lthtml&gt</code>)
+            является <code>document</code>. Но <code>document</code> - это не узел-элемент, так что <code>parentNode</code>
+            вернет его, а <code>parentElement</code> нет.</p>
+            <p>Эта деталь может быть полезна, если мы хотим пойти вверх по цепочке родителей от произвольного элемента
+            <code>elem</code> к <code>&lthtml&gt</code>, но не до <code>document</code>:</p>
+            <code>
+                while (elem = elem.parentElement) { // Идти вверх до &lthtml&gt<br>
+                &nbsp;&nbsp;alert(elem);<br>
+                }
+            </code>
+        </article>
+
+        <p>Изменим один из примеров выше: заменим <code>childNodes</code> на <code>children</code>. Теперь цикл
+        выводит только элементы:</p>
+        <code>
+            &lthtml&gt<br>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltdiv&gtНачало&lt/div&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltul&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&ltli&gtИнформация&lt/li&gt<br>
+            &nbsp;&nbsp;&lt/ul&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltdiv&gtКонец&lt/div&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let elem of document.body.children) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(elem); // DIV, UL, DIV, SCRIPT<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &nbsp;&nbsp;...<br>
+            &lt/body&gt<br>
+            &lt/html&gt
+        </code>
+    </article>
+
+    <article>
+        <h2>Еще немного ссылок: таблицы</h2>
+        <p>До сих пор мы описывали основные навигационные ссылки.</p>
+        <p>Некоторые типы DOM-элементов предоставляют для удобства дополнительные свойства, специфичные для их типа.</p>
+        <p>Таблицы - отличный пример таких элементов.</p>
+        <p><b>Элемент</b> <code>&lttable&gt</code>, в дополнение к свойствам, о которых речь шла выше, поддерживает
+        следующие:</p>
+        <ul>
+            <li>
+                <p><code>table.rows</code> - коллекция строк <code>&lttr&gt</code> таблицы.</p>
+            </li>
+            <li>
+                <p><code>table.caption/tHead/tFoot</code> - ссылки на элементы таблицы <code>&ltcaption&gt</code>,
+                <code>&ltthead&gt</code>, <code>&lttfoot&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>table.tBodies</code> - коллекция элементов таблицы <code>&lttbody&gt</code> (по спецификации
+                их может быть больше одного).</p>
+            </li>
+        </ul>
+        <p><code>&ltthead&gt</code>, <code>&lttfoot&gt</code>, <code>&lttbody&gt</code> предоставляют свойство <code>rows</code>:</p>
+        <ul>
+            <li>
+                <p><code>tbody.rows</code> - коллекция строк <code>&lttr&gt</code> секции.</p>
+            </li>
+        </ul>
+        <p><code>&lttr&gt</code>:</p>
+        <ul>
+            <li>
+                <p><code>tr.cells</code> - коллекция <code>&lttd&gt</code> и <code>&ltth&gt</code> ячеек, находящихся
+                внутри строки <code>&lttr&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>tr.sectionRowIndex</code> - номер строки <code>&lttr&gt</code> в текущей секции
+                <code>&ltthead&gt/&lttbody&gt/&lttfoot&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>tr.rowIndex</code> - номер строки <code>&lttr&gt</code> в таблице (включая все строки таблицы).</p>
+            </li>
+        </ul>
+        <p><code>&lttd&gt</code> и <code>&ltth&gt</code>:</p>
+        <ul>
+            <li>
+                <p><code>td.cellIndex</code> - номер ячейки в строке <code>&lttr&gt</code>.</p>
+            </li>
+        </ul>
+        <p>Пример использования:</p>
+        <code>
+            &lttable id="table"&gt<br>
+            &nbsp;&nbsp;&lttr&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lttd&gtодин&lt/td&gt&lttd&gtдва&lt/td&gt<br>
+            &nbsp;&nbsp;&lt/tr&gt<br>
+            &nbsp;&nbsp;&lttr&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lttd&gtтри&lt/td&gt&lttd&gtчетыре&lt/td&gt<br>
+            &nbsp;&nbsp;&lt/tr&gt<br>
+            &lt/table&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Выводит содержимое первой строки, второй ячейки<br>
+            &nbsp;&nbsp;alert(table.rows[0].cells[1].innerHTML); // 'два'<br>
+            &lt/script&gt
+        </code>
+        <p>Существуют также дополнительные навигационные ссылки для HTML-форм. Мы рассмотрим их позже, когда начнем
+        работать с формами.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Получив DOM-узел, мы можем перейти к его ближайшим соседям используя навигационные ссылки.</p>
+        <p>Есть два основных набора ссылок:</p>
+        <ul>
+            <li>
+                <p>Для всех узлов: <code>parentNode</code>, <code>childNodes</code>, <code>firstChild</code>,
+                <code>lastChild</code>, <code>previousSibling</code>, <code>nextSibling</code>.</p>
+            </li>
+            <li>
+                <p>Только для узлов-элементов: <code>parentElement</code>, <code>children</code>,
+                <code>firstElementChild</code>, <code>lastElementChild</code>, <code>previousElementSibling</code>,
+                <code>nextElementSibling</code>.</p>
+            </li>
+        </ul>
+        <p>Некоторые виды DOM-элементов, например таблицы, предоставляют дополнительные ссылки и коллекции для доступа
+        к своему содержимому.</p>
+    </article>
+</body>
+</html>
