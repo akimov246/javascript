@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Поиск: getElement*, querySelector*</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Поиск: getElement*, querySelector*</h2>
+        <p>Свойства навигации по DOM хороши, когда элементы расположены рядом. А что если нет? Как получить произвольный
+        элемент страницы?</p>
+        <p>Для этого в DOM есть дополнительные методы поиска.</p>
+    </article>
+
+    <article>
+        <h2>document.getElementById или просто id</h2>
+        <p>Если у элемента есть атрибут <code>id</code>, то мы можем получить его вызовом <code>document.getElementById(id)</code>,
+        где бы он не находился.</p>
+        <p>Например:</p>
+        <code>
+            &ltdiv id="elem"&gt<br>
+            &nbsp;&nbsp;&ltdiv id="elem-content"&gtElement&lt/div&gt<br>
+            &lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Получить элемент<br>
+            &nbsp;&nbsp;let elem = document.getElementById('elem');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Сделать его фон красным<br>
+            &nbsp;&nbsp;elem.style.background = 'red';<br>
+            &lt/script&gt
+        </code>
+        <p>Также есть глобальная переменная с именем, указанным в <code>id</code>:</p>
+        <code>
+            &ltdiv id="elem"&gt<br>
+            &nbsp;&nbsp;&ltdiv id="elem-content"&gtЭлемент&lt/div&gt<br>
+            &lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// elem - ссылка на элемент с id="elem"<br>
+            &nbsp;&nbsp;elem.style.background = 'red';<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Внутри id="elem-content" есть дефис, так что такой id не может служить именем переменной<br>
+            &nbsp;&nbsp;// ... Но мы можем обратиться к нему через квадратные скобки: window['elem-content']<br>
+            &lt/script&gt
+        </code>
+        <p>... Но это только если мы не объявили в JavaScript переменную с таким же именем, иначе она будет иметь
+        приоритет:</p>
+        <code>
+            &ltdiv id="elem"&gt&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let elem = 5; // Теперь elem равен 5, а не &ltdiv id="elem"&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;alert(elem); // 5<br>
+            &lt/script&gt
+        </code>
+
+        <article class="warning">
+            <h2>Пожалуйста, не используйте такие глобальные переменные для доступа к элементам</h2>
+            <p>Это поведение соответствует стандарту, но поддерживается в основном для совместимости, как осколок
+            далекого прошлого.</p>
+            <p>Браузер пытается помочь нам, смешивая пространства имен JS и DOM. Это удобно для простых скриптов,
+            которые находятся прямо в HTML, но, вообще говоря, не очень хорошо. Возможны конфликты имен. Кроме того,
+            при чтении JS-кода, не видя HTML, непонятно, непонятно, откуда берется переменная.</p>
+            <p>В этом учебнике мы будем обращаться к элементам по <code>id</code> в примерах для краткости,
+            когда очевидно, откуда берется элемент.</p>
+            <p>В реальной жизни лучше использовать <code>document.getElementById</code>.</p>
+        </article>
+
+        <article class="note">
+            <h2>Значение <code>id</code> должно быть уникальным</h2>
+            <p>Значение <code>id</code> должно быть уникальным. В документе может быть только один элемент
+            с данным <code>id</code>.</p>
+            <p>Если в документе есть несколько элементов с одинаковым значением <code>id</code>, то поведение
+            методов поиска непредсказуемо. Браузер может вернуть любой из них случайным образом. Поэтому,
+            пожалуйста, придерживайтесь правила и сохранения уникальности <code>id</code>.</p>
+        </article>
+
+        <article class="warning">
+            <h2>Только <code>document.getElementById</code>, а не <code>anyElem.getElementById</code></h2>
+            <p>Метод <code>getElementById</code> можно вызвать только для объекта <code>document</code>.
+            Он осуществляет поиск по <code>id</code> по всему документу.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>querySelectorAll</h2>
+        <p>Самый универсальны метод поиска - это <code>elem.querySelectorAll(css)</code>, он возвращает все элементы
+        внутри <code>elem</code>, удовлетворяющий данному CSS-селектору.</p>
+        <p>Следующий запрос получает все элементы <code>&ltli&gt</code>, которые являются последними потомками
+        в <code>&ltul&gt</code>:</p>
+        <code>
+            &ltul&gt<br>
+            &nbsp;&nbsp;&ltli&gtЭтот&/lt&gt<br>
+            &nbsp;&nbsp;&ltli&gtтест&/lt&gt<br>
+            &lt/ul&gt<br>
+            &ltul&gt<br>
+            &nbsp;&nbsp;&ltli&gtполностью&lt/li&gt<br>
+            &nbsp;&nbsp;&ltli&gtпройден&lt/li&gt<br>
+            &lt/ul&gt<br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let elements = document.querySelectorAll('ul > li:last-child');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;for (let elem of elements) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(elem.innerHTML); // 'тест', 'пройден'<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt
+        </code>
+        <p>Этот метод действительно мощный, потому что можно использовать любой CSS-селектор.</p>
+
+        <article class="note">
+            <h2>Псевдоклассы тоже работают</h2>
+            <p>Псевдоклассы в CSS-селекторе, в частности <code>:hover</code> и <code>:active</code>, также поддерживаются.
+            Например, <code>document.querySelectorAll(':hover')</code> вернет коллекцию (в порядке вложенности: от
+            внешнего к внутренним) из текущих элементов под курсором мыши.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>querySelector</h2>
+        <p>Метод <code>querySelector(css)</code> возвращает первый элемент, соответствующий данному CSS-селектору.</p>
+        <p>Иначе говоря, результат такой же, как при вызове <code>elem.querySelectorAll(css)[0]</code>, но он сначала
+        найдет <i>все</i> элементы, а потом возьмет первый, в то время как <code>elem.querySelector</code> найдет
+        только первый и остановится. Это быстрее, кроме того, его короче писать.</p>
+    </article>
+
+    <article>
+        <h2>matches</h2>
+        <p>Предыдущие методы искали по DOM.</p>
+        <p>Метод <code>elem.matches(css)</code> ничего не ищет, а проверяет, удовлетворяет ли <code>elem</code>
+        CSS-селектору, и возвращает <code>true</code> или <code>false</code>.</p>
+        <p>Этот метод удобен, когда мы перебираем элементы (например, в массиве или в чем-то подобном) и пытаемся
+        выбрать те из них, которые нас интересуют.</p>
+        <p>Например:</p>
+        <code>
+            &lta href="http://example.com/file.zip"&gt...&lt/a&gt<br>
+            &lta href="http://ya.ru"&gt...&lt/a&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Может быть любая коллекция вместо document.body.children<br>
+            &nbsp;&nbsp;for (let elem of document.body.children) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (elem.matches('a[href$="zip"]')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Ссылка на архив: ' + elem.href);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt
+        </code>
+    </article>
+
+    <article>
+        <h2>closest</h2>
+        <p><i>Предки</i> элемента - это родитель, родитель родителя, его родитель и так далее. Вместе они образуют
+        цепочку иерархии от элемента до вершины.</p>
+        <p>Метод <code>elem.closest(css)</code> ищет ближайшего предка, который соответствует CSS-селектору. Сам
+        элемент также включается в поиск.</p>
+        <p>Другими словами, метод <code>closest</code> поднимается вверх от элемента и проверяет каждого из родителей.
+        Если он соответствует селектору, поиск прекращается. Метод возвращает либо предка, либо <code>null</code>,
+        если такой элемент не найден.</p>
+        <p>Например:</p>
+        <code>
+            &lth1&gtСодержание&lt/h1&gt<br>
+            <br>
+            &ltdiv class="contents"&gt<br>
+            &nbsp;&nbsp;&ltul class="book"&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&ltli class="chapter"&gtГлава 1&lt/li&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&ltli class="chapter"&gtГлава 2&lt/li&gt<br>
+            &nbsp;&nbsp;&lt/ul&gt<br>
+            &lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let chapter = document.querySelector('.chapter'); // LI<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;alert(chapter.closest('.book'); // UL<br>
+            &nbsp;&nbsp;alert(chapter.closest('.contents'); // DIV<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;alert(chapter.closest('h1'); // null (потому что h1 - не предок)<br>
+            &lt/script&gt
+        </code>
+    </article>
+
+    <article>
+        <h2>getElementsBy*</h2>
+        <p>Существуют также другие методы поиска элементов по тегу, классу и так далее.</p>
+        <p>На данный момент, они скорее исторические, так как <code>querySelector</code> более чем эффективен.</p>
+        <p>Здесь мы рассмотрим их для полноты картины, также вы можете встретить их в старом коде.</p>
+        <ul>
+            <li>
+                <p><code>elem.getElementsByTagName(tag)</code> ищет элементы с данным тегом и возвращает их коллекцию.</p>
+                <p>Передав <code>"*"</code> вместо тега, можно получить всех потомков.</p>
+            </li>
+            <li>
+                <p><code>elem.getElementsByClassName(className)</code> возвращает элементы, которые имеют данный
+                CSS-класс.</p>
+            </li>
+            <li>
+                <p><code>document.getElementsByName(name)</code> возвращает элементы с заданным атрибутом <code>name</code>.
+                Очень редко используется.</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+        <code>
+            // Получить все элементы div в документе<br>
+            let divs = document.getElementsByTagName('div');
+        </code>
+        <p>Давайте найдем все <code>input</code> в таблице:</p>
+        <code>
+            &lttable id="table"&gt<br>
+            &nbsp;&nbsp;&lttr&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lttd&gtВаш возраст:&lt/td&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lttd&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltlabel&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltinput type="radio" name="age" value="young" checked&gt младше 18<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt/label&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltlabel&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltinput type="radio" name="age" value="mature"&gt от 18 до 50<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt/label&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltlabel&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltinput type="radio" name="age" value="senior"&gt старше 50<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt/label&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&lt/td&gt<br>
+            &nbsp;&nbsp;&lt/tr&gt<br>
+            &lt/table&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let inputs = table.getElementsByTagName('input');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;for (let input of inputs) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(input.value + ': ' + input.checked);<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt
+        </code>
+
+        <article class="warning">
+            <h2>Не забываем про букву <code>"s"</code>!</h2>
+            <p>Одна из самых частых ошибок начинающих разработчиков (впрочем, иногда и не только) - это забыть букву
+            <code>"s"</code>. То есть пробовать вызывать метод <code>getElementByTagName</code> вместо
+            <code>getElementsByTagName</code>.</p>
+            <p>Буква <code>"s"</code> отсутствует в названии метода <code>getElementById</code>, так как в данном
+            случае возвращает один элемент. Но <code>getElementsByTagName</code> вернет список элементов,
+            поэтому <code>"s"</code> обязательна.</p>
+        </article>
+
+        <article class="warning">
+            <h2>Возвращает коллекцию, а не элемент!</h2>
+            <p>Другая распространенная ошибка - написать:</p>
+            <code>
+                // Не работает<br>
+                document.getElementsByTagName('input').value = 5;
+            </code>
+            <p>Попытка присвоить значение коллекции, а не элементам внутри нее, не сработает.</p>
+            <p>Нужно перебрать коллекцию в цикле или получить элемент по номеру и уже ему присваивать значение,
+            например, так:</p>
+            <code>
+                // Работает (если есть input)<br>
+                document.getElementsByTagName('input')[0].value = 5;
+            </code>
+        </article>
+        <p>Ищем элементы с классом <code>.article</code>:</p>
+        <code>
+            &ltform name="my-form"&gt<br>
+            &nbsp;&nbsp;&ltdiv class="article"&gtArticle&lt/div&gt<br>
+            &nbsp;&nbsp;&ltdiv class="long article"&gtLong article&lt/div&gt<br>
+            &lt/form&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Ищем по имени атрибута<br>
+            &nbsp;&nbsp;let form = document.getElementsByName('my-form')[0];<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Ищем по классу внутри form<br>
+            &nbsp;&nbsp;let articles = form.getElementsByClassName('article');<br>
+            &nbsp;&nbsp;alert(articles.length); // 2, находим два элемента с классом article<br>
+            &lt/script&gt
+        </code>
+    </article>
+
+    <article>
+        <h2>Живые коллекции</h2>
+        <p>Все методы <code>getElementsBy*</code> возвращают <i>живую</i> коллекцию. Такие коллекции всегда отражают
+        текущее состояние документа и автоматически обновляются при его изменении.</p>
+        <p>В приведенном ниже примере есть два скрипта:</p>
+        <ol>
+            <li>
+                <p>Первый создает ссылку на коллекцию <code>&ltdiv&gt</code>. На этот момент ее длина равна <code>1</code>.</p>
+            </li>
+            <li>
+                <p>Второй скрипт запускается после того, как браузер встречает еще один <code>&ltdiv&gt</code>,
+                теперь ее длина - <code>2</code>.</p>
+            </li>
+        </ol>
+        <code>
+            &ltdiv&gtFirst div&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let divs = document.getElementsByTagName('div');<br>
+            &nbsp;&nbsp;alert(divs.length); // 1<br>
+            &lt/script&gt<br>
+            <br>
+            &ltdiv&gtSecond div&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;alert(divs.length); // 2<br>
+            &lt/script&gt
+        </code>
+        <p>Напротив, <code>querySelectorAll</code> возвращает <i>статическую</i> коллекцию. Это похоже на фиксированный
+        массив элементов.</p>
+        <p>Если мы будем использовать его в примере выше, то оба скрипта вернут длину коллекции, равную <code>1</code>:</p>
+        <code>
+            &ltdiv&gtFirst div&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let divs = document.querySelectorAll('div');<br>
+            &nbsp;&nbsp;alert(divs.length); // 1<br>
+            &lt/script&gt<br>
+            <br>
+            &ltdiv&gtSecond div&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;alert(divs.length); // 1<br>
+            &lt/script&gt
+        </code>
+        <p>Теперь мы легко видим разницу. Длина статической коллекции не изменилась, после появления нового
+        <code>div</code> в документе.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Есть 6 основных методов поиска элементов в DOM:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Метод</th>
+                <th>Ищет по...</th>
+                <th>Ищет внутри элемента?</th>
+                <th>Возвращает живую коллекцию?</th>
+            </tr>
+            </thead>
+            <tr>
+                <td><code>querySelector</code></td>
+                <td>CSS-selector</td>
+                <td>✔</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>querySelectorAll</code></td>
+                <td>CSS-selector</td>
+                <td>✔</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>getElementById</code></td>
+                <td><code>id</code></td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>getElementsByName</code></td>
+                <td><code>name</code></td>
+                <td>-</td>
+                <td>✔</td>
+            </tr>
+            <tr>
+                <td><code>getElementsByTagName</code></td>
+                <td><code>tag</code> или <code>'*'</code></td>
+                <td>✔</td>
+                <td>✔</td>
+            </tr>
+            <tr>
+                <td><code>getElementsByClassName</code></td>
+                <td><code>class</code></td>
+                <td>✔</td>
+                <td>✔</td>
+            </tr>
+        </table>
+        <p>Безусловно, наиболее часто используемыми в настоящее время являются методы <code>querySelector</code>
+        и <code>querySelectorAll</code>, но и методы <code>getElement(s)By*</code> могут быть полезны в отдельных
+        случаях, а также встречаются в старом коде.</p>
+        <p>Кроме того:</p>
+        <ul>
+            <li>
+                <p>Есть метод <code>elem.matches(css)</code>, который проверяет, удовлетворяет ли элемент CSS-селектору.</p>
+            </li>
+            <li>
+                <p>Метод <code>elem.closest(css)</code> ищет ближайшего по иерархии предка, соответствующего
+                данному CSS-селектору. Сам элемент также включен в поиск.</p>
+            </li>
+        </ul>
+        <p>И, напоследок, давайте упомянем еще один метод, который проверяет наличие отношений между предком и потомком:</p>
+        <ul>
+            <li>
+                <p><code>elemA.contains(elemB)</code> вернет <code>true</code>, если <code>elemB</code> находится внутри
+                <code>elemA</code> (<code>elemB</code> потомок <code>elemA</code>) или когда <code>elemA === elemB</code>.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
