@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойства узлов: тип, тег и содержимое</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Свойства узлов: тип, тег и содержимое</h2>
+        <p>Теперь давайте более внимательно взглянем на DOM-узлы.</p>
+        <p>В этой главе мы подробнее разберем, что они собой представляют и изучим их основные свойства.</p>
+    </article>
+
+    <article>
+        <h2>Классы DOM-узлов</h2>
+        <p>У разных DOM-узлов могут быть разные свойства. Например, у узла, соответствующего тегу <code>&lta&gt</code>,
+        есть свойства, связанные со ссылками, а у соответствующего тегу <code>&ltinput&gt</code> - свойства,
+        связанные с полем ввода и т.д. Текстовые узлы отличаются от узлов-элементов. Но у них есть общие свойства
+        и методы, потому что все классы DOM-узлов образуют единую иерархию.</p>
+        <p>Каждый DOM-узел принадлежит соответствующему встроенному классу.</p>
+        <p>Корнем иерархии является <code>EventTarget</code>, от него наследует <code>Node</code> и остальные
+        DOM-узлы.</p>
+        <p>На рисунке ниже изображены основные классы:</p>
+        <img src="https://learn.javascript.ru/article/basic-dom-node-properties/_dom-class-hierarchy.svg" alt style="width: 40%">
+        <p>Существуют следующие классы:</p>
+        <ul>
+            <li>
+                <p><code>EventTarget</code> - это корневой «абстрактный» класс для всего.</p>
+                <p>Объекты этого класса никогда не создаются. Он служит основной, благодаря которой все DOM-узлы
+                поддерживают так называемые «события», о которых мы поговорим позже.</p>
+            </li>
+            <li>
+                <p><code>Node</code> - также является «абстрактным» классом, и служит основой для DOM-узлов.</p>
+                <p>Он обеспечивает базовую функциональность: <code>parentNode</code>, <code>nextSibling</code>,
+                <code>childNodes</code> и т.д. (это геттеры). Объекты класса <code>Node</code> никогда не создаются.
+                Но есть определенные классы узлов, которые наследуются от него (и, следовательно, наследуют функционал
+                <code>Node</code>).</p>
+            </li>
+            <li>
+                <p><code>Document</code>, по историческим причинам часто наследуется <code>HTMLDocument</code>
+                (хотя последняя спецификация этого не навязывает) - это документ в целом.</p>
+                <p>Глобальный объект <code>document</code> принадлежит именно к этому классу. Он служит точкой входа
+                в DOM.</p>
+            </li>
+            <li>
+                <p><code>CharacterData</code> - «абстрактный» класс. Вот кем он наследуется:</p>
+                <ul>
+                    <li>
+                        <p><code>Text</code> - класс, соответствующий тексту внутри элементов. Например,
+                        <code>Hello</code> в <code>&ltp&gtHello&lt/p&gt</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>Comment</code> - класс для комментариев. Они не отображаются, но каждый комментарий
+                        становится членом DOM.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>Element</code> - это базовый класс для DOM-элементов.</p>
+                <p>Он обеспечивает навигацию на уровне элементов: <code>nextElementSibling</code>, <code>children</code>.
+                А также методы поиска элементов: <code>getElementsByTagName</code>, <code>querySelector</code>.</p>
+                <p>Браузер поддерживает не только HTML, но также XML и SVG. Таким образом, класс <code>Element</code>
+                служит основой для более специфичных классов: <code>SVGElement</code>, <code>XmlElement</code>
+                (они нам здесь не нужны) и <code>HTMLElement</code>.</p>
+            </li>
+            <li>
+                <p>И наконец, <code>HTMLElement</code> является базовым классом для всех остальных HTML-элементов.
+                Мы будем работать с ними большую часть времени.</p>
+                <p>От него наследуются конкретные элементы:</p>
+                <ul>
+                    <li>
+                        <p><code>HTMLInputElement</code> - класс для тега <code>&ltinput&gt</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>HTMLBodyElement</code> - класс для тега <code>&ltbody&gt</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>HTMLAnchorElement</code> - класс для тега <code>&lta&gt</code>.</p>
+                    </li>
+                    <li>
+                        <p>... И т.д.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Также существует множество тегов со своими собственными классами, которые могут иметь определенные свойства
+        и методы, в то время как некоторые элементы, такие как <code>&ltspan&gt</code>, <code>&ltsection&gt</code> и
+        <code>&ltarticle&gt</code>, не имеют каких-либо определенных свойств, поэтому они являются экземплярами
+        класса <code>HTMLElement</code>.</p>
+        <p>Таким образом, полный набор свойств и методов данного узла является результатом цепочки наследования.</p>
+        <p>Рассмотрим DOM-объект для тега <code>&ltinput&gt</code>. Он принадлежит классу <code>HTMLInputElement</code>.</p>
+        <p>Он получает свойства и методы из (в порядке наследования):</p>
+        <ul>
+            <li>
+                <p><code>HTMLInputElement</code> - этот класс предоставляет специфичные для элементов формы свойства.</p>
+            </li>
+            <li>
+                <p><code>HTMLElement</code> - предоставляет общие для HTML-элементов методы (и геттеры/сеттеры).</p>
+            </li>
+            <li>
+                <p><code>Element</code> - предоставляет типовые методы элемента.</p>
+            </li>
+            <li>
+                <p><code>Node</code> - предоставляет общие свойства DOM-узлов.</p>
+            </li>
+            <li>
+                <p><code>EventTarget</code> - обеспечивает поддержку событий.</p>
+            </li>
+            <li>
+                <p>... И, наконец, он наследует от <code>Object</code>, поэтому доступны также методы «обычного объекта»,
+                такие как <code>hasOwnProperty</code>.</p>
+            </li>
+        </ul>
+        <p>Для того, чтобы узнать имя класса DOM-узла, вспомним, что обычно у объекта есть свойство <code>constructor</code>.
+        Оно ссылается на конструктор класса, и в свойстве <code>constructor.name</code> содержится его имя:</p>
+        <code>
+            alert(document.body.constructor.name); // HTMLBodyElement
+        </code>
+        <p>... Или мы можем просто привести его к строке:</p>
+        <code>
+            alert(document.body); // [object HTMLBodyElement]
+        </code>
+        <p>Проверить наследование можно также при помощи <code>instanceof</code>:</p>
+        <code>
+            alert(document.body instanceof HTMLBodyElement); // true
+            alert(document.body instanceof HTMLElement); // true
+            alert(document.body instanceof Element); // true
+            alert(document.body instanceof Node); // true
+            alert(document.body instanceof EventTarget); // true
+        </code>
+        <p>Как видно, DOM-узлы - это обычные JavaScript объекты. Для наследования они используют классы, основанные
+        на прототипах.</p>
+        <p>В этом легко убедиться, если вывести в консоли браузера любой элемент через <code>console.dir(elem)</code>.
+        Или даже напрямую обратиться к методам, которые хранятся в <code>HTMLElement.prototype</code>,
+        <code>Element.prototype</code></p>
+
+        <article class="note">
+            <h2><code>console.dir(elem)</code> и <code>console.log(elem)</code></h2>
+            <p>Большинство браузеров поддерживают в инструментах разработчика две команды: <code>console.log</code>
+            и <code>console.dir</code>. Они выводят свои аргументы в консоль. Для JavaScript-объектов эти команды
+            обычно выводят одно и тоже.</p>
+            <p>Но для DOM-элементов они работают по-разному:</p>
+            <ul>
+                <li>
+                    <p><code>console.log(elem)</code> выводит элемент в виде DOM-дерева.</p>
+                </li>
+                <li>
+                    <p><code>console.dir(elem)</code> выводит элемент в виде DOM-объекта, что удобно для анализа его свойств.</p>
+                </li>
+            </ul>
+        </article>
+
+        <article class="note">
+            <h2>Спецификация IDL</h2>
+            <p>В спецификации для описания классов DOM используется не JavaScript, а специальный язык
+            <code>Interface description language (IDL)</code>, с которым достаточно легко разобраться.</p>
+            <p>В IDL все свойства представлены с указанием их типов. Например, <code>DOMString</code>, <code>boolean</code>
+            и т.д.</p>
+            <p>Небольшой отрывок IDL с комментариями:</p>
+            <code>
+                // Объявление HTMLInputElement<br>
+                // Двоеточие ":" после HTMLInputElement означает, что он наследует от HTMLElement<br>
+                interface HTMLInputElement: HTMLElement {<br>
+                &nbsp;&nbsp;// Далее идут свойства и методы элемента &ltinput&gt<br>
+                &nbsp;&nbsp;<br>
+                &nbsp;&nbsp;// "DOMString" означает, что значение свойства - строка<br>
+                &nbsp;&nbsp;attribute DOMString accept;<br>
+                &nbsp;&nbsp;attribute DOMString alt;<br>
+                &nbsp;&nbsp;attribute DOMString autocomplete;<br>
+                &nbsp;&nbsp;attribute DOMString value;<br>
+                &nbsp;&nbsp;<br>
+                &nbsp;&nbsp;// boolean - значит, что autofocus хранит логический тип данных (true/false)<br>
+                &nbsp;&nbsp;attribute boolean autofocus;<br>
+                &nbsp;&nbsp;...<br>
+                &nbsp;&nbsp;// "void" перед методом означает, что данный метод не возвращает значение<br>
+                &nbsp;&nbsp;void select();<br>
+                &nbsp;&nbsp;...<br>
+                }
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Свойство «nodeType»</h2>
+        <p>Свойство <code>nodeType</code> предоставляет еще один, «старомодный» способ узнать «тип» DOM-узла.</p>
+        <p>Его значением является цифра:</p>
+        <ul>
+            <li>
+                <p><code>elem.nodeType == 1</code> для узлов-элементов.</p>
+            </li>
+            <li>
+                <p><code>elem.nodeType == 3</code> для текстовых узлов.</p>
+            </li>
+            <li>
+                <p><code>elem.nodeType == 9</code> для объектов документа.</p>
+            </li>
+            <li>
+                <p><a href="https://dom.spec.whatwg.org/#node">В спецификации</a> можно посмотреть остальные значения.</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+        <code>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;let elem = document.body;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Давайте разберемся: какой тип узла находится в elem?<br>
+            &nbsp;&nbsp;alert(elem.nodeType); // 1 => элемент<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// И его первый потомок...<br>
+            &nbsp;&nbsp;alert(elem.firstChild.nodeType); // 3 => текст<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Для объекта document значение типа -- 9<br>
+            &nbsp;&nbsp;alert(document.nodeType); // 9<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>В современных скриптах, чтобы узнать тип узла, мы можем использовать метод <code>instanceof</code> и другие
+        способы проверить класс, но иногда <code>nodeType</code> проще использовать. Мы не можем изменить значение
+        <code>nodeType</code>, только прочитать его.</p>
+    </article>
+
+    <article>
+        <h2>Тег: nodeName и tagName</h2>
+        <p>Получив DOM-узел, мы можем узнать имя его тега из свойств <code>nodeName</code> и <code>tagName</code>.</p>
+        <p>Например:</p>
+        <code>
+            alert(document.body.nodeName); // BODY<br>
+            alert(document.body.tagName); // BODY<br>
+        </code>
+        <p>Есть какая-то разница между <code>tagName</code> и <code>nodeName</code>?</p>
+        <p>Да, она отражена в названиях свойств, но не очевидна.</p>
+        <ul>
+            <li>
+                <p>Свойство <code>tagName</code> есть только у элементов <code>Element</code>.</p>
+            </li>
+            <li>
+                <p>Свойство <code>nodeName</code> определено для любых узлов <code>Node</code>:</p>
+                <ul>
+                    <li>
+                        <p>Для элементов оно равно <code>tagName</code>.</p>
+                    </li>
+                    <li>
+                        <p>Для остальных типов узлов (текст, комментарий и т.д.) оно содержит строку с типом узла.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Другими словами, свойство <code>tagName</code> есть только у узлов-элементов (поскольку они происходят от
+        класса <code>Element</code>), а <code>nodeName</code> может что-то сказать о других типах узлов.</p>
+        <p>Например, сравним <code>tagName</code> и <code>nodeName</code> на примере объекта <code>document</code>
+        и узла-комментария:</p>
+        <code>
+            &ltbody&gt&lt!-- комментарий --&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;// Для комментария<br>
+            &nbsp;&nbsp;alert(document.body.firstChild.tagName); // undefined (не элемент)<br>
+            &nbsp;&nbsp;alert(document.body.firstChild.nodeName); // #comment<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Для документа<br>
+            &nbsp;&nbsp;alert(document.tagName); // undefined (не элемент)<br>
+            &nbsp;&nbsp;alert(document.nodeName); // #document<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Если мы имеем дело только с элементами, то можно использовать <code>tagName</code> или <code>nodeName</code>,
+        нет разницы.</p>
+
+        <article class="note">
+            <h2>Имена тегов (кроме XHTML) всегда пишутся в верхнем регистре</h2>
+            <p>В браузере существуют два режима обработки документа: HTML и XML. HTML-режим обычно используется для
+            веб-страниц. XML-режим включается, если браузер получает XML-документ с заголовком:
+            <code>Content-Type: application/xml+xhtml</code>.</p>
+            <p>В HTML-режиме значения <code>tagName/nodeName</code> всегда записаны в верхнем регистре. Будет выведено
+            <code>BODY</code> вне зависимости от того, как записан тег в HTML <code>&ltbody&gt</code> или
+            <code>&ltBoDy&gt</code>.</p>
+            <p>В XML-режиме регистр сохраняется «как есть». В настоящее время XML-режим применяется редко.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>innerHTML: содержимое элемента</h2>
+        <p>Свойство <code>innerHTML</code> позволяет получить HTML-содержимое элемента в виде строки.</p>
+        <p>Мы также можем изменять его. Это один из самых мощных способов менять содержимое на странице.</p>
+        <p>Пример ниже показывает содержимое <code>document.body</code>, а затем полностью заменяет его:</p>
+        <code>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltp&gtПараграф&lt/p&gt<br>
+            &nbsp;&nbsp;&ltdiv&gtDIV&lt/div&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.innerHTML); // Читаем текущее содержимое<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.innerHTML = 'Новый BODY!'; // Заменяем содержимое<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &nbsp;&nbsp;<br>
+            &lt/body&gt
+        </code>
+        <p>Мы можем попробовать вставить некорректный HTML, браузер исправит наши ошибки:</p>
+        <code>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.innerHTML = '&ltb&gtтест'; // забыли закрыть тег<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.innerHTML); // &ltb&gtтест&lt/b&gt (исправлено)<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &nbsp;&nbsp;<br>
+            &lt/body&gt
+        </code>
+
+        <article class="note">
+            <h2>Скрипты не выполнятся</h2>
+            <p>Если <code>innerHTML</code> вставляет в документ тег <code>&ltscript&gt</code> - он становится
+            частью HTML, но не запускается.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Будьте внимательны: «innerHTML+=» осуществляет перезапись</h2>
+        <p>Мы можем добавить HTML к элементу, используя <code>elem.innerHTML+="еще html"</code>.</p>
+        <p>Вот так:</p>
+        <code>
+            chatDiv.innerHTML += "&ltdiv&gtПривет&ltimg src='smile.gif'/&gt !&lt/div&gt";<br>
+            chatDiv.innerHTML += "Как дела?";
+        </code>
+        <p>На практике этим следует пользоваться с большой осторожностью, так как фактически происходит <i>не</i>
+        добавление, а перезапись.</p>
+        <p>Технически эти две строки делают одно и то же:</p>
+        <code>
+            elem.innerHTML += '...';<br>
+            // Это более короткая запись для:<br>
+            elem.innerHTML = elem.innerHTML + '...';
+        </code>
+        <p>Другими словами, <code>innerHTML +=</code> делает следующее:</p>
+        <ol>
+            <li>
+                <p>Старое содержимое удаляется.</p>
+            </li>
+            <li>
+                <p>Не его место становится новое значение <code>innerHTML</code> (с добавленной строкой).</p>
+            </li>
+        </ol>
+        <p><b>Так как содержимое «обнуляется» и перезаписывается заново, все изображения и другие ресурсы будут
+        перезагружены.</b></p>
+        <p>В примере <code>chaDiv</code> выше, строка <code>chatDiv.innerHTML += 'Как дела?'</code> заново создает
+        содержимое HTML и перезагружает <code>smile.gif</code> (надеемся, картинка закеширована). Если в <code>chatDiv</code>
+        много текста и изображений, то эта перезагрузка будет очень заметна.</p>
+        <p>Есть и другие побочные эффекты. Например, если существующий текст выделен вышкой, то при перезаписывании
+        <code>innerHTML</code> большинство браузеров снимут выделение. А если это поле ввода <code>&ltinput&gt</code>
+        с текстом, введенным пользователем, то текст будет удален. И т.д.</p>
+        <p>К счастью, есть и другие способы добавить содержимое, не использующие <code>innerHTML</code>, которые мы
+        изучим позже.</p>
+    </article>
+
+    <article>
+        <h2>outerHTML: HTML элемента целиком</h2>
+        <p>Свойство <code>outerHTML</code> содержит HTML элемента целиком. Это как <code>innerHTML</code> плюс
+        сам элемент.</p>
+        <p>Посмотрим на пример:</p>
+        <code>
+            &ltdiv id="elem"&gtПривет &ltb&gtМир&lt/b&gt&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;alert(elem.outerHTML); // &ltdiv id="elem"&gtПривет &ltb&gtМир&lt/b&gt&lt/div&gt<br>
+            &lt/script&gt
+        </code>
+        <p><b>Будьте осторожны: в отличие от <code>innerHTML</code>, запись в <code>outerHTML</code> не изменяет элемент.
+        Вместо этого элемент заменяется целиком во внешнем контексте.</b></p>
+        <p>Да, звучит странно, и это действительно необычно, поэтому здесь мы и отмечаем это особо.</p>
+        <p>Рассмотрим пример:</p>
+        <code>
+            &ltdiv&gtПривет, мир!&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let div = document.querySelector('div');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Заменяем div.outerHTML на &ltp&gt...&ltp&gt<br>
+            &nbsp;&nbsp;div.outerHTML = '&ltp&gtНовый элемент&lt/p&gt'; // (*)<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Содержимое div осталось тем же!<br>
+            &nbsp;&nbsp;alert(div.outerHTML); // &ltdiv&gtПривет, мир!&lt/div&gt (**)<br>
+            &lt/script&gt
+        </code>
+        <p>Какая-то магия, да?</p>
+        <p>В строке <code>(*)</code> мы заменили <code>div</code> на <code>&ltp&gtНовый элемент&lt/p&gt</code>.
+        Во внешнем документе мы видим новое содержимое вместо <code>&ltdiv&gt</code>. Но, как видно в строке
+        <code>(**)</code>, старая переменная <code>div</code> осталась прежней!</p>
+        <p>Это потому, что использование <code>outerHTML</code> не изменяет DOM-элемент, а удаляет его из внешнего
+        контекста и вставляет вместо него новый HTML-код.</p>
+        <p>То есть, при <code>div.outerHTML = ...</code> произошло следующее:</p>
+        <ul>
+            <li>
+                <p><code>div</code> был удален из документа.</p>
+            </li>
+            <li>
+                <p>Вместо него был вставлен другой HTML <code>&ltp&gtНовый элемент&lt/p&gt</code>.</p>
+            </li>
+            <li>
+                <p>В <code>div</code> осталось старое значение. Новый HTML не сохранен ни в какой переменной.</p>
+            </li>
+        </ul>
+        <p>Здесь легко сделать ошибку: заменить <code>div.outerHTML</code>, а потом продолжать работать с <code>div</code>,
+        как будто там новое содержимое. Но это не так. Подобное верно для <code>innerHTML</code>, но не для
+        <code>outerHTML</code>.</p>
+        <p>Мы можем писать в <code>elem.outerHTML</code>, но надо иметь в виду, что это не меняет элемент, в который
+        мы пишем. Вместо этого создается новый HTML на его месте. Мы можем получить ссылки на новые элементы,
+        обратившись к DOM.</p>
+    </article>
+
+    <article>
+        <h2>nodeValue/data: содержимое текстового узла</h2>
+        <p>Свойство <code>innerHTML</code> есть только у узлов-элементов.</p>
+        <p>У других типов узлов, в частности, у текстовых, есть свои аналоги: свойства <code>nodeValue</code> и
+        <code>data</code>. Эти свойства очень похожи при использовании, есть лишь небольшие различия в спецификации.
+        Мы будем использовать <code>data</code>, потому что оно короче.</p>
+        <p>Прочитаем содержимое текстового узла и комментария:</p>
+        <code>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;Привет<br>
+            &nbsp;&nbsp;&lt!-- Комментарий --&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let text = document.body.firstChild;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(text.data); // Привет<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let comment = text.nextSibling;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(comment.data); // Комментарий<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Мы можем представить, для чего нам может понадобиться читать или изменять текстовый узел, но комментарии?</p>
+        <p>Иногда их используют для вставки информации или инструкций шаблонизатора в HTML, как в примере ниже:</p>
+        <code>
+            &lt!-- if isAdmin --&gt<br>
+            &nbsp;&nbsp;&ltdiv&gtДобро пожаловать, Admin!&lt/div&gt<br>
+            &lt!-- /if --&gt
+        </code>
+        <p>Затем JavaScript может прочитать это из свойства <code>data</code> и обработать инструкции.</p>
+    </article>
+
+    <article>
+        <h2>textContent: просто текст</h2>
+        <p>Свойство <code>textContent</code> предоставляет доступ к <i>тексту</i> внутри элемента за вычетом всех
+        <code>&ltтегов&gt</code>.</p>
+        <p>Например:</p>
+        <code>
+            &ltdiv id="news"&gt<br>
+            &nbsp;&nbsp;&lth1&gtСрочно в номер!&lt/h1&gt<br>
+            &nbsp;&nbsp;&ltp&gtМарсиане атаковали человечество!&lt/p&gt<br>
+            &lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Срочно в номер! Марсиане атаковали человечество!<br>
+            &nbsp;&nbsp;alert(news.textContent);<br>
+            &lt/script&gt
+        </code>
+        <p>Как мы видим, возвращается только текст, как если бы все <code>&ltтеги&gt</code> были вырезаны, но текст
+        в них остался.</p>
+        <p>На практике редко появляется необходимость читать текст таким образом.</p>
+        <p><b>Намного полезнее возможность записывать текст в <code>textContent</code>, т.к. позволяет писать текст
+        «безопасным способом».</b></p>
+        <p>Представим, что у нас есть произвольная строка, введенная пользователем, и мы хотим показать ее.</p>
+        <ul>
+            <li>
+                <p>С <code>innerHTML</code> вставка происходит «как HTML», со всеми HTML-тегами.</p>
+            </li>
+            <li>
+                <p>С <code>textContent</code> вставка получается «как текст», все символы трактуются буквально.</p>
+            </li>
+        </ul>
+        <p>Сравним два тега div:</p>
+        <code>
+            &ltdiv id="elem1"&gt&lt/div&gt<br>
+            &ltdiv id="elem2"&gt&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let name = prompt('Введите ваше имя?', '&ltb&gtВинни-пух!&lt/b&gt');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;elem1.innerHTML = name; // <b>Винни-пух!</b><br>
+            &nbsp;&nbsp;elem2.textContent = name; // &ltb&gtВинни-пух!&lt/b&gt<br>
+            &lt/script&gt
+        </code>
+        <ol>
+            <li>
+                <p>В первый <code>&ltdiv&gt</code> имя приходит «как HTML»: все теги стали именно тегами, поэтому
+                мы видим имя, выделенной жирным шрифтом.</p>
+            </li>
+            <li>
+                <p>Во второй <code>&ltdiv&gt</code> имя приходит «как текст», поэтому мы видим
+                <code>&ltb&gtВинни-пух!&lt/b&gt</code>.</p>
+            </li>
+        </ol>
+        <p>В большинстве случаев мы рассчитываем получить от пользователя текст и хотим, чтобы он интерпретировался как
+        текст. Мы не хотим, чтобы на сайте появлялся произвольный HTML-код. Присваивание через <code>textContent</code> -
+        один из способов от этого защититься.</p>
+    </article>
+
+    <article>
+        <h2>Свойство «hidden»</h2>
+        <p>Атрибут и DOM-свойство «hidden» указывает на то, видим ли мы элемент или нет.</p>
+        <p>Мы можем использовать его в HTML или назначить при помощи JavaScript, как в примере ниже:</p>
+        <code>
+            &ltdiv&gtОба тега DIV внизу невидимы&lt/div&gt<br>
+            <br>
+            &ltdiv hidden&gtС атрибутом "hidden"&lt/div&gt<br>
+            <br>
+            &ltdiv id="elem"&gtС назначенным JavaScript свойством "hidden"&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.hidden = true;<br>
+            &lt/script&gt
+        </code>
+        <p>Технически, <code>hidden</code> работает так же, как <code>style="display: none"</code>. Но его применение
+        проще.</p>
+        <p>Мигающий элемент:</p>
+        <code>
+            &ltdiv id="elem"&gtМигающий элемент&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;setInterval(() => elem.hidden = !elem.hidden, 1000);<br>
+            &lt/script&gt
+        </code>
+    </article>
+
+    <article>
+        <h2>Другие свойства</h2>
+        <p>У DOM-элементов есть дополнительные свойства, в частности, зависящие от класса:</p>
+        <ul>
+            <li>
+                <p><code>value</code> - значение для <code>&ltinput&gt</code>, <code>&ltselect&gt</code>,
+                и <code>&lttextarea&gt</code> (<code>HTMLInputElement</code>, <code>HTMLSelectElement</code> ...).</p>
+            </li>
+            <li>
+                <p><code>href</code> - адрес ссылки «href» для <code>&lta href="..."&gt</code>
+                (<code>HTMLAnchorElement)</code>.</p>
+            </li>
+            <li>
+                <p><code>id</code> - значение атрибута «id» для всех элементов (<code>HTMLElement</code>).</p>
+            </li>
+            <li>
+                <p>... И многие другие...</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+        <code>
+            &ltinput type="text" id="elem" value="значение"&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;alert(elem.type); // 'text'<br>
+            &nbsp;&nbsp;alert(elem.id); // 'elem'<br>
+            &nbsp;&nbsp;alert(elem.value); // 'значение'<br>
+            &lt/script&gt
+        </code>
+        <p>Большинство стандартных HTML-атрибутов имеют соответствующее DOM-свойство, и мы можем получить к нему доступ.</p>
+        <p>Если мы хотим узнать полный список поддерживаемых свойств для данного класса, можно найти их в спецификации.
+        Например, класс <code>HTMLInputElement</code> описывается здесь:
+        <a href="https://html.spec.whatwg.org/#htmlinputelement">https://html.spec.whatwg.org/#htmlinputelement</a>.</p>
+        <p>Если же нам нужно быстро что-либо узнать или нас интересует специфика определенного браузера - мы всегда
+        можем вывести элемент в консоль, используя <code>console.dir(elem)</code>, и прочитать все свойства.
+        Или исследовать «свойства DOM» во вкладке Elements браузерных инструментов разработчика.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Каждый DOM-узел принадлежит определенному классу. Классы формируют иерархию. Весь набор свойств и методов
+        является результатом наследования.</p>
+        <p>Главные свойства DOM-узла:</p>
+        <ul>
+            <li>
+                <p><code>nodeType</code></p>
+                <p>Свойство <code>nodeType</code> позволяет узнать тип DOM-узла. Его значение - числовое:
+                <code>1</code> для элементов, <code>3</code> для текстовых узлов, и т.д. Только для чтения.</p>
+            </li>
+            <li>
+                <p><code>nodeName/tagName</code></p>
+                <p>Для элементов это свойство возвращает название тега (записывается в верхнем регистре, за исключением
+                XML-режима). Для узлов-неэлементов <code>nodeName</code> описывает, что это за узел. Только для чтения.</p>
+            </li>
+            <li>
+                <p><code>innerHTML</code></p>
+                <p>Внутреннее HTML-содержание узла-элемента. Можно изменять.</p>
+            </li>
+            <li>
+                <p><code>outerHTML</code></p>
+                <p>Полный HTML узла-элемента. Запись в <code>elem.outerHTML</code> не меняет <code>elem</code>.
+                Вместо этого она заменяет его во внешнем контексте.</p>
+            </li>
+            <li>
+                <p><code>nodeValue/data</code></p>
+                <p>Содержимое узла-неэлемента (текст, комментарий). Эти свойства практически одинаковые, обычно
+                мы используем <code>data</code>. Можно изменять.</p>
+            </li>
+            <li>
+                <p><code>textContent</code></p>
+                <p>Текст внутри элемента: HTML за вычетом всех <code>&ltтегов&gt</code>. Запись в него помещает текст
+                в элемент, при этом все специальные символы и теги интерпретируются как текст. Можно использовать для
+                защиты от вставки произвольного HTML кода.</p>
+            </li>
+            <li>
+                <p><code>hidden</code></p>
+                <p>Когда значение установлено в <code>true</code>, делает то же самое, что и CSS <code>display:none</code>.</p>
+            </li>
+        </ul>
+        <p>В зависимости от своего класса DOM-узлы имеют и другие свойства. Например, у элементов <code>&ltinput&gt</code>
+        (<code>HTMLInputElement</code>) есть свойства <code>value</code>, <code>type</code>, у элементов
+        <code>&lta&gt</code> (<code>HTMLAnchorElement</code>) есть <code>href</code> и т.д. Большинство стандартных
+        HTML-атрибутов имеют соответствующие свойства DOM.</p>
+        <p>Впрочем, HTML-атрибуты и свойства DOM не всегда одинаковы, мы увидим это в следующей главе.</p>
+    </article>
+</body>
+</html>
