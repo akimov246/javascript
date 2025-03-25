@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Атрибуты и свойства</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Атрибуты и свойства</h2>
+        <p>Когда браузер загружает страницу, он «читает» (также говорят: «парсит») HTML и генерирует из него DOM-объекты.
+        Для узлов-элементов большинство стандартных HTML-атрибутов автоматически становятся свойствами DOM-объектов.</p>
+        <p>Например, для такого тега <code>&ltbody id="page"&gt</code> у DOM-объекта будет такое свойство
+        <code>body.id="page"</code>.</p>
+        <p>Но преобразование атрибута в свойство происходит не один-в-один! В этой главе мы уделим внимание различию
+        этих двух понятий, чтобы посмотреть, как работать с ними, когда она одинаковые и когда разные.</p>
+    </article>
+
+    <article>
+        <h2>DOM-свойства</h2>
+        <p>Ранее мы уже видели встроенные DOM-свойства. Их много. Но технически нас никто не ограничивает, и если этого
+        мало - мы можем добавить свое собственное свойство.</p>
+        <p>DOM-узлы - это обычные объекты JavaScript. Мы можем их изменять.</p>
+        <p>Например, создадим новое свойство для <code>document.body</code>:</p>
+        <code>
+            document.body.myData = {<br>
+            &nbsp;&nbsp;name: 'Caesar',<br>
+            &nbsp;&nbsp;title: 'Emperor'<br>
+            };<br>
+            <br>
+            alert(document.body.myData.title); // Emperor
+        </code>
+        <p>Мы можем добавить и метод:</p>
+        <code>
+            document.body.sayTagName = function() {<br>
+            &nbsp;&nbsp;alert(this.tagName);<br>
+            };<br>
+            <br>
+            document.body.sayTagName(); // BODY (значением 'this' в этом методе будет document.body)
+        </code>
+        <p>Также можно изменять встроенные прототипы, такие как <code>Element.prototype</code> и добавлять новые методы
+        ко всем элементам:</p>
+        <code>
+            Element.prototype.sayHi = function() {<br>
+            &nbsp;&nbsp;alert(`Hello, I'm ${this.tagName}`);<br>
+            };<br>
+            <br>
+            document.documentElement.sayHi(); // Hello, I'm HTML<br>
+            document.body.sayHi(); Hello, I'm BODY
+        </code>
+        <p>Итак, DOM-свойства и методы ведут себя так же, как и обычные объекты JavaScript:</p>
+        <ul>
+            <li>
+                <p>Им можно присвоить любое значение.</p>
+            </li>
+            <li>
+                <p>Они регистрозависимы (нужно писать <code>elem.nodeType</code>, не <code>elem.NoDeTyPe</code>).</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>HTML-атрибуты</h2>
+        <p>В HTML у тегов могут быть атрибуты. Когда браузер парсит HTML, чтобы создать DOM-объекты для тегов,
+        он распознает <i>стандартные</i> атрибуты и создает DOM-свойства для них.</p>
+        <p>Таким образом, когда у элемента есть <code>id</code> или другой <i>стандартный</i> атрибут, создается
+        соответствующее свойство. Но этого не происходит, если атрибут нестандартный.</p>
+        <p>Например:</p>
+        <code>
+            &ltbody id="test" something="non-standard"&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.id); // test<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Нестандартный атрибут не преобразуется в свойство<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.something); // undefined<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Пожалуйста, учтите, что стандартный атрибут для одного тега может быть нестандартным для другого. Например,
+        атрибут <code>"type"</code> является стандартным для элемента <code>&ltinput&gt</code> (<code>HTMLInputElement</code>),
+        но не является стандартным для <code>&ltbody&gt</code> (<code>HTMLBodyElement</code>). Стандартные атрибуты
+        описаны в спецификации для соответствующего класса элемента.</p>
+        <p>Мы можем увидеть это на примере ниже:</p>
+        <code>
+            &ltbody id="body" type="..."&gt<br>
+            &nbsp;&nbsp;&ltinput id="input" type="text"&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(input.type); // text<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(body.type); // undefined: DOM-свойство не создалось, потому что оно нестандартное<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Таким образом, для нестандартных атрибутов не будет соответствующих DOM-свойств. Есть ли способ получить
+        такие атрибуты?</p>
+        <p>Конечно. Все атрибуты доступны с помощью следующих методов:</p>
+        <ul>
+            <li>
+                <p><code>elem.hasAttribute(name)</code> - проверяет наличие атрибута.</p>
+            </li>
+            <li>
+                <p><code>elem.getAttribute(name)</code> - получает значение атрибута.</p>
+            </li>
+            <li>
+                <p><code>elem.setAttribute(name, value)</code> - устанавливает значение атрибута.</p>
+            </li>
+            <li>
+                <p><code>elem.removeAttribute(name)</code> - удаляет атрибут.</p>
+            </li>
+        </ul>
+        <p>Эти методы работают именно с тем, что написано в HTML.</p>
+        <p>Кроме этого, получить все атрибуты элемента можно с помощью свойства <code>elem.attributes</code>: коллекция
+        объектов, которая принадлежит ко встроенному классу <code>Attr</code> со свойствами <code>name</code> и
+        <code>value</code>.</p>
+        <p>Вот демонстрация чтения нестандартного свойства:</p>
+        <code>
+            &ltbody something="non-standard"&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.getAttribute('something')); // non-standard<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>У HTML-атрибутов есть следующие особенности:</p>
+        <ul>
+            <li>
+                <p>Их имена регистронезависимы (<code>id</code> то же самое, что и <code>ID</code>).</p>
+            </li>
+            <li>
+                <p>Их значения всегда являются строками.</p>
+            </li>
+        </ul>
+        <p>Расширенная демонстрация работы с атрибутами:</p>
+        <code>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltdiv id="elem" about="Elephant"&gt&lt/dib&gt<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(elem.getAttribute('About')); // (1) 'Elephant', чтение<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;elem.setAttribute('Test', 123); // (2), запись<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(elem.outerHTML); // (3), посмотрим, если атрибут в HTML (да)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let attr of elem.attributes) { // (4) весь список<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(`${attr.name} = ${attr.value}`);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Пожалуйста, обратите внимание:</p>
+        <ol>
+            <li>
+                <p><code>getAttribute('About')</code> - здесь первая заглавная буква, а в HTML - строчная. Но это не
+                важно: имена атрибутов регистронезависимы.</p>
+            </li>
+            <li>
+                <p>Мы можем присвоить что угодно атрибуту, но это станет строкой. Поэтому в этой строчке мы получаем
+                значение <code>'123'</code>.</p>
+            </li>
+            <li>
+                <p>Все атрибуты, в том числе те, которые мы установили, видны в <code>outerHTML</code>.</p>
+            </li>
+            <li>
+                <p>Коллекция <code>attributes</code> является перебираемой. В ней есть все атрибуты элемента (стандартные
+                и нестандартные) в виде объектов со свойствами <code>name</code> и <code>value</code>.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Синхронизация между атрибутами и свойствами</h2>
+        <p>Когда стандартный атрибут изменяется, соответствующее ему свойство автоматически обновляется. Это работает
+        и в обратную сторону (за некоторыми исключениями).</p>
+        <p>В примере ниже <code>id</code> модифицируется как атрибут, и можно увидеть, что свойство также изменено.
+        То же самое работает и в обратную сторону:</p>
+        <code>
+            &ltinput&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let input = document.querySelector('input');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Атрибут => свойство<br>
+            &nbsp;&nbsp;input.setAttribute('id', 'id');<br>
+            &nbsp;&nbsp;alert(input.id); // id (обновлено)<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Свойство => атрибут<br>
+            &nbsp;&nbsp;input.id = 'newId';<br>
+            &nbsp;&nbsp;alert(input.getAttribute('id')); // newId (обновлено)<br>
+            &lt/script&gt
+        </code>
+        <p>Но есть и исключения, например, <code>input.value</code> синхронизируется только в одну сторону - атрибут →
+        значение, но не в обратную:</p>
+        <code>
+            &ltinput&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let input = document.querySelector('input');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Атрибут => значение<br>
+            &nbsp;&nbsp;input.setAttribute('value', 'text');<br>
+            &nbsp;&nbsp;alert(input.value); // text<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Свойство => атрибут<br>
+            &nbsp;&nbsp;input.value = 'newValue';<br>
+            &nbsp;&nbsp;alert(input.getAttribute('value')); // text (не обновилось!)<br>
+            &lt/script&gt
+        </code>
+        <p>В примере выше:</p>
+        <ul>
+            <li>
+                <p>Изменение атрибута <code>value</code> обновило свойство.</p>
+            </li>
+            <li>
+                <p>Но изменение свойства не обновило атрибут.</p>
+            </li>
+        </ul>
+        <p>Иногда эта «особенность» может пригодиться, потому что действия пользователя могут приводить к изменениям
+        <code>value</code>, и если после этого мы захотим восстановить «оригинальное» значение из HTML, оно будет
+        в атрибуте.</p>
+    </article>
+
+    <article>
+        <h2>DOM-свойства типизированы</h2>
+        <p>DOM-свойства не всегда являются строками. Например, свойство <code>input.checked</code> (для чекбоксов) имеет
+        логический тип:</p>
+        <code>
+            &ltinput id="input" type="checkbox" checked&gt checkbox<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;alert(input.getAttribute('checked'); // Значение атрибута: пустая строка<br>
+            &nbsp;&nbsp;alert(input.checked); // Значение свойства: true<br>
+            &lt/script&gt
+        </code>
+        <p>Есть и другие примеры. Атрибут <code>style</code> - строка, но свойство <code>style</code> является объектом:</p>
+        <code>
+            &ltdiv id="div" style="color:red;font-size:120%"&gtHello&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Строка<br>
+            &nbsp;&nbsp;alert(div.getAttribute('style')); // color:red;font-size:120%<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Объект<br>
+            &nbsp;&nbsp;alert(div.style); // [object CSSStyleDeclaration]<br>
+            &nbsp;&nbsp;alert(div.style.color); // red<br>
+            &lt/script&gt
+        </code>
+        <p>Хотя большинство свойств, все же, строки.</p>
+        <p>При этом некоторые из них, хоть и строки, могут отличаться от атрибутов. Например, DOM-свойство <code>href</code>
+        всегда содержит <i>полный</i> URL, даже если атрибут содержит относительный URL или просто <code>#hash</code>.</p>
+        <p>Ниже пример:</p>
+        <code>
+            &lta id="a" href="#hello"&gtlink&lt/a&gt<br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Атрибут<br>
+            &nbsp;&nbsp;alert(a.getAttribute('href')); // #hello<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Свойство<br>
+            &nbsp;&nbsp;alert(a.href); // Полный URL в виде https://site.com/page#hello<br>
+            &lt/script&gt
+        </code>
+        <p>Если же нужно значение <code>href</code> или любого другого атрибута в точности, как оно записано в HTML,
+        можно воспользоваться <code>getAttribute</code>.</p>
+    </article>
+
+    <article>
+        <h2>Нестандартные атрибуты, dataset</h2>
+        <p>При написании HTML мы используем много стандартных атрибутов. Но что насчет нестандартных, пользовательских?
+        Давайте посмотрим, полезны они или нет, и для чего они нужны.</p>
+        <p>Иногда нестандартные атрибуты используются для передачи пользовательских данных из HTML в JavaScript,
+        или чтобы «помечать» HTML-элементы для JavaScript.</p>
+        <p>Как тут:</p>
+        <code>
+            &lt!-- пометить div, чтобы показать здесь "name" --&gt<br>
+            &ltdiv show-info="name"&gt&lt/div&gt<br>
+            &lt!-- а здесь возраст "age" --&gt<br>
+            &ltdiv show-info="age"&gt&lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Код находит элемент с пометкой и показывает запрошенную информацию<br>
+            &nbsp;&nbsp;let user = {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;name: 'Pete',<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;age: 25<br>
+            &nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;for (let div of document.querySelectorAll('[show-info]')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Вставить соответствующую информацию в поле<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let field = div.getAttribute('show-info');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;div.innerHTML = user[field]; // Сначала Pete в name, потом 25 в age<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt
+        </code>
+        <p>Также они могут быть использованы, чтобы стилизовать элементы.</p>
+        <p>Например, здесь для состояния заказа используется атрибут <code>order-state</code>:</p>
+        <code>
+            &ltstyle&gt<br>
+            &nbsp;&nbsp;// Стили зависят от пользовательского атрибута "order-state"<br>
+            &nbsp;&nbsp;.order[order-state="new"] {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;color: green;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;.order[order-state="pending"] {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;color: blue;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;.order[order-state="canceled"] {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;color: red;<br>
+            &nbsp;&nbsp;}<br>
+            &lt/style&gt<br>
+            <br>
+            &ltdiv class="order" order-state="new"&gt<br>
+            &nbsp;&nbsp;A new order.<br>
+            &lt/div&gt<br>
+            <br>
+            &ltdiv class="order" order-state="pending"&gt<br>
+            &nbsp;&nbsp;A pending order.<br>
+            &lt/div&gt<br>
+            <br>
+            &ltdiv class="order" order-state="canceled"&gt<br>
+            &nbsp;&nbsp;A canceled order.<br>
+            &lt/div&gt
+        </code>
+        <p>Почему атрибут может быть предпочтительнее таких классов, как <code>.order-state-new</code>,
+        <code>.order-state-pending</code>, <code>order-state-cancelled</code>?</p>
+        <p>Это потому, что атрибутом удобнее управлять. Состояние может быть изменено достаточно просто:</p>
+        <code>
+            // Немного проще, чем удаление старого/добавление нового класса<br>
+            div.setAttribute('order-state', 'canceled');
+        </code>
+        <p>Но с пользовательскими атрибутами могут возникнуть проблемы. Что если мы используем нестандартный атрибут
+        для наших целей, а позже он появится в стандарте и будет выполнять какую-то функцию? Язык HTML живой, он растет,
+        появляется все больше атрибутов, чтобы удовлетворить потребности разработчиков. В этом случае могут возникнуть
+        неожиданные эффекты.</p>
+        <p>Чтобы избежать конфликтов, существуют атрибуты вида <code>data-*</code>.</p>
+        <p><b>Все атрибуты, начинающиеся с префикса «data-», зарезервированы для использования программистами. Они
+        доступны в свойстве <code>dataset</code>.</b></p>
+        <p>Например, если у <code>elem</code> есть атрибут <code>"data-about"</code>, то обратиться к нему можно
+        как <code>elem.dataset.about</code>.</p>
+        <p>Как тут:</p>
+        <code>
+            &ltbody data-about="Elephants"&gt<br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;alert(document.body.dataset.about); // Elephants<br>
+            &lt/script&gt
+        </code>
+        <p>Атрибуты, состоящие из нескольких слов, к примеру <code>data-order-state</code>, становятся свойствами,
+        записанными с помощью верблюжьей нотации: <code>dataset.orderState</code>.</p>
+        <p>Вот переписанный пример «состояния заказа»:</p>
+        <code>
+            &ltstyle&gt<br>
+            &nbsp;&nbsp;.order[data-order-state="new"] {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;color: green;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;.order[data-order-state="pending"] {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;color: blue;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;.order[data-order-state="canceled"] {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;color: red;<br>
+            &nbsp;&nbsp;}<br>
+            &lt/style&gt<br>
+            <br>
+            &ltdiv id="order" class="order" data-order-state="new"&gt<br>
+            &nbsp;&nbsp;A new order.<br>
+            &lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Чтение<br>
+            &nbsp;&nbsp;alert(order.dataset.orderState); // new<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Изменение<br>
+            &nbsp;&nbsp;order.dataset.orderState = "pending"; // (*)<br>
+            &lt/script&gt
+        </code>
+        <p>Использование <code>data-*</code> атрибутов - валидный, безопасный способ передачи пользовательских данных.</p>
+        <p>Пожалуйста, примите во внимание, что мы можем не только читать, но и изменять data-атрибуты. Тогда CSS
+        обновит представление соответствующим образом: в примере выше последняя строка <code>(*)</code> меняет цвет
+        на синий.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>
+                <p>Атрибуты - это то, что написано в HTML.</p>
+            </li>
+            <li>
+                <p>Свойства - это то, что находится в DOM-объектах.</p>
+            </li>
+        </ul>
+        <p>Небольшое сравнение:</p>
+        <table>
+            <thead>
+            <tr>
+                <th></th>
+                <th>Свойства</th>
+                <th>Атрибуты</th>
+            </tr>
+            </thead>
+            <tr>
+                <td>Тип</td>
+                <td>Любое значение, стандартные свойства имеют типы, описанные в спецификации</td>
+                <td>Строка</td>
+            </tr>
+            <tr>
+                <td>Имя</td>
+                <td>Имя регистрозависимо</td>
+                <td>Имя регистронезависимо</td>
+            </tr>
+        </table>
+        <p>Методы для работы с атрибутами:</p>
+        <ul>
+            <li>
+                <p><code>elem.hasAttribute(name)</code> - проверить на наличие.</p>
+            </li>
+            <li>
+                <p><code>elem.getAttribute(name)</code> - получить значение.</p>
+            </li>
+            <li>
+                <p><code>elem.setAttribute(name, value)</code> - установить значение.</p>
+            </li>
+            <li>
+                <p><code>elem.removeAttribute(name)</code> - удалить атрибут.</p>
+            </li>
+            <li>
+                <p><code>elem.attributes</code> - это коллекция всех атрибутов.</p>
+            </li>
+        </ul>
+        <p>В большинстве ситуаций предпочтительнее использовать DOM-свойства. Нужно использовать атрибуты только тогда,
+        когда DOM-свойства не подходят, когда нужны именно атрибуты, например:</p>
+        <ul>
+            <li>
+                <p>Нужен нестандартный атрибут. Но если он начинается с <code>data-</code>, тогда нужно использовать
+                <code>dataset</code>.</p>
+            </li>
+            <li>
+                <p>Мы хотим получить именно то значение, которое написано в HTML. Значение DOM-свойства может быть другим,
+                например, свойство <code>href</code> - всегда полный URL, а нам может понадобиться получить
+                «оригинальное» значение.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
