@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Стили и классы</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Стили и классы</h2>
+        <p>Как правило, существует два способа задания стилей для элемента:</p>
+        <ol>
+            <li>
+                <p>Создать класс в CSS и использовать его: <code>&ltdiv class="..."&gt</code>.</p>
+            </li>
+            <li>
+                <p>Писать стили непосредственно в атрибуте <code>style</code>: <code>&ltdiv style="..."&gt</code>.</p>
+            </li>
+        </ol>
+        <p>JavaScript может менять и классы, и свойство <code>style</code>.</p>
+        <p>Классы - всегда предпочтительный вариант по сравнению со <code>style</code>. Мы должны манипулировать
+        свойством <code>style</code> только в том случае, если классы «не могут справиться».</p>
+        <p>Например, использование <code>style</code> является приемлемым, если мы вычисляем координаты элемента
+        динамически и хотим установить их из JavaScript:</p>
+        <code>
+            let top = /* Сложные расчеты */;<br>
+            let left = /* Сложные расчеты */;<br>
+            <br>
+            elem.style.left = left; // Например, '123px', значение вычисляется во время работы скрипта<br>
+            elem.style.top = top; // Например, '456px'
+        </code>
+        <p>Мы также можем установить сразу несколько стилей для элемента, используя свойство <code>cssText</code>.
+        Но с ним нужно быть осторожнее, т.к. оно может как добавить стили к существующим, так и полностью перезаписать
+        их на новые:</p>
+        <code>
+            let top = /* Сложные расчеты */;<br>
+            let left = /* Сложные расчеты */;<br>
+            <br>
+            // Полная перезапись стилей elem, используем =<br>
+            elem.style.cssText = `<br>
+            &nbsp;&nbsp;top: ${top};<br>
+            &nbsp;&nbsp;left: ${left};<br>
+            `;<br>
+            <br>
+            // Добавление новых стилей к существующим стилям elem, используем +=<br>
+            elem.style.cssText += `<br>
+            &nbsp;&nbsp;top: ${top};<br>
+            &nbsp;&nbsp;left: ${left};<br>
+            `;<br>
+            <br>
+            // Если элементу уже заданы стили, которые мы хотим добавить (+=), они будут перезаписаны на новые.
+        </code>
+        <p>В других случаях, например, чтобы сделать текст красным, добавить значок фона - описываем это в CSS
+        и добавляем класс (JavaScript может это сделать). Это более гибкое и легкое в поддержке решение.</p>
+    </article>
+
+    <article>
+        <h2>className и classList</h2>
+        <p>Изменение класса является одним из наиболее часто используемых действий в скриптах.</p>
+        <p>Когда-то давно в JavaScript существовало ограничение: зарезервированное слово типа <code>"class"</code>
+        не могло быть свойством объекта. Это ограничение сейчас отсутствует, но в то время было невозможно иметь
+        свойство <code>elem.class</code>.</p>
+        <p>Поэтому для классов было введено схожее свойство <code>"className"</code>: <code>elem.className</code>
+        соответствует атрибуту <code>"class"</code>.</p>
+        <p>Например:</p>
+        <code>
+            &ltbody class="main page"&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.className); // main page<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Если мы присваиваем что-то <code>elem.className</code>, то это заменяет всю строку с классами. Иногда это то,
+        что нам нужно, но часто мы хотим добавить/удалить один класс.</p>
+        <p>Для этого есть другое свойство: <code>elem.classList</code>.</p>
+        <p><code>elem.classList</code> - это специальный объект с методами для добавления/удаления одного класса.</p>
+        <p>Например:</p>
+        <code>
+            &ltbody class="main page"&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Добавление класса<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.classList.add('article');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.className); // main page article<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Так что мы можем работать как со строкой полного класса, используя <code>className</code>, так и с отдельными
+        классами, используя <code>classList</code>. Выбираем тот вариант, который нам удобнее.</p>
+        <p>Методы <code>classList</code>:</p>
+        <ul>
+            <li>
+                <p><code>elem.classList.add/remove('class')</code> - добавить/удалить класс.</p>
+            </li>
+            <li>
+                <p><code>elem.classList.toggle('class')</code> - добавить класс, если его нет, иначе удалить.</p>
+            </li>
+            <li>
+                <p><code>elem.classList.contains('class')</code> - проверка наличия класса, возвращает <code>true/false</code>.</p>
+            </li>
+        </ul>
+        <p>Кроме того, <code>classList</code> является перебираемым, поэтому можно перечислить все классы при помощи
+        <code>for...of</code>:</p>
+        <code>
+            &ltbody class="main page"&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let name of document.body.classList) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(name); main, затем page<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+    </article>
+
+    <article>
+        <h2>Свойство style</h2>
+        <p>Свойство <code>elem.style</code> - это объект, который соответствует тому, что написано в атрибуте
+        <code>"style"</code>.</p>
+        <p>Свойства из одного слова записываются так же, с маленькой буквы:</p>
+        <code>
+            background → elem.style.background<br>
+            top → elem.style.top<br>
+            opacity → elem.style.opacity
+        </code>
+        <p>Для свойств из нескольких слов используется camelCase:</p>
+        <code>
+            background-color → elem.style.backgroundColor<br>
+            z-index → elem.style.zIndex<br>
+            border-left-width → elem.style.borderLeftWidth
+        </code>
+        <p>Например:</p>
+        <code>
+            document.body.style.backgroundColor = prompt('background color?', 'green');
+        </code>
+
+        <article class="note">
+            <h2>Свойства с префиксом</h2>
+            <p>Стили с браузерным префиксом, например, <code>-moz-border-radius</code>, <code>-webkit-border-radius</code>
+            преобразуются по тому же принципу: дефис означает заглавную букву.</p>
+            <p>Например:</p>
+            <code>
+                button.style.MozBorderRadius = '5px';<br>
+                button.style.WebkitBorderRadius = '5px';
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Сброс стилей</h2>
+        <p>Иногда нам нужно добавить свойство стиля, а потом, позже, убрать его.</p>
+        <p>Например, чтобы скрыть элемент, мы можем задать <code>elem.style.display = 'none'</code>.</p>
+        <p>Затем мы можем удалить свойство <code>style.display</code>, чтобы вернуться к первоначальному состоянию.
+        Вместо <code>delete elem.style.display</code> мы должны присвоить ему пустую строку:
+        <code>elem.style.display = ''</code>.</p>
+        <code>
+            // Если мы запустим этот код, &ltbody&gt «мигнет»<br>
+            document.body.style.display = 'none'; // Скрыть<br>
+            <br>
+            setTimeout(() => document.body.style.display = '', 1000); // Возврат к нормальному состоянию
+        </code>
+        <p>Если мы установим в <code>style.display</code> пустую строку, то браузер применит CSS-классы и встроенные стили,
+        как если бы такого свойства <code>style.display</code> вообще не было.</p>
+    </article>
+
+    <article>
+        <h2>Следите за единицами измерения</h2>
+        <p>Не забудьте добавить к значениям единицы измерения.</p>
+        <p>Например, мы должны устанавливать <code>10px</code>, а не просто <code>10</code> в свойство
+        <code>elem.style.top</code>. Иначе это не сработает:</p>
+        <code>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Не работает!<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.style.margin = 20;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.style.margin); // '' (пустая строка, присваивание игнорируется)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Сейчас добавим единицу изменения (px) - и заработает<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.body.style.margin = '20px';<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.style.margin); // '20px'<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.style.marginTop); // '20px'<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.style.marginLeft); // '20px'<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>Пожалуйста, обратите внимание, браузер «распаковывает» свойство <code>style.margin</code> в последних строках
+        и выводит <code>style.marginLeft</code> и <code>style.marginTop</code> из него.</p>
+    </article>
+
+    <article>
+        <h2>Вычисленные стили: getComputedStyle</h2>
+        <p>Итак, изменить стиль очень просто. Но как его <i>прочитать</i>?</p>
+        <p>Например, мы хотим знать размер, отступы, цвет элемента. Как это сделать?</p>
+        <p><b>Свойство <code>style</code> оперирует только значением атрибута <code>'style'</code>, без учета
+        CSS-каскада.</b></p>
+        <p>Поэтому, используя <code>elem.style</code>, мы не можем прочитать ничего, что приходит из классов CSS.</p>
+        <p>Например, здесь <code>style</code> не может видеть отступы:</p>
+        <code>
+            &lthead&gt<br>
+            &nbsp;&nbsp;&ltstyle&gt body {color: red, margin: 5px}&lt/style&gt<br>
+            &lt/head&gt<br>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;Красный текст<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.style.color); // пусто<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(document.body.style.marginTop); // пусто<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+        <p>... Но что, если нам нужно, скажем, увеличить отступ на <code>20px</code>? Для начала нам нужно его текущее
+        значение получить.</p>
+        <p>Для этого есть метод: <code>getComputedStyle</code>.</p>
+        <p>Синтаксис:</p>
+        <code>
+            getComputedStyle(element, [pseudo])
+        </code>
+        <ul>
+            <li>
+                <p><code>element</code> - элемент, значение для которого нужно получить.</p>
+            </li>
+            <li>
+                <p><code>pseudo</code> - указывается, если нужен стиль псевдоэлемента, например <code>::before</code>.
+                Пустая строка или отсутствие элемента означают сам элемент.</p>
+            </li>
+        </ul>
+        <p>Результат вызова - объект со стилями, похожий на <code>elem.style</code>, но с учетом всех CSS-классов.</p>
+        <p>Например:</p>
+        <code>
+            &lthead&gt<br>
+            &nbsp;&nbsp;&ltstyle&gt body {color: red, margin: 5px} &lt/style&gt<br>
+            &lt/head&gt<br>
+            &ltbody&gt<br>
+            &nbsp;&nbsp;&ltscript&gt<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let computedStyle = getComputedStyle(document.body);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Сейчас мы можем прочитать отступ и цвет<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(computedStyle.marginTop); // 5px<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(computedStyle.color); // rgb(255, 0, 0)<br>
+            &nbsp;&nbsp;&lt/script&gt<br>
+            &lt/body&gt
+        </code>
+
+        <article class="note">
+            <h2>Вычисленное (computed) и окончательное (resolved) значения</h2>
+            <p>Есть две концепции в CSS:</p>
+            <ol>
+                <li>
+                    <p><i>Вычисленное</i> (computed) значение - это то, которое получено после применения всех CSS-правил
+                    и CSS-наследования. Например, <code>height: 1em</code> или <code>font-size: 125%</code>.</p>
+                </li>
+                <li>
+                    <p><i>Окончательное</i> (resolved) значение - непосредственно применяемое к элементу. Значение
+                    <code>1em</code> или <code>125%</code> являются относительными. Браузер берет вычисленное значение
+                    и делает все единицы измерения фиксированными и абсолютными, например, <code>height: 20px</code>
+                    или <code>font-size: 16px</code>. Для геометрических свойств разрешенные значения могут иметь
+                    плавающую точку, например, <code>width: 50.5px</code>.</p>
+                </li>
+            </ol>
+            <p>Давным-давно <code>getComputedStyle</code> был создан для получения вычисленных значений, но оказалось,
+            что окончательные значения гораздо удобнее, и стандарт изменился.</p>
+            <p>Так что в настоящее время <code>getComputedStyle</code> фактически возвращает окончательное значение
+            свойства, для геометрии оно обычно в пикселях.</p>
+        </article>
+
+        <article class="warning">
+            <h2><code>getComputedStyle</code> требует полное свойство!</h2>
+            <p>Для правильного получения значения нужно указать точное свойство. Например, <code>paddingLeft</code>,
+            <code>marginTop</code>, <code>borderTopWidth</code>. При обращении к сокращенному: <code>padding</code>,
+            <code>margin</code>, <code>border</code> - правильный результат не гарантируется.</p>
+            <p>Например, если есть свойства <code>paddingLeft/paddingTop</code>, то что мы получим вызывая
+            <code>getComputedStyle(elem).padding</code>? Ничего, или, может быть, «сгенерированное» значение из известных
+            внутренних отступов? Стандарта для этого нет.</p>
+        </article>
+
+        <article class="note">
+            <h2>Стили, применяемые к посещенным <code>:visited</code> ссылкам, скрываются!</h2>
+            <p>Посещенные ссылки могут быть окрашены с помощью псевдокласса <code>:visited</code>.</p>
+            <p>Но <code>getComputedStyle</code> не дает доступ к этой информации, чтобы произвольная страница не могла
+            определить, посещал ли пользователь ту или иную ссылку, проверив стили.</p>
+            <p>JavaScript не видит стили, применяемые с помощью <code>:visited</code>. Кроме того, в CSS есть ограничение,
+            которое запрещает в целях безопасности применять к <code>:visited</code> CSS-стили, изменяющие геометрию
+            элемента. Это гарантирует, что нет обходного пути для «злой» страницы проверить, были ли ссылка посещена и,
+            следовательно, нарушить конфиденциальность.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Для управления классами существуют два DOM-свойства:</p>
+        <ul>
+            <li>
+                <p><code>className</code> - строковое значение, удобно для управления всем набором классов.</p>
+            </li>
+            <li>
+                <p><code>classList</code> - объект с методами <code>add/remove/toggle/contains</code>, удобно для
+                управления отдельными классами.</p>
+            </li>
+        </ul>
+        <p>Чтобы изменить стили:</p>
+        <ul>
+            <li>
+                <p>Свойство <code>style</code> является объектом со стилями в формате camelCase. Чтение и запись в него
+                работают так же, как изменение соответствующих свойств в атрибуте <code>"style"</code>. Чтобы узнать,
+                как добавить в него <code>important</code> и делать некоторые другие вещи - смотрите
+                <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/API/CSSStyleDeclaration">документацию</a>.</p>
+            </li>
+            <li>
+                <p>Свойство <code>style.cssText</code> соответствует всему атрибуту <code>"style"</code>, полной строке
+                стилей.</p>
+            </li>
+        </ul>
+        <p>Для чтения окончательных стилей (с учетом всех классов, после применения CSS и вычисления окончательных
+        значений) используется:</p>
+        <ul>
+            <li>
+                <p>Метод <code>getComputedStyle(element, [pseudo])</code>, возвращает объект, похожий по формату на
+                <code>style</code>. Только для чтения.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
