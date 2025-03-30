@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Поместите мяч в центр поля</title>
+    <script defer src="script.js"></script>
+    <style>
+        #field {
+            width: 95%;
+            height: 500px;
+            background-image: radial-gradient(circle, black 1px, transparent 1px);
+            background-size: 10px 10px;
+            border: 10px groove black;
+            background-color: #00FF00;
+            position: relative;
+        }
+
+        #ball {
+            position: absolute;
+            width: 10%;
+        }
+    </style>
+</head>
+<body>
+    <div id="field">
+        <img alt src="https://en.js.cx/clipart/ball.svg" id="ball">
+    </div>
+</body>
+</html>
