@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Размеры и прокрутка окна</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Размеры и прокрутка окна</h2>
+        <p>Как узнать ширину и высоту окна браузера? Как получить полную ширину и высоту документа, включая прокрученную
+        часть? Как прокрутить страницу с помощью JavaScript?</p>
+        <p>Для большинства таким запросов мы можем использовать корневой элемент документа <code>document.documentElement</code>,
+        который соответствует тегу <code>&lthtml&gt</code>. Однако есть дополнительные методы и особенности, которые
+        необходимо учитывать.</p>
+    </article>
+
+    <article>
+        <h2>Ширина/высота окна</h2>
+        <p>Чтобы получить ширину/высоту окна, можно взять свойства <code>clientWidth/clientHeight</code> из
+        <code>document.documentElement</code>:</p>
+        <img src="https://learn.javascript.ru/article/size-and-scroll-window/document-client-width-height.svg" alt style="width: 40%">
+        <p>Например, эта кнопка показывает высоту вашего окна:</p>
+        <button>alert(document.documentElement.clientHeight)</button>
+        <script>
+            let btn1 = document.currentScript.previousElementSibling;
+            btn1.onclick = () => {
+                alert(document.documentElement.clientHeight);
+            }
+        </script>
+
+        <article class="warning">
+            <h2>Не <code>window.innerWidth/Height</code></h2>
+            <p>Браузеры также поддерживают свойства <code>window.innerWidth/innerHeight</code>. Вроде бы, похоже на
+            то, что нам нужно. Почему же не использовать их?</p>
+            <p>Если есть полоса прокрутки, и она занимает какое-то место, то свойства <code>clientWidth/clientHeight</code>
+            указывают на ширину/высоту документа без нее (за ее вычетом). Иными словами, они возвращают высоту/ширину
+            видимой части документа, доступной для содержимого.</p>
+            <p>А <code>window.innerWidth/innerHeight</code> включают в себя полосу прокрутки.</p>
+            <p>Если полоса прокрутки занимает некоторое место, то эти две строки выведут разные значения:</p>
+            <code>
+                alert(window.innerWidth); // Полная ширина окна<br>
+                alert(document.documentElement.clientWidth); // Ширина окна за вычетом полосы прокрутки
+            </code>
+            <p>В большинстве случаев нам нужна <i>доступная</i> ширина окна: для рисования или позиционирования.
+            Полоса прокрутки «отъедает» ее часть. Поэтому следует использовать <code>document.documentElement.clientWidth</code>.</p>
+        </article>
+
+        <article class="warning">
+            <h2><code>DOCTYPE</code> - это важно</h2>
+            <p>Обратите внимание, что геометрические свойства верхнего уровня могут работать немного иначе, если в
+            HTML нет <code>&ltDOCTYPE HTML&gt</code>. Возможны странности.</p>
+            <p>В современном HTML мы всегда должны указывать <code>DOCTYPE</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Ширина/высота документа</h2>
+        <p>Теоретически, т.к. корневым элементом документа является <code>documentElement</code>, и он включает в себя
+        все содержимое, мы можем получить полный размер документа как <code>documentElement.scrollWidth/scrollHeight</code>.</p>
+        <p>Но именно на этом элементе, для страницы в целом, эти свойства работают не так, как предполагается.
+        В Chrome/Safari/Opera, если нет прокрутки, то <code>documentElement.scrollHeight</code> может быть даже меньше,
+        чем <code>documentElement.clientHeight</code>! С точки зрения элемента это невозможная ситуация.</p>
+        <p>Чтобы надежно получить полную высоту документа, нам следует взять максимальное из этих свойств:</p>
+        <code>
+            let scrollHeight = Math.max(<br>
+            &nbsp;&nbsp;document.body.scrollHeight, document.documentElement.scrollHeight,<br>
+            &nbsp;&nbsp;document.body.offsetHeight, document.documentElement.offsetHeight,<br>
+            &nbsp;&nbsp;document.body.clientHeight, document.documentElement.clientHeight<br>
+            );<br>
+            <br>
+            alert('Полная высота документа с прокручиваемой частью: ' + scrollHeight);
+        </code>
+        <p>Почему? Лучше не спрашивайте. Эти несоответствия идут с давних времен. Глубокой логики здесь нет.</p>
+    </article>
+
+    <article>
+        <h2>Получение текущей прокрутки</h2>
+        <p>Обычные элементы хранят текущее состояние прокрутки в <code>elem.scrollLeft/scrollTop</code>.</p>
+        <p>Что же со страницей? В большинстве браузеров мы можем обратиться к <code>documentElement.scrollLeft/Top</code>,
+        за исключением основанных на старых WebKit (Safari), где есть ошибка (5991), и там нужно использовать
+        <code>document.body</code> вместо <code>document.documentElement</code>.</p>
+        <p>К счастью, нам совсем не обязательно запоминать эти особенности, потому что текущую прокрутку можно
+        прочитать из свойств <code>window.pageXOffset/pageYOffset</code>:</p>
+        <code>
+            alert('Текущая прокрутка сверху: ' + window.pageYOffset);<br>
+            alert('Текущая прокрутка слева: ' + window.pageXOffset);
+        </code>
+        <p>Эти свойства доступны только для чтения.</p>
+
+        <article class="note">
+            <h2>В качестве свойств объекта <code>window</code> также доступны <code>scrollX</code> и <code>scrollY</code></h2>
+            <p>По историческим причинам существует два аналога <code>window.pageXOffset</code> и
+            <code>window.pageYOffset</code>:</p>
+            <ul>
+                <li>
+                    <p><code>window.pageXOffset</code> - то же самое, что и <code>window.scrollX</code>.</p>
+                </li>
+                <li>
+                    <p><code>window.pageYOffset</code> - то же самое, что и <code>window.scrollY</code>.</p>
+                </li>
+            </ul>
+        </article>
+    </article>
+
+    <article>
+        <h2>Прокрутка: scrollTo, scrollBy</h2>
+        <p>Обычные элементы можно прокручивать, изменяя <code>scrollTop/scrollLeft</code>.</p>
+        <p>Мы можем сделать то же самое для страницы в целом, используя <code>document.documentElement.scrollTop/Left</code>
+        (кроме основанных на старом WebKit (Safari), где, как сказано выше, <code>document.body.scrollTop/Left</code>).</p>
+        <p>Есть и другие способы, в которых подобных несовместимостей нет: специальные методы
+        <code>window.scrollBy(x, y)</code> и <code>window.scrollTo(pageX, pageY)</code>.</p>
+        <ul>
+            <li>
+                <p>Метод <code>scrollBy(x, y)</code> прокручивает страницу <i>относительно ее текущего положения</i>.
+                Например, <code>scrollBy(0, 10)</code> прокручивает страницу на <code>10px</code> вниз.</p>
+                <p>Кнопка ниже демонстрирует это:</p>
+                <button>window.scrollBy(0, 10)</button>
+                <script>
+                    let btn2 = document.currentScript.previousElementSibling;
+                    btn2.onclick = () => {
+                        window.scrollBy(0, 10);
+                    }
+                </script>
+            </li>
+            <li>
+                <p>Метод <code>scrollTo(pageX, pageY)</code> прокручивает страницу <i>на абсолютные координаты</i>
+                (<code>pageX</code>, <code>pageY</code>). То есть, чтобы левый-верхний угол видимой части страницы
+                имел данные координаты относительно левого верхнего угла документа. Это все равно, что поставить
+                <code>scrollLeft/scrollTop</code>. Для прокрутки в самое начало мы можем использовать
+                <code>scrollTo(0, 0)</code>.</p>
+                <button>window.scrollTo(0, 0)</button>
+                <script>
+                    let btn3 = document.currentScript.previousElementSibling;
+                    btn3.onclick = () => {
+                        window.scrollTo(0, 0);
+                    }
+                </script>
+            </li>
+        </ul>
+        <p>В обоих методах вместо координат также может использоваться объект <code>options</code>, как аргумент:</p>
+        <code>
+            window.scrollBy(options);
+            window.scrollTo(options);
+        </code>
+        <p><code>options</code> поддерживает три свойства:</p>
+        <code>
+            window.scrollTo({<br>
+            &nbsp;&nbsp;top: 100,<br>
+            &nbsp;&nbsp;left: 0,<br>
+            &nbsp;&nbsp;behavior: 'smooth'<br>
+            });
+        </code>
+        <ul>
+            <li>
+                <p><code>top</code> - то же самое, что <code>y</code>/<code>pageY</code>.</p>
+            </li>
+            <li>
+                <p><code>left</code> - то же самое, что <code>x</code>/<code>pageX</code>.</p>
+            </li>
+            <li>
+                <p><code>behavior</code> - определяет, каким образом будет прокручиваться страница:</p>
+                <ul>
+                    <li>
+                        <p><code>'smooth'</code> - плавно (не поддерживается в IE и старых версиях Safari).</p>
+                    </li>
+                    <li>
+                        <p><code>'instant'</code> - мгновенно.</p>
+                    </li>
+                    <li>
+                        <p><code>'auto'</code> - определяется браузером (зависит от CSS-свойства <code>scroll-behavior</code>)</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Демонстрация плавной прокрутки страницы:</p>
+        <button>window.scrollBy({top: 500, left: 0, behavior: 'smooth'})</button>
+        <script>
+            let btn4 = document.currentScript.previousElementSibling;
+            btn4.onclick = () => {
+                window.scrollBy({
+                    top: 500,
+                    left: 0,
+                    behavior: 'smooth'
+                });
+            }
+        </script>
+    </article>
+
+    <article>
+        <h2>scrollIntoView</h2>
+        <p>Для полноты картины давайте рассмотрим еще один метод: <code>elem.scrollIntoView(top)</code>.</p>
+        <p>Вызов <code>elem.scrollIntoView(top)</code> прокручивает страницу, чтобы <code>elem</code> оказался вверху.
+        У него есть один аргумент:</p>
+        <ul>
+            <li>
+                <p>Если <code>top = true</code> (по умолчанию), то страница будет прокручена, чтобы <code>elem</code>
+                появился в верхней части окна. Верхний край элемента совмещен с верхней частью окна.</p>
+            </li>
+            <li>
+                <p>Если <code>top = false</code>, то страница будет прокручена, чтобы <code>elem</code> появился внизу.
+                Нижний край элемента будет совмещен с нижним краем окна.</p>
+            </li>
+        </ul>
+        <p>Кнопка ниже прокрутит страницу так, что она сама окажется вверху:</p>
+        <button>this.scrollIntoView()</button>
+        <script>
+            let btn5 = document.currentScript.previousElementSibling;
+            btn5.onclick = () => {
+                btn5.scrollIntoView();
+            }
+        </script>
+        <p>А следующая кнопка прокрутит страницу так, что она сама окажется внизу:</p>
+        <button>this.scrollIntoView(false)</button>
+        <script>
+            let btn6 = document.currentScript.previousElementSibling;
+            btn6.onclick = () => {
+                btn6.scrollIntoView(false);
+            }
+        </script>
+        <p>Как и <code>scrollTo</code>/<code>scrollBy</code>, <code>scrollIntoView</code> также принимает объект
+        <code>options</code> как аргумент (он немного отличается):</p>
+        <code>
+            this.scrollIntoView(options)
+        </code>
+        <p><code>options</code> поддерживает три свойства:</p>
+        <code>
+            this.scrollIntoView({<br>
+            &nbsp;&nbsp;behavior: 'smooth',<br>
+            &nbsp;&nbsp;block: 'end',<br>
+            &nbsp;&nbsp;inline: 'nearest'<br>
+            });
+        </code>
+        <ul>
+            <li>
+                <p><code>behavior</code> - анимация прокрутки (<code>smooth</code>, <code>instant</code>, <code>auto</code>).</p>
+            </li>
+            <li>
+                <p><code>block</code> - вертикальное выравнивание (<code>start</code>, <code>center</code>, <code>end</code>,
+                <code>nearest</code>). Значение по умолчанию: <code>start</code>.</p>
+            </li>
+            <li>
+                <p><code>inline</code> - горизонтальное выравнивание (<code>start</code>, <code>center</code>,
+                <code>end</code>, <code>nearest</code>). Значение по умолчанию: <code>nearest</code>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Запретить прокрутку</h2>
+        <p>Иногда нам нужно сделать документ «непрокручиваемым». Например, при показе большого диалогового окна над
+        документом - чтобы посетитель мог прокручивать это окно, но не документ.</p>
+        <p>Чтобы запретить прокрутку страницы, достаточно установить <code>document.body.style.overflow = 'hidden'</code>
+        (<code>document.documentElement.style.overflow = 'hidden'</code>).</p>
+        <p>Попробуйте сами:</p>
+        <button>document.body.style.overflow = 'hidden'</button>
+        <script>
+            let btn7 = document.currentScript.previousElementSibling;
+            btn7.onclick = () => {
+                document.body.style.overflow = 'hidden';
+            }
+        </script>
+        <button style="display: block; margin-top: 10px">document.body.style.overflow = ''</button>
+        <script>
+            let btn8 = document.currentScript.previousElementSibling;
+            btn8.onclick = () => {
+                document.body.style.overflow = '';
+            }
+        </script>
+        <p>Первая кнопка останавливает прокрутку, вторая возобновляет ее.</p>
+        <p>Аналогичным образом мы можем «заморозить» прокрутку для других элементов, а не только для <code>document.body</code>.</p>
+        <p>Недостатком этого способа является то, что сама полоса прокрутки исчезает. Если она занимала некоторую ширину,
+        то теперь эта ширина освободится, и содержимое страницы расширится, текст «прыгнет», заняв освободившееся место.</p>
+        <p>Это выглядит немного странно, но это можно обойти, если сравнить <code>clientWidth</code> до и после остановки,
+        и если <code>clientWidth</code> увеличится (значит полоса прокрутки исчезла), то добавить <code>padding</code>
+        в <code>document.body</code> вместо полосы прокрутки, чтобы оставить ширину содержимого прежней.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Размеры:</p>
+        <ul>
+            <li>
+                <p>Ширина/высота видимой части документа (ширина/высота области содержимого):
+                <code>document.documentElement.clientWidth/Height</code>.</p>
+            </li>
+            <li>
+                <p>Ширина/высота всего документа со всей прокручиваемой областью страницы:</p>
+                <code>
+                    let scrollHeight = Math.max(<br>
+                    &nbsp;&nbsp;document.body.scrollHeight, document.documentElement.scrollHeight,<br>
+                    &nbsp;&nbsp;document.body.offsetHeight, document.documentElement.offsetHeight,<br>
+                    &nbsp;&nbsp;document.body.clientHeight, document.documentElement.clientHeight<br>
+                    );
+                </code>
+            </li>
+        </ul>
+        <p>Прокрутка:</p>
+        <ul>
+            <li>
+                <p>Прокрутку окна можно получить так: <code>window.pageYOffset/pageXOffset</code> или
+                <code>window.scrollY/scrollX</code>.</p>
+            </li>
+            <li>
+                <p>Изменить текущую прокрутку:</p>
+                <ul>
+                    <li>
+                        <p><code>window.scrollTo(pageX, pageY)</code> - абсолютные координаты.</p>
+                    </li>
+                    <li>
+                        <p><code>window.scrollBy(x, y)</code> - прокрутка относительно текущего места.</p>
+                    </li>
+                    <li>
+                        <p><code>window.scrollIntoView(top)</code> - прокрутить страницу так, чтобы сделать
+                        <code>elem</code> видимым (выровнять относительно верхней/нижней части окна).</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
