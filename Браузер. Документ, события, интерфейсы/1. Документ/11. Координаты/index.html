@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Координаты</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Координаты</h2>
+        <p>Чтобы передвигать элементы по экрану, нам следует познакомиться с системами координат.</p>
+        <p>Большинство соответствующих методов JavaScript работают в одной из двух указанных ниже систем координат:</p>
+        <ol>
+            <li>
+                <p><b>Относительно окна браузера</b> - как <code>position: fixed</code>, отсчет идет от верхнего угла
+                окна.</p>
+                <ul>
+                    <li>
+                        <p>Мы будем обозначать эти координаты как <code>clientX/clientY</code>, причина выбора таких
+                        имен будет ясна позже, когда мы изучим свойства событий.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><b>Относительно документа</b> - как <code>position: absolute</code> на уровне документа, отсчет идет
+                от верхнего левого угла документа.</p>
+                <ul>
+                    <li>
+                        <p>Мы будем обозначать это координаты как <code>pageX/pageY</code>.</p>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>Когда страница полностью прокручена в самое начало, то верхний левый угол окна совпадает с левым верхним углом
+        документа, при этом обе этих систем координат тоже совпадают. Но если происходит прокрутка, то координаты элементов
+        в контексте окна меняются, так как они двигаются, но в то же время их координаты относительно документа остаются
+        такими же.</p>
+        <p>На приведенной ниже картинке взята точка в документе и показаны ее координаты до прокрутки (слева) и
+        после (справа):</p>
+        <img src="https://learn.javascript.ru/article/coordinates/document-and-window-coordinates-scrolled.svg" alt style="width: 50%">
+        <p>При прокрутке документа:</p>
+        <ul>
+            <li>
+                <p><code>pageY</code> - координата точки относительно документа осталась без изменений, так как отсчет
+                по-прежнему ведется от верхней границы документа (сейчас она прокручена наверх).</p>
+            </li>
+            <li>
+                <p><code>clientY</code> - координата точки относительно окна изменилась (стрелка на рисунке стала короче),
+                так как точка стала ближе к верхней границе окна.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Координаты относительно окна: getBoundingClientRect</h2>
+        <p>Метод <code>elem.getBoundingClientRect()</code> возвращает координаты в контексте окна для минимального по
+        размеру прямоугольника, который заключает в себе элемент <code>elem</code>, в виде объекта встроенного
+        класса <code>DOMRect</code>.</p>
+        <p>Основные свойства объекта типа <code>DOMRect</code>:</p>
+        <ul>
+            <li>
+                <p><code>x/y</code> - X/Y-координаты начала прямоугольника относительно окна.</p>
+            </li>
+            <li>
+                <p><code>width/height</code> - ширина/высота прямоугольника (могут быть отрицательными).</p>
+            </li>
+        </ul>
+        <p>Дополнительные, «зависимые» свойства:</p>
+        <ul>
+            <li>
+                <p><code>top/bottom</code> - Y-координата верхней/нижней границы прямоугольника.</p>
+            </li>
+            <li>
+                <p><code>left/right</code> - X-координата левой/правой границы прямоугольника.</p>
+            </li>
+        </ul>
+        <p>Кликните на кнопку, чтобы увидеть ее координаты относительно окна:</p>
+        <button>button.getBoundingClientRect()</button>
+        <script>
+            let btn1 = document.currentScript.previousElementSibling;
+            btn1.onclick = () => {
+                alert(JSON.stringify(btn1.getBoundingClientRect(), null, 4));
+            }
+        </script>
+        <p>Если вы прокрутите страницу, то расположение кнопки в окне поменяется, и, соответственно, ее координаты
+        в контексте окна тоже (при вертикальной прокрутке - <code>y/top/bottom</code>).</p>
+        <p>Вот картинка с результатами вызова <code>elem.getBoundingClientRect()</code>:</p>
+        <img src="https://learn.javascript.ru/article/coordinates/coordinates.svg" alt style="width: 40%">
+        <p>Как вы видите, <code>x/y</code> и <code>width/height</code> уже точно задают прямоугольник. Остальные свойства
+        могут быть легко вычислены на их основе:</p>
+        <ul>
+            <li>
+                <p><code>left = x</code></p>
+            </li>
+            <li>
+                <p><code>top = y</code></p>
+            </li>
+            <li>
+                <p><code>right = x + width</code></p>
+            </li>
+            <li>
+                <p><code>bottom = y + height</code></p>
+            </li>
+        </ul>
+        <p>Заметим:</p>
+        <ul>
+            <li>
+                <p>Координаты могут считаться с десятичной частью, например <code>10.5</code>. Это нормально, ведь
+                браузер использует дроби в своих внутренних вычислениях. Мы не обязаны округлять значения при установке
+                <code>style.left/top</code>.</p>
+            </li>
+            <li>
+                <p>Координаты могут быть отрицательными. Например, если страница прокручена так, что элемент <code>elem</code>
+                ушел вверх за пределы окна, то вызов <code>elem.getBoundingClientRect().top</code> вернет отрицательное
+                значение.</p>
+            </li>
+        </ul>
+
+        <article class="note">
+            <h2>Зачем вообще нужны зависимые свойства? Для чего существуют <code>top/left</code>, если есть <code>x/y</code>?</h2>
+            <p>С математической точки зрения, прямоугольник однозначно задается начальной точкой <code>(x, y)</code>
+            и вектором направления <code>(width, height)</code>.</p>
+            <p>Так что дополнительные зависимые свойства существуют лишь для удобства.</p>
+            <p>Что же касается <code>top/left</code>, то они на самом деле не всегда равны <code>x/y</code>.
+            Технически, значения <code>width/height</code> могут быть отрицательными. Это позволяет задать «направленный»
+            прямоугольник, например, для выделения мышью с отмеченным началом и концом.</p>
+            <p>То есть, отрицательные значения <code>width/height</code> означают, что прямоугольник «растет» влево-вверх
+            из правого нижнего угла.</p>
+            <p>Вот прямоугольник с отрицательными <code>width</code> и <code>height</code> (например,
+            <code>width = -200</code>, <code>height=-100</code>):</p>
+            <img src="https://learn.javascript.ru/article/coordinates/coordinates-negative.svg" alt style="width: 40%">
+            <p>Как вы видите, свойства <code>left/top</code> при этом не равным <code>x/y</code>.</p>
+            <p>Впрочем, на практике результат вызова <code>elem.getBoundingClientRect()</code> всегда возвращает
+            положительные значения для ширины/высоты. Здесь мы упомянули отрицательные <code>width/height</code>
+            лишь для того, чтобы вы поняли, зачем существуют эти с виду дублирующий свойства.</p>
+        </article>
+
+        <article class="warning">
+            <h2>Internet Explorer и Edge: не поддерживают <code>x/y</code></h2>
+            <p>Internet Explorer и Edge не поддерживают свойства <code>x/y</code> по историческим причинам.</p>
+            <p>Таким образом, мы можем либо сделать полифил (добавив соответствующие геттеры в <code>DOMRect.prototype</code>),
+            либо использовать <code>top/left</code>, так как это всегда одно и то же при положительных
+            <code>width/height</code>, в частности - в результате вызова <code>elem.getBoundingClientRect()</code>.</p>
+        </article>
+
+        <article class="warning">
+            <h2>Координаты right/bottom отличаются от одноименных CSS-свойств</h2>
+            <p>Есть очевидное сходство между координатами относительно окна и CSS <code>position: fixed</code>.</p>
+            <p>Но в CSS свойство <code>right</code> означает расстояние от правого края, и свойство <code>bottom</code>
+            означает расстояние от нижнего края окна браузера.</p>
+            <p>Если взглянуть на картинку выше, то видно, что в JavaScript это не так. Все координаты в контексте окна
+            считаются от верхнего левого угла, включая <code>right/bottom</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>elementFromPoint(x, y)</h2>
+        <p>Вызов <code>document.elementFromPoint(x, y)</code> возвращает самый глубоко вложенный элемент в окне,
+        находящийся по координатам <code>(x, y)</code>.</p>
+        <p>Синтаксис:</p>
+        <code>
+            let elem = document.elementFromPoint(x, y);
+        </code>
+        <p>Например, код ниже выделяет с помощью стилей и выводит имя тега элемента, который сейчас в центре окна
+        браузера:</p>
+        <code>
+            let centerX = document.documentElement.clientWidth / 2;<br>
+            let centerY = document.documentElement.clientHeight / 2;<br>
+            <br>
+            let elem = document.elementFromPoint(centerX, centerY);<br>
+            <br>
+            elem.style.background = 'green';<br>
+            alert(elem.tagName);<br>
+        </code>
+        <button style="margin: 5px">Выполнить пример</button>
+        <script>
+            let btn2 = document.currentScript.previousElementSibling;
+            btn2.onclick = () => {
+                let centerX = document.documentElement.clientWidth / 2;
+                let centerY = document.documentElement.clientHeight / 2;
+
+                let elem = document.elementFromPoint(centerX, centerY);
+
+                elem.style.background = 'green';
+                alert(elem.tagName);
+            }
+        </script>
+        <p>Поскольку используются координаты в контексте окна, то элемент может быть разным, в зависимости от того,
+        какая сейчас прокрутка.</p>
+
+        <article class="warning">
+            <h2>Для координат за пределами окна метод <code>elementFromPoint</code> возвращает <code>null</code></h2>
+            <p>Метод <code>document.elementFromPoint(x, y)</code> работает, только если координаты <code>(x, y)</code>
+            относятся к видимой части содержимого окна.</p>
+            <p>Если любая из координат представляет собой отрицательное число или превышает размеры окна, то возвращается
+            <code>null</code>.</p>
+            <p>Вот типичная ошибка, которая может произойти, если в коде нет соответствующей проверки:</p>
+            <code>
+                let elem = document.elementFromPoint(x, y);<br>
+                // Если координаты ведут за пределы окна, то elem = null<br>
+                elem.style.background = ''; // Ошибка!
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Применение для fixed позиционирования</h2>
+        <p>Чаще всего нам нужны координаты для позиционирования чего-либо.</p>
+        <p>Чтобы показать что-то около нужного элемента, мы можем вызвать <code>getBoundingClientRect</code>, чтобы
+        получить его координаты, а затем использовать CSS-свойство <code>position</code> вместе с
+        <code>left/top</code> (или <code>tight/bottom</code>).</p>
+        <p>Например, функция <code>createMessageUnder(elem, html)</code> ниже показывает сообщение под элементом
+        <code>elem</code>:</p>
+        <code>
+            let elem = document.getElementById('coords-show-mark');<br>
+            <br>
+            function createMessageUnder(elem, html) {<br>
+            &nbsp;&nbsp;// Создаем элемент, который будет содержать сообщение<br>
+            &nbsp;&nbsp;let message = document.createElement('div');<br>
+            &nbsp;&nbsp;// Для стилей лучше было бы использовать CSS-класс здесь<br>
+            &nbsp;&nbsp;message.style.cssText = 'position: fixed; color: red';<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Устанавливаем координаты элементу, не забываем про 'px'!<br>
+            &nbsp;&nbsp;let coords = elem.getBoundingClientRect();<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;message.style.left = coords.left + 'px';<br>
+            &nbsp;&nbsp;message.style.top = coords.bottom + 'px';<br>
+            &nbsp;&nbsp;message.innerHTML = html;<br>
+            &nbsp;&nbsp;return message;<br>
+            }<br>
+            <br>
+            // Использование:<br>
+            // Добавим сообщение на страницу на 5 секунд<br>
+            let message = createMessageUnder(elem, 'Hello, world!');<br>
+            document.body.append(message);<br>
+            setTimeout(() => message.remove(), 5000);
+        </code>
+        <p>Кликните кнопку, чтобы увидеть пример в действии:</p>
+        <button>position: fixed</button>
+        <script>
+            let btn3 = document.currentScript.previousElementSibling;
+            btn3.onclick = () => {
+                let image = document.createElement('img');
+                image.src = 'https://sun9-17.userapi.com/impg/_wdkbdsvTtiGCOaSurm394OlDaY_C4aDXRpKig/vInL-aPCYio.jpg?size=994x1005&quality=95&sign=43a3655793ec528b4c36515cc0ceb5cb&type=album';
+                image.style.position = 'fixed';
+                image.style.width = '15%';
+                let coords = btn3.getBoundingClientRect();
+                image.style.left = coords.left + 'px';
+                image.style.top = coords.bottom + 'px';
+                document.body.append(image);
+                setTimeout(() => image.remove(), 5000);
+            }
+        </script>
+        <p>Код можно изменить, чтобы показать сообщение слева, справа, снизу, применять к нему CSS-анимации и так далее.
+        Это просто, так как в нашем распоряжении имеются все координаты и размеры элемента.</p>
+        <p>Но обратите внимание на одну важную деталь: при прокрутке страницы сообщение уплывает от кнопки.</p>
+        <p>Причина весьма очевидна: сообщение позиционируется с помощью <code>position: fixed</code>, поэтому оно
+        остается всегда на том же самом месте в окне при прокрутке страницы.</p>
+        <p>Чтобы изменить это, нам нужно использовать другую систему координат, где сообщение позиционировалось бы
+        относительно документа, и свойство <code>position: absolute</code>.</p>
+    </article>
+
+    <article>
+        <h2>Координаты относительно документа</h2>
+        <p>В такой системе координат отсчет ведется от левого верхнего угла документа, не окна.</p>
+        <p>В CSS координаты относительно окна браузера соответствуют свойству <code>position: fixed</code>, а координаты
+        относительно документа - свойству <code>position: absolute</code> на самом верхнем уровне вложенности.</p>
+        <p>Мы можем воспользоваться свойствами <code>position: absolute</code> и <code>top/left</code>, чтобы привязать
+        что-нибудь к конкретному месту в документе. При этом прокрутка страницы не имеет значения. Но сначала нужно
+        получить верные координаты.</p>
+        <p>Не существует стандартного метода, который возвращал бы координаты элемента относительно документа,
+        но мы можем написать его сами.</p>
+        <p>Две системы координат связаны следующими формулами:</p>
+        <ul>
+            <li>
+                <p><code>pageY</code> = <code>clientY</code> + высота вертикально прокрученной части документа.</p>
+            </li>
+            <li>
+                <p><code>pageX</code> = <code>clientX</code> + ширина горизонтально прокрученной части документа.</p>
+            </li>
+        </ul>
+        <p>Функция <code>getCoords(elem)</code> берет координаты в контексте окна с помощью
+        <code>elem.getBoundingClientRect()</code> и добавляет к ним значение соответствующей прокрутки:</p>
+        <code>
+            // Получаем координаты элемента в контексте документа<br>
+            function getCoords(elem) {<br>
+            &nbsp;&nbsp;let box = elem.getBoundingClientRect();<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;return {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;top: box.top + window.scrollY;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;right: box.right + window.scrollX;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;bottom: box.bottom + window.scrollY;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;left: box.left + window.scrollX;<br>
+            &nbsp;&nbsp;};<br>
+            }
+        </code>
+        <p>Если бы в примере выше мы использовали ее вместе с <code>position: absolute</code>, то при прокрутке сообщение
+        оставалось бы рядом с элементом.</p>
+        <p>Модифицированная функция <code>createMessageUnder</code>:</p>
+        <code>
+            function createMessageUnder(elem, html) {<br>
+            &nbsp;&nbsp;let message = document.createElement('div');<br>
+            &nbsp;&nbsp;message.style.cssText = 'position: absolute; color: red';<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let coords = getCoords(elem);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;message.style.left = coords.left + 'px';<br>
+            &nbsp;&nbsp;message.style.top = coords.bottom + 'px';<br>
+            &nbsp;&nbsp;message.innerHTML = html;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;return message;<br>
+            }<br>
+        </code>
+        <button>position: absolute</button>
+        <script>
+            let btn4 = document.currentScript.previousElementSibling;
+            btn4.onclick = () => {
+                let image = document.createElement('img');
+                image.src = 'https://sun9-17.userapi.com/impg/_wdkbdsvTtiGCOaSurm394OlDaY_C4aDXRpKig/vInL-aPCYio.jpg?size=994x1005&quality=95&sign=43a3655793ec528b4c36515cc0ceb5cb&type=album';
+                image.style.position = 'absolute';
+                image.style.width = '15%';
+                let coords = btn4.getBoundingClientRect();
+                document.body.append(image);
+                image.style.left = coords.left + window.scrollX + 'px';
+                image.style.top = coords.top + window.scrollY - image.offsetHeight + 'px';
+                setTimeout(() => image.remove(), 5000);
+            }
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Любая точка на странице имеет координаты:</p>
+        <ol>
+            <li>
+                <p>Относительно окна браузера - <code>elem.getBoundingClientRect()</code>.</p>
+            </li>
+            <li>
+                <p>Относительно документа - <code>elem.getBoundingClientRect()</code> + текущая прокрутка страницы.</p>
+            </li>
+        </ol>
+        <p>Координаты в контексте окна подходят для использования с <code>position: fixed</code>, а координаты
+        относительно документа - для использования с <code>position: absolute</code>.</p>
+        <p>Каждая из систем координат имеет свои преимущества и недостатки. Иногда будет лучше применить одну,
+        а иногда - другую, как это и происходит с позиционированием в CSS, где мы выбираем между <code>absolute</code>
+        и <code>fixed</code>.</p>
+    </article>
+</body>
+</html>
