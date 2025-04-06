@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Создать раскрывающееся меню</title>
+    <script defer src="script.js"></script>
+    <style>
+        span {
+            cursor: pointer;
+            transition: all 1s;
+        }
+
+        span.opened {
+            background-color: #00FF00;
+        }
+
+        span.closed::before {
+            content: '▶ ';
+            color: green;
+        }
+
+        span.opened::before {
+            content: '▼ ';
+            color: green;
+        }
+
+        ul.closed {
+            display: none;
+        }
+
+        ul.opened {
+            display: block;
+        }
+
+        ul {
+            transition: all 2s;
+        }
+    </style>
+</head>
+<body>
+    <span class="closed">Сладости (нажми меня)!</span>
+    <ul class="closed">
+        <li>Пирожное</li>
+        <li>Пончик</li>
+        <li>Мёд</li>
+    </ul>
+</body>
+</html>

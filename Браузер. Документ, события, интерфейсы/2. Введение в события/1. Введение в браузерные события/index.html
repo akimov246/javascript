@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Введение в браузерные события</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Введение в браузерные события</h2>
+        <p><i>Событие</i> - это сигнал от браузера о том, что что-то произошло. Все DOM-узлы подают такие сигналы
+        (хотя события бывают и не только в DOM).</p>
+        <p>Вот список самых часто используемых DOM-событий, пока просто для ознакомления:</p>
+        <p><b>События мыши:</b></p>
+        <ul>
+            <li>
+                <p><code>click</code> - происходит, когда кликнули на элемент левой кнопкой мыши (на устройствах с сенсорными
+                экранами оно происходит при касании).</p>
+            </li>
+            <li>
+                <p><code>contextmenu</code> - происходит, когда кликнули на элемент правой кнопкой мыши.</p>
+            </li>
+            <li>
+                <p><code>mouseover</code>/<code>mouseout</code> - когда мыши наводится на/покидает элемент.</p>
+            </li>
+            <li>
+                <p><code>mousedown</code>/<code>mouseup</code> - когда нажали/отжали кнопку мыши на элементе.</p>
+            </li>
+            <li>
+                <p><code>mousemove</code> - при движении мыши.</p>
+            </li>
+        </ul>
+        <p><b>События на элементах управления:</b></p>
+        <ul>
+            <li>
+                <p><code>submit</code> - пользователь отправил форму <code>&ltform&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>focus</code> - пользователь фокусируется на элементе, например нажимает на <code>&ltinput&gt</code>.</p>
+            </li>
+        </ul>
+        <p><b>Клавиатурные события:</b></p>
+        <ul>
+            <li>
+                <p><code>keydown</code> и <code>keyup</code> - когда пользователь нажимает/отпускает клавишу.</p>
+            </li>
+        </ul>
+        <p><b>События документа:</b></p>
+        <ul>
+            <li>
+                <p><code>DOMContentLoaded</code> - когда HTML загружен и обработан, DOM документа полностью построен
+                и доступен.</p>
+            </li>
+        </ul>
+        <p><b>CSS events:</b></p>
+        <ul>
+            <li>
+                <p><code>transitioned</code> - когда CSS-анимация завершена.й</p>
+            </li>
+        </ul>
+        <p>Существует множество других событий. Мы подробно разберем их в последующих главах.</p>
+    </article>
+
+    <article>
+        <h2>Обработчики событий</h2>
+        <p>Событию можно назначить <i>обработчик</i>, то есть функцию, которая сработает, как только событие произошло.</p>
+        <p>Именно благодаря обработчикам JavaScript-код может реагировать на действия пользователя.</p>
+        <p>Есть несколько способов назначить событию обработчик. Сейчас мы их рассмотрим, начиная с самого простого.</p>
+
+        <h3>Использование атрибута HTML</h3>
+        <p>Обработчик может быть назначен прямо в разметке, в атрибуте, который называется <code>on&ltсобытие&gt</code>.</p>
+        <p>Например, чтобы назначить обработчик события <code>click</code> на элементе <code>input</code>, можно
+        использовать атрибут <code>onclick</code>, вот так:</p>
+        <code>
+            &ltinput value="Нажми меня" onclick="alert('Клик!')" type="button"&gt<br>
+        </code>
+        <button onclick="alert('Клик!')" style="margin-top: 5px">Нажми меня</button>
+        <p>При клике мышкой по кнопке выполнится код, указанный в атрибуте <code>onclick</code>.</p>
+        <p>Обратите внимание, для содержимого атрибута <code>onclick</code> используются одинарные кавычки, так как сам
+        атрибут находится в двойных. Если мы забудем об этом и поставим двойные кавычки внутри атрибута, вот так:
+        <code>onclick="alert("Клик!")"</code>, код не будет работать.</p>
+        <p>Атрибут HTML-тега - не самое удобное место для написания большого количества кода, поэтому лучше создать
+        отдельную JavaScript-функцию и вызвать ее там.</p>
+        <p>Следующий пример по клику запускает функцию <code>countRabbits()</code>:</p>
+        <code>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;function countRabbits() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let i = 1; i <= 3; i++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Кролик номер: ' + i);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt<br>
+            <br>
+            &ltinput type="button" onclick="countRabbits()" value="Считать кроликов!"&gt<br>
+        </code>
+        <script>
+            function countRabbits() {
+                for (let i = 1; i <= 3; i++) {
+                    alert('Кролик номер: ' + i);
+                }
+            }
+        </script>
+        <button onclick="countRabbits()" style="margin-top: 5px">Считать кроликов!</button>
+        <p>Как мы помним, атрибут HTML-тега не чувствителен к регистру, поэтому <code>ONCLICK</code> будет работать
+        так же, как <code>onClick</code> и <code>onCLICK</code>... Но, как правило, атрибуты пишут в нижнем регистре:
+        <code>onclick</code>.</p>
+
+        <h3>Использование свойства DOM-объекта</h3>
+        <p>Можно назначать обработчик, используя свойство DOM-элемента <code>on&ltсобытие&gt</code>.</p>
+        <p>К примеру, <code>elem.onclick</code>:</p>
+        <code>
+            &ltinput id="elem" type="button" value="Нажми меня!"&gt<br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.onclick = function() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Спасибо!');<br>
+            &nbsp;&nbsp;};<br>
+            &lt/script&gt<br>
+        </code>
+        <button style="margin-top: 5px">Нажми меня!</button>
+        <script>
+            let btn1 = document.currentScript.previousElementSibling;
+            btn1.onclick = () => {
+                alert('Спасибо!')
+            };
+        </script>
+        <p>Если обработчик задан через атрибут, то браузер читает HTML-разметку, создает новую функцию из содержимого
+        атрибута и записывает в свойство.</p>
+        <p>Этот способ, по сути, аналогичен предыдущему.</p>
+        <p><b>Обработчик всегда хранится в свойстве DOM-объекта, а атрибут - лишь один из способов его инициализации.</b></p>
+        <p><b>Так как у элемента DOM может быть только одно свойство с именем <code>onclick</code>, то назначить
+        более одного обработчика так нельзя.</b></p>
+        <p>В примере ниже назначение через JavaScript перезапишет обработчик из атрибута:</p>
+        <code>
+            &ltinput type="button" id="elem" onclick="alert('Было')" value="Нажми меня"&gt<br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.onclick = function() { // Перезапишет существующий обработчик<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Стало'); // Выведется только это<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt<br>
+        </code>
+        <button onclick="alert('Было')" style="margin-top: 5px">Нажми меня</button>
+        <script>
+            let btn2 = document.currentScript.previousElementSibling;
+            btn2.onclick = () => {
+                alert('Стало');
+            }
+        </script>
+        <p>Кстати, обработчиком можно назначить и уже существующую функцию:</p>
+        <code>
+            function sayThanks() {<br>
+            &nbsp;&nbsp;alert('Спасибо!);<br>
+            }<br>
+            <br>
+            elem.onclick = sayThanks;
+        </code>
+        <p>Убрать обработчик можно назначением <code>elem.onclick = null</code>.</p>
+    </article>
+
+    <article>
+        <h2>Доступ к элементу через this</h2>
+        <p>Внутри обработчика события <code>this</code> ссылается на текущий элемент, то есть на тот, на котором,
+        как говорят, «висит» (т.е. назначен) обработчик.</p>
+        <p>В коде ниже <code>button</code> выводит свое содержимое, используя <code>innerHTML</code>:</p>
+        <code>
+            &ltbutton onclick="alert(this.innerHTML)"&gtНажми меня&lt/button&gt<br>
+        </code>
+        <button onclick="alert(this.innerHTML)" style="margin-top: 5px">Нажми меня</button>
+    </article>
+
+    <article>
+        <h2>Частые ошибки</h2>
+        <p>Если вы только начинаете работать с событиями, обратите внимание на следующие моменты.</p>
+        <p><b>Функция должна быть присвоена как <code>sayThanks</code>, а не <code>sayThanks()</code>.</b></p>
+        <code>
+            // Правильно<br>
+            button.onclick = sayThanks;<br>
+            <br>
+            // Неправильно<br>
+            button.onclick = sayThanks();
+        </code>
+        <p>Если добавить скобки, то <code>sayThanks()</code> - это уже вызов функции, результат которого (равный
+        <code>undefined</code>, так как функция ничего не возвращает) будет присвоен <code>onclick</code>. Так что
+        это не будет работать.</p>
+        <p>А вот в разметке, в отличие от свойства, скобки нужны:</p>
+        <code>
+            &ltinput type="button" id="button" onclick="sayThanks()"&gt
+        </code>
+        <p>Это различие просто объяснить. При создании обработчика браузером из атрибута, он автоматически создает
+        функцию с <i>телом из значения атрибута</i>: <code>sayThanks()</code>.</p>
+        <p>Так что разметка генерирует такое свойство:</p>
+        <code>
+            button.onclick = function() {<br>
+            &nbsp;&nbsp;sayThanks();<br>
+            };
+        </code>
+        <p><b>Используйте именно функции, а не строки.</b></p>
+        <p>Назначение обработчика строкой <code>elem.onclick="alert(1)"</code> также сработает. Это сделано из
+        соображений совместимости, но делать так не рекомендуется.</p>
+        <p><b>Не используйте <code>setAttribute</code> для обработчиков.</b></p>
+        <p>Такой вызов работать не будет:</p>
+        <code>
+            // При нажатии на body будут ошибки, атрибуты всегда строки, и функция станет строкой<br>
+            document.body.setAttribute('onclick', function() {alert(1)});
+        </code>
+        <p><b>Регистр DOM-свойства имеет значение.</b></p>
+        <p>Используйте <code>elem.onclick</code>, а не <code>elem.ONCLICK</code>, потому что DOM-свойства чувствительны
+        к регистру.</p>
+    </article>
+
+    <article>
+        <h2>addEventListener</h2>
+        <p>Фундаментальный недостаток описанных выше способов назначения обработчика - невозможность повесить
+        несколько обработчиков на одно событие.</p>
+        <p>Например, одна часть кода хочет при клике на кнопку делать ее подсвеченной, а другая - выдавать сообщение.</p>
+        <p>Мы хотим назначить два обработчика для этого. Но новое DOM-свойство перезапишет предыдущее:</p>
+        <code>
+            input.onclick = function() {alert(1);}<br>
+            // ...<br>
+            input.onclick = function() {alert(2);} // Заменит предыдущий обработчик
+        </code>
+        <p>Разработчики стандартов достаточно давно это поняли и предложили альтернативный способ назначения
+        обработчиков при помощи специальных методов <code>addEventListener</code> и <code>removeEventListener</code>.
+        Они свободны от указанного недостатка.</p>
+        <p>Синтаксис добавления обработчика:</p>
+        <code>
+            element.addEventListener(event, handler, [options]);
+        </code>
+        <ul>
+            <li>
+                <p><code>event</code></p>
+                <p>Имя события, например <code>"click"</code>.</p>
+            </li>
+            <li>
+                <p><code>handler</code></p>
+                <p>Ссылка на функцию-обработчик.</p>
+            </li>
+            <li>
+                <p><code>options</code></p>
+                <p>Дополнительный объект со свойствами:</p>
+                <ul>
+                    <li>
+                        <p><code>once</code>: если <code>true</code>, тогда обработчик будет автоматически удален
+                        после выполнения.</p>
+                    </li>
+                    <li>
+                        <p><code>capture</code>: фаза, на которой должен сработать обработчик, подробнее об этом
+                        будет рассказано в главе «Всплытие и погружение». Так исторически сложилось, что
+                        <code>options</code> может быть <code>false/true</code>, это то же самое, что
+                        <code>{capture: false/true}</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>passive</code>: если <code>true</code>, то указывает, что обработчик никогда не
+                        вызовет <code>preventDefault()</code>, подробнее об этом будет рассказано в главе
+                        «Действия браузера по умолчанию».</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Для удаления обработчика следует использовать <code>removeEventListener</code>:</p>
+        <code>
+            element.removeEventListener(event, handler, [options]);
+        </code>
+
+        <article class="warning">
+            <h2>Удаление требует именно ту же функцию</h2>
+            <p>Для удаления нужно передать именно ту функцию-обработчик которая была назначена.</p>
+            <p>Вот так не сработает:</p>
+            <code>
+                elem.addEventLister('click', () => alert('Спасибо!'));<br>
+                // ...
+                elem.removeEventLister('click', () => alert('Спасибо!'));
+            </code>
+            <p>Обработчик не будет удален, т.к. в <code>removeEventListener</code> передана не та же функция,
+            а другая, с одинаковым кодом, но это не важно.</p>
+            <p>Вот так правильно:</p>
+            <code>
+                function handler() {<br>
+                &nbsp;&nbsp;alert('Спасибо!');<br>
+                }<br>
+                <br>
+                input.addEventListener('click', handler);<br>
+                // ...<br>
+                input.removeEventListener('click', handler);
+            </code>
+            <p>Обратим внимание - если функцию-обработчик не сохранить где-либо, мы не сможем ее удалить. Нет метода,
+            который позволяет получить из элемента обработчик событий, назначенный через <code>addEventListener</code>.</p>
+        </article>
+        <p>Метод <code>addEventListener</code> позволяет добавлять несколько обработчиков на одно событие одного элемента,
+        например:</p>
+        <code>
+            &ltinput id="elem" type="button" value="Нажми меня"&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;function handler1() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Спасибо!');<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;function handler2() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Спасибо еще раз!');<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;elem.onclick = () => alert('Привет');<br>
+            &nbsp;&nbsp;elem.addEventListener('click', handler1); // Спасибо!<br>
+            &nbsp;&nbsp;elem.addEventListener('click', handler2); // Спасибо еще раз!<br>
+            &lt/script&gt<br>
+        </code>
+        <button style="margin-top: 5px">Нажми меня</button>
+        <script>
+            function handler1() {
+                alert('Спасибо!');
+            }
+
+            function handler2() {
+                alert('Спасибо еще раз!')
+            }
+
+            let btn3 = document.currentScript.previousElementSibling;
+
+            btn3.onclick = () => alert('Привет');
+            btn3.addEventListener('click', handler1);
+            btn3.addEventListener('click', handler2);
+        </script>
+        <p>Как видно из примера выше, можно одновременно назначить обработчики и через DOM-свойство и через
+        <code>addEventListener</code>. Однако, во избежание путаницы, рекомендуется выбрать один способ.</p>
+
+        <article class="warning">
+            <h2>Обработчики некоторых событий можно назначать только через <code>addEventListener</code></h2>
+            <p>Существуют события, которые нельзя назначить через DOM-свойство, но можно через
+            <code>addEventListener</code>.</p>
+            <p>Например, таково событие <code>DOMContentLoaded</code>, которое срабатывает, когда завершена загрузка
+            и построение DOM документа.</p>
+            <code>
+                document.onDOMContentLoaded = function() {<br>
+                &nbsp;&nbsp;alert('DOM построен'); // Не будет работать<br>
+                };<br>
+            </code>
+            <code>
+                document.addEventListener('DOMContentLoaded', function() {<br>
+                &nbsp;&nbsp;alert('DOM построен'); // А вот так сработает<br>
+                };
+            </code>
+            <p>Так что <code>addEventListener</code> более универсален. Хотя заметим, что таких событий меньшинство,
+            это скорее исключение, чем правило.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Объект события</h2>
+        <p>Чтобы хорошо обработать событие, могут понадобиться детали того, что произошло. Не просто «клик» или
+        «нажатие клавиши», а также - какие координаты указателя мыши, какая клавиша нажата и так далее.</p>
+        <p>Когда происходит событие, браузер создает <i>объект события</i>, записывает в него детали и передает его
+        в качестве аргумента функции-обработчику.</p>
+        <p>Пример ниже демонстрирует получение координат мыши из объекта события:</p>
+        <code>
+            &ltinput type="button" value="Нажми меня" id="elem"&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.onclick = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Вывести тип события, элемент и координаты клика<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(event.type + ' на ' + event.currentTarget);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Координаты: ' + event.clientX + ':' + event.clientY);<br>
+            &nbsp;&nbsp;};<br>
+            &lt/script&gt<br>
+        </code>
+        <button style="margin-top: 5px">Нажми меня</button>
+        <script>
+            let btn4 = document.currentScript.previousElementSibling;
+            btn4.onclick = (event) => {
+                alert(event.type + ' на ' + event.currentTarget);
+                alert('Координаты: ' + event.clientX + ':' + event.clientY);
+            };
+        </script>
+        <p>Некоторые свойства объекта <code>event</code>:</p>
+        <ul>
+            <li>
+                <p><code>event.type</code></p>
+                <p>Тип события, в данном случае <code>'click'</code>.</p>
+            </li>
+            <li>
+                <p><code>event.currentTarget</code></p>
+                <p>Элемент, на котором сработал обработчик. Значение - обычно такое же, как и у <code>this</code>,
+                но если обработчик является функцией-стрелкой или при помощи <code>bind</code> привязан другой объект
+                в качестве <code>this</code>, то мы можем получить элемент из <code>event.currentTarget</code>.</p>
+            </li>
+            <li>
+                <p><code>event.clientX</code>/<code>event.clientY</code></p>
+                <p>Координаты курсора в момент клика относительно окна, для событий мыши.</p>
+            </li>
+        </ul>
+        <p>Есть также и ряд других свойств, в зависимости от типа событий, которые мы разберем в дальнейших главах.</p>
+
+        <article class="note">
+            <h2>Объект события доступен и в HTML</h2>
+            <p>При назначении обработчика в HTML, тоже можно использовать объект <code>event</code>, вот так:</p>
+            <code>
+                &ltinput type="button" onclick="alert(event.type)" value="Тип события"&gt<br>
+            </code>
+            <button style="margin-top: 5px" onclick="alert(event.type)">Тип события</button>
+            <p>Это возможно потому, что когда браузер из атрибута создает функцию-обработчик, то она выглядит так:
+            <code>function(event) {alert(event.type)}</code>. То есть, ее первый аргумент называется <code>'event'</code>,
+            а тело взято из атрибута.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Объект-обработчик: handleEvent</h2>
+        <p>Мы можем назначить обработчиком не только функцию, но и объект при помощи <code>addEventListener</code>.
+        В этом случае, когда происходит событие, вызывается метод объект <code>handleEvent</code>.</p>
+        <p>К примеру:</p>
+        <code>
+            &ltbutton id="elem"&gtНажми меня&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.addEventListener('click', {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;handleEvent(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(event.type + ' на ' + event.currentTarget);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;});<br>
+            &lt/script&gt<br>
+        </code>
+        <button style="margin-top: 5px">Нажми меня</button>
+        <script>
+            let btn5 = document.currentScript.previousElementSibling;
+            btn5.addEventListener('click', {
+                handleEvent(event) {
+                    alert(event.type + ' на ' + event.currentTarget);
+                }
+            });
+        </script>
+        <p>Как видим, если <code>addEventListener</code> получает объект в качестве обработчика, он вызывает
+        <code>object.handleEvent(event)</code>, когда происходит событие.</p>
+        <p>Мы также можем использовать класс для этого:</p>
+        <code>
+            &ltbutton id="elem"&gtНажми меня&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;class Menu {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;handleEvent(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch(event.type) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case 'mousedown':<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elem.innerHTML = 'Нажата кнопка мыши';<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case 'mouseup':<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elem.innerHTML += '... и отжата';<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let menu = new Menu();<br>
+            &nbsp;&nbsp;elem.addEventListener('mousedown', menu);<br>
+            &nbsp;&nbsp;elem.addEventListener('mouseup', menu);<br>
+            &lt/script&gt<br>
+        </code>
+        <button style="margin-top: 5px">Нажми меня</button>
+        <script>
+            let btn6 = document.currentScript.previousElementSibling;
+            class Menu {
+                handleEvent(event) {
+                    switch(event.type) {
+                        case 'mousedown':
+                            btn6.innerHTML = 'Нажата кнопка мыши';
+                            break;
+                        case 'mouseup':
+                            btn6.innerHTML += '... и отжата.';
+                            break;
+                    }
+                }
+            }
+
+            let menu = new Menu();
+            btn6.addEventListener('mousedown', menu);
+            btn6.addEventListener('mouseup', menu);
+        </script>
+        <p>Здесь один и тот же объект обрабатывает оба события. Обратите внимание, мы должны явно назначить оба
+        обработчика через <code>addEventListener</code>. Тогда объект <code>menu</code> будет получать события
+        <code>mousedown</code> и <code>mouseup</code>, но не другие (не назначенные) типы событий.</p>
+        <p>Метод <code>handleEvent</code> не обязательно должен выполнять всю работу сам. Он может вызывать другие
+        методы, которые заточены под обработку конкретных типов событий, вот так:</p>
+        <code>
+            &ltbutton id="elem"&gtНажми меня&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;class Menu {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;handleEvent(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// mousedown -> onMousedown<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let method = 'on' + event.type[0].toUpperCase() + event.type.slice(1);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this[method]();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;onMousedown() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elem.innerHTML = 'Кнопка мыши нажата';<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;onMouseup() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elem.innerHTML += '... и отжата.';<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let menu = new Menu();<br>
+            &nbsp;&nbsp;elem.addEventListener('mousedown', menu);<br>
+            &nbsp;&nbsp;elem.addEventListener('mouseup', menu);<br>
+            &lt/script&gt<br>
+        </code>
+        <button style="margin-top: 5px">Нажми меня</button>
+        <script>
+            let btn7 = document.currentScript.previousElementSibling;
+
+            class Menu2 {
+                handleEvent(event) {
+                    let method = 'on' + event.type[0].toUpperCase() + event.type.slice(1);
+                    this[method]();
+                }
+
+                onMousedown() {
+                    btn7.innerHTML = 'Кнопка мыши нажата';
+                }
+
+                onMouseup() {
+                    btn7.innerHTML += '... и отжата.';
+                }
+            }
+
+            let menu2 = new Menu2();
+            btn7.addEventListener('mousedown', menu2);
+            btn7.addEventListener('mouseup', menu2);
+        </script>
+        <p>Теперь обработка событий разделена по методам, что упрощает поддержку кода.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Есть три способа назначения обработчиков событий:</p>
+        <ol>
+            <li>
+                <p>Атрибут HTML: <code>onclick="..."</code>.</p>
+            </li>
+            <li>
+                <p>DOM-свойство: <code>elem.onclick = function</code>.</p>
+            </li>
+            <li>
+                <p>Специальные методы: <code>elem.addEventListener(event, handler, [options])</code> для добавления,
+                <code>removeEventListener</code> для удаления.</p>
+            </li>
+        </ol>
+        <p>HTML-атрибуты используются редко потому, что JavaScript в HTML-теге выглядит немного странно. К тому же
+        много кода там не напишешь.</p>
+        <p>DOM-свойства вполне можно использовать, но мы не можем назначить больше одного обработчика на один тип
+        события. Во многих случаях с этим ограничением можно мириться.</p>
+        <p>Последний способ самый гибкий, однако нужно писать больше всего кода. Есть несколько типов событий,
+        которые работают только через него, например, <code>DOMContentLoaded</code>. Также <code>addEventListener</code>
+        поддерживает объекты в качестве обработчиков событий. В этом случае вызывается метод объекта
+        <code>handleEvent</code>.</p>
+        <p>Не важно, как вы назначаете обработчик - он получает объект события первым аргументом. Этот объект
+        содержит подробности о том, что произошло.</p>
+        <p>Мы изучим больше о событиях и их типах в следующих главах.</p>
+    </article>
+</body>
+</html>

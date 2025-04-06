@@ -1,0 +1,27 @@
+img {
+    width: 100%;
+    height: 100%;
+}
+
+.carousel {
+    display: flex;
+    margin: 20% auto;
+    align-items: center;
+    justify-content: center;
+}
+
+.arrow {
+    height: 5em;
+    width: 5em;
+    border-radius: 100%;
+}
+
+ul {
+    padding: 0;
+    display: flex;
+    list-style-type: none;
+}
+
+ul li {
+    display: none;
+}
