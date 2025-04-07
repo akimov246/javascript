@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Всплытие и погружение</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Всплытие и погружение</h2>
+        <p>Давайте начнем с примера.</p>
+        <p>Этот обработчик для <code>&ltdiv&gt</code> сработает, если вы кликните по любому из вложенных тегов,
+        будь то <code>&ltem&gt</code> или <code>&ltcode&gt</code>:</p>
+        <code>
+            &ltdiv onclick="alert('Обработчик!')"&gt<br>
+            &nbsp;&nbsp;&ltem&gtЕсли вы кликните на &ltcode&gtEM&lt/code&gt, сработает обработчик на &ltcode&gtDIV&lt/code&gt&lt/em&gt<br>
+            &lt/div&gt<br>
+        </code>
+        <div onclick="alert('Обработчик!')"
+             style="height: 50px; border: 1px solid black; display: flex; align-items: center; justify-content: center">
+            <em>Если вы кликните на <code>EM</code>, сработает обработчик на <code>DIV</code></em>
+        </div>
+        <p>Вам не кажется это странным? Почему же сработал обработчик на <code>&ltdiv&gt</code>, если клик произошел
+        на <code>&ltem&gt</code>?</p>
+    </article>
+
+    <article>
+        <h2>Всплытие</h2>
+        <p>Принцип всплытия очень простой.</p>
+        <p><b>Когда на элементе происходит событие, обработчик сначала срабатывает на нем, потом на его родителе,
+        затем выше и так далее, вверх по цепочке предков.</b></p>
+        <p>Например, есть 3 вложенных элемента <code>FORM > DIV > P</code> с обработчиком на каждом:</p>
+        <code>
+            &ltstyle&gt<br>
+            &nbsp;&nbsp;body * {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;margin: 10px;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;border: 1px solid blue;<br>
+            &nbsp;&nbsp;}<br>
+            &lt/style&gt<br>
+            <br>
+            &ltform onclick="alert('form')"&gtFORM<br>
+            &nbsp;&nbsp;&ltdiv onclick="alert('div')"&gtDIV<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&ltp onclick="alert('p')"&gtP&lt/p&gt<br>
+            &nbsp;&nbsp;&lt/div&gt<br>
+            &lt/form&gt<br>
+        </code>
+        <form style="margin: 10px; border: 1px solid blue" onclick="alert('form')">FORM
+            <div style="margin: 10px; border: 1px solid blue" onclick="alert('div')">DIV
+                <p style="margin: 10px; border: 1px solid blue" onclick="alert('p')">P</p>
+            </div>
+        </form>
+        <p>Клик по внутреннему <code>&ltp&gt</code> вызовет обработчик <code>onclick</code>:</p>
+        <ol>
+            <li>
+                <p>Сначала на самом <code>&ltp&gt</code>.</p>
+            </li>
+            <li>
+                <p>Потом на внешнем <code>&ltdiv&gt</code>.</p>
+            </li>
+            <li>
+                <p>Затем на внешнем <code>&ltform&gt</code>.</p>
+            </li>
+            <li>
+                <p>И так далее вверх по цепочке до самого <code>document</code>.</p>
+            </li>
+        </ol>
+        <img src="https://learn.javascript.ru/article/bubbling-and-capturing/event-order-bubbling.svg" alt style="width: 30%">
+        <p>Поэтому если кликнуть на <code>&ltp&gt</code>, то мы увидим три оповещения:
+        <code>p</code> → <code>div</code> → <code>form</code>.</p>
+        <p>Этот процесс называется «всплытием», потому что события «всплывают» от внутреннего элемента вверх через
+        родителей подобно тому, как всплывает пузырёк воздуха в воде.</p>
+
+        <article class="warning">
+            <h2><i>Почти</i> все события всплывают</h2>
+            <p>Ключевое слово в этой фразе - «почти».</p>
+            <p>Например, событие <code>focus</code> не всплывает. В дальнейшем мы увидим и другие примеры. Однако,
+            стоит понимать, что это скорее исключение, чем правило, все-таки большинство событий всплывают.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>event.target</h2>
+        <p>Всегда можно узнать, на каком конкретно элементе произошло событие.</p>
+        <p><b>Самый глубокий элемент, который вызывает событие, называется <i>целевым</i> элементом, и он доступен
+        через <code>event.target</code>.</b></p>
+        <p>Отличия от <code>this</code> (=<code>event.currentTarget</code>):</p>
+        <ul>
+            <li>
+                <p><code>event.target</code> - это «целевой» элемент, на котором произошло событие, в процессе
+                всплытия он неизменен.</p>
+            </li>
+            <li>
+                <p><code>this</code> - это «текущий» элемент, до которого дошло всплытие, на нем сейчас выполняется
+                обработчик.</p>
+            </li>
+        </ul>
+        <p>Например, если стоит только один обработчик <code>form.onclick</code>, то он «поймает» все клики внутри формы.
+        Где бы ни был клик внутри - он всплывет до элемента <code>&ltform&gt</code>, на котором сработает обработчик.</p>
+        <p>При этом внутри обработчика <code>form.onclick</code>:</p>
+        <ul>
+            <li>
+                <p><code>this</code> (=<code>event.currentTarget</code>) всегда будет элемент <code>&ltform&gt</code>,
+                так как обработчик сработал на ней.</p>
+            </li>
+            <li>
+                <p><code>event.target</code> будет содержать ссылку на конкретный элемент внутри формы, на котором
+                произошел клик.</p>
+            </li>
+        </ul>
+        <p>Попробуйте сами:</p>
+        <form id="form" style="background-color: green; height: 150px; width: 150px; position: relative; text-align: center; cursor:pointer;">
+            FORM
+            <div style="background-color: blue; top: 25px; left: 25px; height: 100px; width: 100px; position: absolute;">
+                DIV
+                <p style="background-color: red; top: 25px; left: 25px; height: 50px; width: 50px; position: absolute; line-height: 50px; margin: 0">P</p>
+            </div>
+        </form>
+        <script>
+            let form = document.getElementById('form');
+            form.onclick = function(event) {
+                let color = event.target.style.backgroundColor;
+                event.target.style.backgroundColor = 'yellow';
+                setTimeout(() => {
+                    alert('target=' + event.target.tagName + ', this=' + this.tagName);
+                    event.target.style.backgroundColor = color;
+                });
+            };
+        </script>
+        <p>Возможна и ситуация, когда <code>event.target</code> и <code>this</code> - один и тот же элемент, например,
+        если клик был непосредственно на самом элементе <code>&ltform&gt</code>, а не на его подэлементе.</p>
+    </article>
+
+    <article>
+        <h2>Прекращение всплытия</h2>
+        <p>Всплытие идет с «целевого» элемента прямо наверх. По умолчанию событие будет всплывать до элемента
+        <code>&lthtml&gt</code>, а затем до объекта <code>document</code>, а иногда даже до <code>window</code>,
+        вызывая все обработчики на своем пути.</p>
+        <p>Но любой промежуточный обработчик может решить, что событие полностью обработано, и остановить всплытие.</p>
+        <p>Для этого нужно вызвать метод <code>event.stopPropagation()</code>.</p>
+        <p>Например, здесь при клике на кнопку <code>&ltbutton&gt</code> обработчик <code>body.onclick</code> не
+        сработает:</p>
+        <code>
+            &ltbody onclick="alert('Сюда всплытие не дойдет')"&gt<br>
+            &nbsp;&nbsp;&ltbutton onclick="event.stopPropagation()"&gtКликни меня&lt/button&gt<br>
+            &lt/body&gt<br>
+        </code>
+        <div style="margin-top: 5px; height: 50px; border: 1px solid black" onclick="alert('Сюда всплытие не дойдет')">
+            <button onclick="event.stopPropagation()">Кликни меня</button>
+        </div>
+
+        <article class="note">
+            <h2>event.stopImmediatePropagation()</h2>
+            <p>Если у элемента есть несколько обработчиков на одно событие, то даже при прекращении всплытия все они
+            будут выполнены.</p>
+            <p>То есть, <code>event.stopPropagation()</code> препятствует продвижению события дальше, но на текущем
+            элементе все обработчики будут вызваны.</p>
+            <p>Для того чтобы полностью остановить обработку, существует метод <code>event.stopImmediatePropagation()</code>.
+            Он не только предотвращает всплытие, но и останавливает обработку событий на текущем элементе.</p>
+        </article>
+
+        <article class="warning">
+            <h2>Не прекращайте всплытие без необходимости!</h2>
+            <p>Всплытие - это удобно. Не прекращайте его без всякой нужды, очевидной и архитектурно прозрачной.</p>
+            <p>Зачастую прекращение всплытия через <code>event.stopPropagation()</code> имеет свои подводные камни,
+            которые со временем могут стать проблемами.</p>
+            <p>Например:</p>
+            <ol>
+                <li>
+                    <p>Мы делаем вложенное меню. Каждое подменю обрабатывает клики на своих элементах и делает для них
+                    <code>stopPropagation</code>, чтобы не срабатывало внешнее меню.</p>
+                </li>
+                <li>
+                    <p>Позже мы решили отслеживать все клики в окне для какой-то функциональности, к примеру,
+                    для статистики - где вообще у нас кликают люди. Некоторые системы аналитики так делают.
+                    Обычно используют <code>document.addEventListener('click', ...)</code>, чтобы отлавливать все клики.</p>
+                </li>
+                <li>
+                    <p>Наша аналитика не будет работать над областью, где клики прекращаются <code>stopPropagation</code>.
+                    Увы, получилась «мертвая зона».</p>
+                </li>
+            </ol>
+            <p>Зачастую нет никакой необходимости прекращать всплытие. Задача, которая, казалось бы, требует этого,
+            может быть решена иначе. Например, с помощью создания своего уникального события, о том, как это делать,
+            мы поговорим позже. Также мы можем записывать какую-то служебную информацию в объект <code>event</code>
+            в одном обработчике, а читать в другом, таким образом, мы можем сообщить обработчикам на родительских элементах
+            информацию о том, что событие уже было как-то обработано.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Погружение</h2>
+        <p>Существует еще одна фаза из жизненного цикла события - «погружение» (иногда ее называют «перехват»).
+        Она очень редко используется в реальном коде, однако тоже может быть полезной.</p>
+        <p>Стандарт <code>DOM Events</code> описывает 3 фазы прохода события:</p>
+        <ol>
+            <li>
+                <p>Фаза погружения (capturing phase) - событие сначала идет сверху вниз.</p>
+            </li>
+            <li>
+                <p>Фаза цели (target phase) - событие достигло целевого (исходного) элемента.</p>
+            </li>
+            <li>
+                <p>Фаза всплытия (bubbling phase) - событие начинает всплывать.</p>
+            </li>
+        </ol>
+        <p>Картинка из спецификации демонстрирует, как это работает при клике по ячейке <code>&lttd&gt</code>, расположенной
+        внутри таблицы:</p>
+        <img src="https://learn.javascript.ru/article/bubbling-and-capturing/eventflow.svg" alt style="width: 40%">
+        <p>То есть при клике на <code>&lttd&gt</code> событие путешествует по цепочке родителей сначала вниз к
+        элементу (погружается), затем оно достигает целевой элемент (фаза цели), а потом идет наверх (всплытие),
+        вызывая по пути обработчики.</p>
+        <p><b>Ранее мы говорили только о всплытии, потому что другие стадии, как правило, не используются и проходят
+        незаметно для нас.</b></p>
+        <p>Обработчики, добавленные через <code>on&ltevent&gt</code>-свойство или через HTML-атрибуты, или через
+        <code>addEventListener(event, handler)</code> с двумя аргументами, ничего не знают о фазе погружения,
+        а работают только на 2-ой и 3-ей фазах.</p>
+        <p>Чтобы поймать событие на стадии погружения, нужно использовать третий аргумент <code>capture</code>
+        вот так:</p>
+        <code>
+            elem.addEventListener(..., {capture: true});<br>
+            // Или просто true, как сокращение для {capture: true}<br>
+            elem.addEventListener(..., true);
+        </code>
+        <p>Существует два варианта значений опции <code>capture</code>:</p>
+        <ul>
+            <li>
+                <p>Если аргумент <code>false</code> (по умолчанию), то событие будет поймано при всплытии.</p>
+            </li>
+            <li>
+                <p>Если аргумент <code>true</code>, то событие будет перехвачено при погружении.</p>
+            </li>
+        </ul>
+        <p>Обратите внимание, что хоть и формально существует 3 фазы, 2-ую фазу («фазу цели»: событие достигло элемента)
+        нельзя обработать отдельно, при ее достижении вызываются все обработчики: и на всплытие, и на погружение.</p>
+        <p>Давайте посмотрим и всплытие и погружение в действии:</p>
+        <code>
+            &ltstyle&gt<br>
+            &nbsp;&nbsp;body * {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;margin: 10px;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;border: 1px solid blue;<br>
+            &nbsp;&nbsp;}<br>
+            &lt/style&gt<br>
+            <br>
+            &ltform&gtFORM<br>
+            &nbsp;&nbsp;&ltdiv&gtDIV<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&ltp&gtP&lt/p&gt<br>
+            &nbsp;&nbsp;&lt/div&gt<br>
+            &lt/form&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;for (let elem of document.querySelectorAll('*')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;elem.addEventListener('click', e => alert(`Погружение: ${elem.tagName}`), true);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;elem.addEventListener('click', e => alert(`Всплытие: ${elem.tagName}`), false);<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt
+        </code>
+        <div id="div">
+            <form style="margin: 10px; border: 1px solid blue">FORM
+                <div style="margin: 10px; border: 1px solid blue">
+                    DIV
+                    <p style="margin: 10px; border: 1px solid blue">P</p>
+                </div>
+            </form>
+        </div>
+        <script>
+            for (let elem of document.querySelectorAll('#div *')) {
+                elem.addEventListener('click', () => alert(`Погружение: ${elem.tagName}`), true);
+                elem.addEventListener('click', () => alert(`Всплытие: ${elem.tagName}`), false);
+            }
+        </script>
+        <p>Здесь обработчики навешиваются на <i>каждый</i> элемент в документе, чтобы увидеть в каком порядке
+        они вызываются по мере прохода события.</p>
+        <p>Если вы кликните по <code>&ltp&gt</code>, то последовательность следующая:</p>
+        <ol>
+            <li>
+                <p><code>HTML</code> → <code>BODY</code> → <code>FORM</code> → <code>DIV</code> (фаза погружения, первый обработчик).</p>
+            </li>
+            <li>
+                <p><code>P</code> (фаза цели, срабатывают обработчики, установленные и на погружение и на всплытие,
+                так что выведется два раза).</p>
+            </li>
+            <li>
+                <p><code>DIV</code> → <code>FORM</code> → <code>BODY</code> → <code>HTML</code>
+                (фаза всплытия, второй обработчик).</p>
+            </li>
+        </ol>
+        <p>Существует свойство <code>event.eventPhase</code>, содержащее номер фазы, на которой событие было поймано.
+        Но оно используется редко, мы обычно и так знаем об этом в обработчике.</p>
+
+        <article class="note">
+            <h2>Чтобы убрать обработчик <code>removeEventListener</code>, нужна та же фаза</h2>
+            <p>Если мы добавили обработчик вот так <code>addEventListener(..., true)</code>, то мы должны передать те же
+            значения аргумента <code>capture</code> в <code>removeEventListener(..., true)</code>, когда снимаем обработчик.</p>
+        </article>
+
+        <article class="note">
+            <h2>На каждой фазе разные обработчики на одном элементе срабатывают в порядке назначения</h2>
+            <p>Если у нас несколько обработчиков одного события, назначенных <code>addEventListener</code> на один
+            элемент, в рамках одной фазы, то их порядок срабатывания - тот же, в котором они установлены:</p>
+            <code>
+                elem.addEventListener('click', e => alert(1)); // Всегда сработает перед следующим<br>
+                elem.addEventListener('click', e => alert(2));
+            </code>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>При наступлении события - самый глубоко вложенный элемент, на котором оно произошло, помечается как
+        «целевой» (<code>event.target</code>).</p>
+        <ul>
+            <li>
+                <p>Затем событие сначала двигается вниз от корня документа к <code>event.target</code>, по пути
+                вызывая обработчики, поставленные через <code>addEventListener(..., true)</code>, где
+                <code>true</code> - это сокращение для <code>{capture: true}</code>.</p>
+            </li>
+            <li>
+                <p>Далее обработчики вызываются на целевом элементе.</p>
+            </li>
+            <li>
+                <p>Далее событие двигается от <code>event.target</code> вверх к корню документа, по пути вызывая
+                обработчики, поставленные через <code>on&ltevent&gt</code> и <code>addEventListener</code> без третьего
+                аргумента или с третьим аргументом равным <code>false</code>.</p>
+            </li>
+        </ul>
+        <p>Каждый обработчик имеет доступ к свойствам события <code>event</code>:</p>
+        <ul>
+            <li>
+                <p><code>event.target</code> - самый глубокий элемент, на котором произошло событие.</p>
+            </li>
+            <li>
+                <p><code>event.currentTarget</code> (=<code>this</code>) - элемент на котором в данный момент сработал
+                обработчик (тот, на котором «висит» конкретный обработчик).</p>
+            </li>
+            <li>
+                <p><code>event.eventPhase</code> - на какой фазе он сработал (погружение=1, фаза цели=2, всплытие=3).</p>
+            </li>
+        </ul>
+        <p>Любой обработчик может остановить событие вызовом <code>event.stopPropagation()</code>, но делать это не
+        рекомендуется, так как в дальнейшем это событие может понадобиться, иногда для самых неожиданных вещей.</p>
+        <p>В современной разработке стадия погружения используется очень редко, обычно события обрабатываются
+        во время всплытия. И в этом есть логика.</p>
+        <p>В реальном мире, когда происходит чрезвычайная ситуация, местные службы реагируют первыми. Они знают
+        лучше всех местность, в которой это произошло, и другие детали. Вышестоящие инстанции подключаются уже после
+        этого и при необходимости.</p>
+        <p>То же самое справедливо для обработчиков событий. Код, который «навесил» обработчик на конкретный элемент,
+        знает максимум деталей об элементе и его предназначении. Например, обработчик на определенном <code>&lttd&gt</code>
+        скорее всего подходит только для этого конкретного <code>&lttd&gt</code>, он знает все о нем, поэтому он должен
+        отработать первым. Далее имеет смысл передать обработку события родителю - он тоже понимает, что происходит,
+        но уже менее детально, далее - выше, и так далее, до самого объекта <code>document</code>, обработчик на котором
+        реализовывает самую общую функциональность уровня документа.</p>
+        <p>Всплытие и погружение являются основой для «делегирования событий» - очень мощного приема обработки
+        событий. Его мы изучим в следующей главе.</p>
+    </article>
+</body>
+</html>
