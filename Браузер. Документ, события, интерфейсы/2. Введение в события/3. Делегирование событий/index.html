@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Делегирование событий</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <style>
+        table#bagua td{
+            width: 33%;
+        }
+
+        .nw {
+            background-color: rgb(153, 153, 153)
+        }
+
+        .n {
+            background-color: rgb(0, 51, 255);
+            color: white;
+        }
+
+        .ne {
+            background-color: rgb(255, 255, 102)
+        }
+
+        .w {
+            background-color: rgb(255, 255, 0)
+        }
+
+        .c {
+            background-color: rgb(102, 0, 204);
+            color: white;
+        }
+
+        .e {
+            background-color: rgb(0, 153, 255);
+            color: white;
+        }
+
+        .sw {
+            background-color: rgb(153, 102, 51);
+            color: white;
+        }
+
+        .s {
+            background-color: rgb(255, 102, 0);
+            color: white;
+        }
+
+        .se {
+            background-color: rgb(0, 204, 51);
+            color: white;
+        }
+
+        .highlight {
+            background-color: red;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Делегирование событий</h2>
+        <p>Всплытие и перехват событий позволяет реализовать один из самых важных приемов разработки - <i>делегирование</i>.</p>
+        <p>Идея в том, что если у нас есть много элементов, события на которых нужно обрабатывать похожим образом,
+        то вместо того, чтобы назначать обработку каждому, мы ставим один обработчик на их общего предка.</p>
+        <p>Из него можно получить целевой элемент <code>event.target</code>, понять на каком именно потомке произошло
+        событие и обработать его.</p>
+        <p>Рассмотрим пример - диаграмму Ба-Гуа. Это таблица, отражающая древнюю китайскую философию.</p>
+        <p>Вот она:</p>
+        <table id="bagua">
+            <thead>
+                <tr>
+                    <th colspan="3">Квадрат <i>Bagua</i>: Направление, Элемент, Цвет, значение</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="nw">
+                        <b>Северо-Запад</b><br>
+                        Металл<br>
+                        Серебро<br>
+                        Старейшины
+                    </td>
+                    <td class="n">
+                        <b>Север</b><br>
+                        Вода<br>
+                        Синий<br>
+                        Перемены
+                    </td>
+                    <td class="ne">
+                        <b>Северо-Восток</b><br>
+                        Земля<br>
+                        Желтый<br>
+                        Направление
+                    </td>
+                </tr>
+                <tr>
+                    <td class="w">
+                        <b>Запад</b><br>
+                        Металл<br>
+                        Золото<br>
+                        Молодость
+                    </td>
+                    <td class="c">
+                        <b>Центр</b><br>
+                        Все<br>
+                        Пурпурный<br>
+                        Гармония
+                    </td>
+                    <td class="e">
+                        <b>Восток</b><br>
+                        Дерево<br>
+                        Синий<br>
+                        Будущее
+                    </td>
+                </tr>
+                <tr>
+                    <td class="sw">
+                        <b>Юго-Запад</b><br>
+                        Земля<br>
+                        Коричневый<br>
+                        Спокойствие
+                    </td>
+                    <td class="s">
+                        <b>Юг</b><br>
+                        Огонь<br>
+                        Оранжевый<br>
+                        Слава
+                    </td>
+                    <td class="se">
+                        <b>Юго-Восток</b><br>
+                        Дерево<br>
+                        Зеленый<br>
+                        Роман
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <p>В этой таблице всего 9 ячеек, но могло быть и 99, и даже 9999, не важно.</p>
+        <p><b>Наша задача - реализовать подсветку ячейки <code>&lttd&gt</code> при клике.</b></p>
+        <p>Вместо того чтобы назначать обработчик <code>onclick</code> для каждой ячейки <code>&lttd&gt</code>
+        (их может быть очень много) - мы повесим «единый» обработчик на элемент <code>&lttable&gt</code>.</p>
+        <p>Он будет использовать <code>event.target</code>, чтобы получить элемент, на котором произошло событие,
+        и подсветит его.</p>
+        <p>Код будет таким:</p>
+        <code>
+            let selectedTd;<br>
+            <br>
+            table.onclick = function(event) {<br>
+            &nbsp;&nbsp;let target = event.target; // Где был клик?<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;if (target.tagName != 'TD') return; // Не на TD? Тогда не интересует<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;highlight(target); // Подсветить TD<br>
+            };<br>
+            <br>
+            function highlight(td) {<br>
+            &nbsp;&nbsp;if (selectedTd) { // Убрать существующую подсветку, если есть<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;selectedTd.classList.remove('highlight');<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;selectedTd = td;<br>
+            &nbsp;&nbsp;selectedTd.classList.add('highlight'); // Подсветим новый td<br>
+            }
+        </code>
+        <script>
+            let selectedTd;
+
+            document.getElementById('bagua').onclick = function(event) {
+                let target = event.target.closest('td');
+
+                if (!target) return;
+
+                if (!document.getElementById('bagua').contains(target)) return;
+
+                highlight(target);
+            }
+
+            function highlight(td) {
+                if (selectedTd) {
+                    selectedTd.classList.remove('highlight');
+                }
+                selectedTd = td;
+                selectedTd.classList.add('highlight');
+            }
+        </script>
+        <p>Такому коду нет разницы, сколько ячеек в таблице. Мы можем добавлять, удалять <code>&lttd&gt</code> из таблицы
+        динамически в любое время, и подсветка будет стабильно работать.</p>
+        <p>Однако, у текущей версии кода есть недостаток.</p>
+        <p>Клик может быть не на теге <code>&lttd&gt</code>, а внутри него.</p>
+        <p>В нашем случае, если взглянуть на HTML-код таблицы внимательно, видно, что ячейка <code>&lttd&gt</code>
+        содержит вложенные теги, например <code>&ltstrong&gt</code>:</p>
+        <code>
+            &lttd&gt<br>
+            &nbsp;&nbsp;&ltstrong&gtСеверо-Запад&lt/strong&gt<br>
+            &nbsp;&nbsp;...<br>
+            &lt/td&gt
+        </code>
+        <p>Естественно, если клик произойдет на элементе <code>&ltstrong&gt</code>, то он станет значением
+        <code>event.target</code>.</p>
+        <img src="https://learn.javascript.ru/article/event-delegation/bagua-bubble.svg" alt style="width: 40%">
+        <p>Внутри обработчика <code>table.onclick</code> мы должны по <code>event.target</code> разобраться,
+        был клик внутри <code>&lttd&gt</code> или нет.</p>
+        <p>Вот улучшенный код:</p>
+        <code>
+            table.onclick = function(event) {<br>
+            &nbsp;&nbsp;let td = event.target.closest('td'); // (1)<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;if (!td) return; // (2)<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;if (!table.contains(td)) return; // (3)<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;highlight(td); // (4)<br>
+            };
+        </code>
+        <p>Разберем пример:</p>
+        <ol>
+            <li>
+                <p>Метод <code>elem.closest(selector)</code> возвращает ближайшего предка, соответствующего селектору.
+                В данном случае нам нужен <code>&lttd&gt</code>, находящийся выше по дереву от исходного элемента.</p>
+            </li>
+            <li>
+                <p>Если <code>event.target</code> не содержится внутри элемента <code>&lttd&gt</code>, то вызов вернет
+                <code>null</code>, и ничего не произойдет.</p>
+            </li>
+            <li>
+                <p>Если таблицы вложенные, <code>event.target</code> может содержать элемент <code>&lttd&gt</code>,
+                находящийся вне текущей таблицы. В таких случаях мы должны проверить, действительно ли это
+                <code>&lttd&gt</code> <i>нашей таблицы</i>.</p>
+            </li>
+            <li>
+                <p>И если это так, то подсвечиваем его.</p>
+            </li>
+        </ol>
+        <p>В итоге мы получили короткий код подсветки, быстрый и эффективный, которому совершенно не важно,
+        сколько всего в таблице <code>&lttd&gt</code>.</p>
+    </article>
+
+    <article>
+        <h2>Применение делегирования: действия в разметке</h2>
+        <p>Есть и другие примеры делегирования.</p>
+        <p>Например, нам нужно сделать меню с разными кнопками: «Сохранить (save)», «Загрузить (load)», «Поиск (search)»
+        и т.д. И есть объект с соответствующими методами <code>save</code>, <code>load</code>, <code>search</code>...
+        Как их состыковать?</p>
+        <p>Первое, что может прийти в голову - это найти каждую кнопку и назначить ей свой обработчик среди методов
+        объекта. Но существует более элегантное решение. Мы можем добавить один обработчик для всего меню
+        и атрибуты <code>data-action</code> для каждой кнопки в соответствии с методами, которые они вызывают.</p>
+        <p>Обработчик считывает содержимое атрибута и выполняет метод. Взгляните на рабочий пример:</p>
+        <code>
+            &ltdiv id="menu"&gt<br>
+            &nbsp;&nbsp;&ltbutton data-action="save"&gtСохранить&lt/button&gt<br>
+            &nbsp;&nbsp;&ltbutton data-action="load"&gtЗагрузить&lt/button&gt<br>
+            &nbsp;&nbsp;&ltbutton data-action="search"&gtПоиск&lt/button&gt<br>
+            &lt/div&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;class Menu {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;constructor(elem) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;elem.onclick = this.onClick.bind(this); // (*)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;save() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Сохраняю');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;load() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Загружаю');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;search() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Ищу');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;onClick(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let action = event.target.dataset.action;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (action) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this[action]();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;new Menu(menu);<br>
+            &lt/script&gt<br>
+        </code>
+        <div id="menu" style="margin: 5px; border: 1px solid black; padding: 5px; display: inline-block">
+            <button data-action="save">Сохранить</button>
+            <button data-action="load">Загрузить</button>
+            <button data-action="search">Поиск</button>
+        </div>
+
+        <script>
+            class Menu {
+                constructor(elem) {
+                    elem.onclick = this.onClick.bind(this);
+                }
+
+                save() {
+                    alert('Сохраняю');
+                }
+
+                load() {
+                    alert('Загружаю');
+                }
+
+                search() {
+                    alert('Ищу');
+                }
+
+                onClick(event) {
+                    let action = event.target.dataset.action;
+                    if (action) {
+                        this[action]();
+                    }
+                }
+            }
+
+            new Menu(menu);
+        </script>
+        <p>Обратите внимание, что метод <code>this.onClick</code> в строке, отмеченной звездочкой <code>(*)</code>,
+        привязывается к контексту текущего объекта <code>this</code>. Это важно, т.к. иначе <code>this</code> внутри
+        него будет ссылаться на DOM-элемент (<code>elem</code>), а не на объект <code>Menu</code>, и
+        <code>this[action]</code> будет не тем, что нам нужно.</p>
+        <p>Так что же дает нам здесь делегирование?</p>
+        <ul>
+            <li>
+                <p>Не нужно писать код, чтобы присвоить обработчик каждой кнопке. Достаточно просто создать один метод
+                и поместить его в разметке.</p>
+            </li>
+            <li>
+                <p>Структура HTML становится по-настоящему гибкой. Мы можем добавлять/удалять кнопки в любое время.</p>
+            </li>
+        </ul>
+        <p>Мы также можем использовать классы <code>.action-save</code>, <code>.action-load</code>, но подход с
+        использованием атрибутов <code>data-action</code> является более семантичным. Их можно использовать и для
+        стилизации в правилах CSS.</p>
+    </article>
+
+    <article>
+        <h2>Прием проектирования «поведение»</h2>
+        <p>Делегирование событий можно использовать для добавления элементам «поведения» (behavior),
+        <i>декларативно</i> задавая хитрые обработчики установкой специальных HTML-атрибутов и классов.</p>
+        <p>Прием проектирования «поведение» состоит из двух частей:</p>
+        <ol>
+            <li>
+                <p>Элементу ставится пользовательский атрибут, описывающий его поведение.</p>
+            </li>
+            <li>
+                <p>При помощи делегирования ставится обработчик на документ, который ловит все клики (или другие события)
+                и, если элемент имеет нужный атрибут, производит соответствующее действие.</p>
+            </li>
+        </ol>
+        <h3>Поведение: «Счетчик»</h3>
+        <p>Например, здесь HTML-атрибут <code>data-counter</code> добавляет кнопкам поведение: «увеличить значение
+        при клике»:</p>
+        <code>
+            Счетчик: &ltinput type="button" value="1" data-counter&gt<br>
+            Еще счетчик: &ltinput type="button" value="2" data-counter<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;document.addEventListener('click', function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (event.target.dataset.counter != undefined) { // Если есть атрибут...<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.target.value++;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;});<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            Счетчик: <button data-counter>1</button>
+            Еще счетчик: <button data-counter>2</button>
+        </div>
+        <script>
+            document.addEventListener('click', function(event) {
+                if (event.target.dataset.counter !== undefined) {
+                    event.target.innerText++;
+                }
+            });
+        </script>
+        <p>Если нажать на кнопку - значение увеличится. Конечно, нам важны не счетчики, а общий подход, который здесь
+        продемонстрирован.</p>
+        <p>Элементов с атрибутом <code>data-counter</code> может быть сколько угодно. Новые могут добавляться
+        в HTML-код в любой момент. При помощи делегирования мы фактически добавили новый «псевдостандартный»
+        атрибут в HTML, который добавляет элементу новую возможность («поведение»).</p>
+
+        <article class="warning">
+            <h3>Всегда используйте метод <code>addEventListener</code> для обработчиков на уровне документа</h3>
+            <p>Когда мы устанавливаем обработчик событий на объект <code>document</code>, мы всегда должны
+            использовать метод <code>addEventListener</code>, а не <code>document.on&ltсобытие&gt</code>, т.к.
+            в случае последнего могут возникать конфликты: новые обработчики будут перезаписывать уже существующие.</p>
+            <p>Для реального проекта совершенно нормально иметь много обработчиков на элементе <code>document</code>,
+            установленных из разных частей кода.</p>
+        </article>
+
+        <h3>Поведение: «Переключатель» (Toggler)</h3>
+        <p>Еще один пример поведения. Сделаем так, что при клике на элемент с атрибутом <code>data-toggle-id</code>
+        будет скрываться/показываться элемент с заданным <code>id</code>:</p>
+        <code>
+            &ltbutton data-toggle-id="subscribe-mail"&gt<br>
+            &nbsp;&nbsp;Показать форму подписки<br>
+            &lt/button&gt<br>
+            <br>
+            &ltform id="subscribe-mail" hidden&gt<br>
+            &nbsp;&nbsp;Ваша почта: &ltinput type="email"&gt<br>
+            &lt/gorm&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;document.addEventListener('click', function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let id = event.target.dataset.toggleId;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (!id) return;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let elem = document.getElementById(id);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;elem.hidden = !elem.hidden;<br>
+            &nbsp;&nbsp;});<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            <button data-toggle-id="subscribe-mail" style="margin: 5px 5px 5px 0">Показать форму подписки</button>
+            <form id="subscribe-mail" hidden="">
+                <label>Ваша почта: <input type="email"></label>
+            </form>
+        </div>
+        <script>
+            document.addEventListener('click', function(event) {
+                let id = event.target.dataset.toggleId;
+                if (!id) return;
+
+                let elem = document.getElementById(id);
+                elem.hidden = !elem.hidden;
+            });
+        </script>
+        <p>Еще раз подчеркнем, что мы сделали. Теперь для того, чтобы добавить скрытие-раскрытие любому элементу,
+        даже не надо знать JavaScript, можно просо написать атрибут <code>data-toggle-id</code>.</p>
+        <p>Это бывает очень удобно - не нужно писать JavaScript-код для каждого элемента, который должен так себя вести.
+        Просто используем поведение. Обработчики на уровне документа сделают это возможным для элемента в любом месте
+        страницы.</p>
+        <p>Мы можем комбинировать несколько вариантов поведения на одном элементе.</p>
+        <p>Шаблон «поведение» может служить альтернативой для фрагментов JS-кода в верстке.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Делегирование событий - это здорово! Пожалуй, это один из самых полезных приемов для работы с DOM.</p>
+        <p>Он часто используется, если есть много элементов, обработка которых очень схожа, но не только для этого.</p>
+        <p>Алгоритм:</p>
+        <ol>
+            <li>
+                <p>Вешаем обработчик на контейнер.</p>
+            </li>
+            <li>
+                <p>В обработчике проверяем исходный элемент <code>event.target</code>.</p>
+            </li>
+            <li>
+                <p>Если событие произошло внутри нужного нам элемента, то обрабатываем его.</p>
+            </li>
+        </ol>
+        <p>Зачем использовать:</p>
+        <ul>
+            <li>
+                <p>Упрощает процесс инициализации и экономит память: не нужно вешать много обработчиков.</p>
+            </li>
+            <li>
+                <p>Меньше кода: при добавлении и удалении элементов не нужно ставить или снимать обработчики.</p>
+            </li>
+            <li>
+                <p>Удобство изменений DOM: можно массово добавлять или удалять элементы путем изменения
+                <code>innerHTML</code> и ему подобных.</p>
+            </li>
+        </ul>
+        <p>Конечно, у делегирования событий есть свои ограничения:</p>
+        <ul>
+            <li>
+                <p>Во-первых, событие должно всплывать. Некоторые события этого не делают. Также, низкоуровневые
+                обработчики не должны вызывать <code>event.stopPropagation()</code>.</p>
+            </li>
+            <li>
+                <p>Во-вторых, делегирование создает дополнительную нагрузку на браузер, ведь обработчик запускается,
+                когда событие происходит в любом месте контейнера, не обязательно на элементах, которые нам интересны.
+                Но обычно эта нагрузка настолько пустяковая, что ее даже не стоит принимать во внимание.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
