@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Действия браузера по умолчанию</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <style>
+        ul#menu {
+            padding: 0;
+        }
+
+        ul#menu li {
+            display: inline-flex;
+            border: 1px solid rgb(0, 118, 163);
+            background-color: rgb(0, 149, 205);
+            border-radius: 5px;
+            font-size: 20px;
+            height: 30px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        ul#menu a {
+            color: white;
+            margin: 25px;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Действия браузера по умолчанию</h2>
+        <p>Многие события автоматически влекут за собой действия браузера.</p>
+        <p>Например:</p>
+        <ul>
+            <li>
+                <p>Клик по ссылке инициирует переход на новый URL.</p>
+            </li>
+            <li>
+                <p>Нажатие на кнопку «отправить» в форме - отсылку ее на сервер.</p>
+            </li>
+            <li>
+                <p>Зажатие кнопки мыши над текстом и ее движение в таком состоянии - инициирует его выделение.</p>
+            </li>
+        </ul>
+        <p>Если мы обрабатываем событие в JavaScript, то зачастую такое действие браузера нам не нужно. К счастью,
+        его можно отменить.</p>
+    </article>
+
+    <article>
+        <h2>Отмена действия браузера</h2>
+        <p>Есть два способа отменить действия браузера:</p>
+        <ul>
+            <li>
+                <p>Основной способ - это воспользоваться объектом <code>event</code>. Для отмены действия браузера
+                существует стандартный метод <code>event.preventDefault()</code>.</p>
+            </li>
+            <li>
+                <p>Если же обработчик назначен через <code>on&ltсобытие&gt</code> (не через <code>addEventListener</code>),
+                то также можно вернуть <code>false</code> из обработчика.</p>
+            </li>
+        </ul>
+        <p>В следующем примере при клике по ссылке переход не произойдет:</p>
+        <code>
+            &lta href="/" onclick="return false"&gtНажми здесь&lt/a&gt<br>
+            или<br>
+            &lta href="/" onclick="event.preventDefault()"&gtздесь&lt/a&gt
+        </code>
+        <div style="margin: 5px">
+            <a href="/" onclick="return false" style="text-decoration: underline">Нажми здесь</a>
+            или
+            <a href="/" onclick="event.preventDefault()" style="text-decoration: underline">здесь</a>
+        </div>
+
+        <article class="warning">
+            <h3>Возврат <code>false</code> из обработчика - это исключение</h3>
+            <p>Обычно значение, которое возвращает обработчик события, игнорируется.</p>
+            <p>Единственное исключение - это <code>return false</code> из обработчика, назначенного через
+            <code>on&ltсобытие&gt</code>.</p>
+            <p>В других случаях <code>return</code> не нужен, он никак не обрабатывается.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Пример: меню</h2>
+        <p>Рассмотрим пример для сайта, например:</p>
+        <code>
+            &ltul id="menu" class="menu"&gt<br>
+            &nbsp;&nbsp;&ltli&gt&lta href="/html"&gtHTML&lt/a&gt&lt/li&gt<br>
+            &nbsp;&nbsp;&ltli&gt&lta href="/javascript"&gtJavaScript&lt/a&gt&lt/li&gt<br>
+            &nbsp;&nbsp;&ltli&gt&lta href="/css"&gtCSS&lt/a&gt&lt/li&gt<br>
+            &lt/ul&gt
+        </code>
+        <p>Данный пример при помощи CSS может выглядеть так:</p>
+        <div>
+            <ul id="menu" class="menu">
+                <li><a href="/html">HTML</a></li>
+                <li><a href="/javascript">JavaScript</a></li>
+                <li><a href="/css">CSS</a></li>
+            </ul>
+        </div>
+        <p>В HTML-разметке все элементы меню являются не кнопками, а ссылками, то есть тегами <code>&lta&gt</code>.
+        В этом подходе есть некоторые преимущества, например:</p>
+        <ul>
+            <li>
+                <p>Некоторые посетители очень любят сочетание «правый клик - открыть в новом окне». Если мы будем
+                использовать <code>&ltbutton&gt</code> или <code>&ltspan&gt</code>, то данное сочетание работать не будет.</p>
+            </li>
+            <li>
+                <p>Поисковые движки переходят по ссылкам <code>&lta href="..."&gt</code> при индексации.</p>
+            </li>
+        </ul>
+        <p>Поэтому в разметке мы используем <code>&lta&gt</code>. Но нам необходимо обрабатывать клики в JavaScript,
+        а стандартное действие браузера (переход по ссылке) - отменить.</p>
+        <p>Например, вот так:</p>
+        <code>
+            menu.onclick = function(event) {<br>
+            &nbsp;&nbsp;if (event.target.nodeName != 'A') return;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let href = event.target.getAttribute('href');<br>
+            &nbsp;&nbsp;alert(href); // Может быть подгрузка с сервера, генерация интерфейса и т.п.<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;return false; // Отменить действие браузера (переход по ссылке)<br>
+            };
+        </code>
+        <script>
+            menu.onclick = function(event) {
+                if (event.target.nodeName !== 'A') return;
+
+                let href = event.target.getAttribute('href');
+                alert(href);
+
+                return false;
+                // Или
+                //event.preventDefault();
+            }
+        </script>
+        <p>Если мы уберем <code>return false</code>, то после выполнения обработчика события браузер выполнит
+        «действие по умолчанию» - переход по адресу из <code>href</code>. А это нам здесь не нужно, мы обрабатываем
+        клик сами.</p>
+        <p>Кстати, использование здесь делегирования событий делает наше меню очень гибким. Мы можем добавить
+        вложенные списки и стилизовать их с помощью CSS - обработчик не потребует изменений.</p>
+
+        <article class="note">
+            <h3>Событий, вытекающие из других</h3>
+            <p>Некоторые события естественным образом вытекают друг из друга. Если мы отменим первое событие, то
+            последующие не возникнут.</p>
+            <p>Например, событие <code>mousedown</code> для поля <code>&ltinput&gt</code> приводит к фокусировке на нем
+            и запускает событие <code>focus</code>. Если мы отменим событие <code>mousedown</code>, то фокусирования
+            не произойдет.</p>
+            <p>В следующем примере попробуйте нажать на первом <code>&ltinput&gt</code> - происходит событие <code>focus</code>.
+            Но если вы нажмете по второму элементу, то события <code>focus</code> не будет.</p>
+            <code>
+                &ltinput value="Фокус работает" onfocus="this.value = ''"&gt<br>
+                &ltinput value="Кликни меня" onmousedown="return false" onfocus="this.value = ''"
+            </code>
+            <div style="margin: 5px">
+                <input value="Фокус работает" onfocus="this.value = ''" onfocusout="this.value = 'Фокус работает'">
+                <input value="Кликни меня" onmousedown="return false" onfocus="this.value = ''">
+            </div>
+            <p>Это потому, что отменено стандартное действие <code>mousedown</code>. Впрочем, фокусировка на элементе
+            все еще возможна, если мы будем использовать другой способ. Например, нажатием клавиши <kbd>Tab</kbd>
+            можно перейти от первого поля ввода ко второму. Но только не через клик мышью на элемент, это больше не работает.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Опция «passive» для обработчика</h2>
+        <p>Необязательная опция <code>passive: true</code> для <code>addEventListener</code> сигнализирует браузеру, что
+        обработчик не собирается выполнять <code>preventDefault()</code>.</p>
+        <p>Почему это может быть полезно?</p>
+        <p>Есть некоторые события, как <code>touchmove</code> на мобильных устройствах (когда пользователь перемещает
+        палец по экрану), которое по умолчанию начинает прокрутку, но мы можем отменить это действие, используя
+        <code>preventDefault()</code> в обработчике.</p>
+        <p>Поэтому, когда браузер обнаружит такое событие, он должен для начала запустить все обработчики и после,
+        если <code>preventDefault</code> не вызывается нигде, он может начать прокрутку. Это может вызвать ненужные
+        задержки в пользовательском интерфейсе.</p>
+        <p>Опция <code>passive: true</code> сообщает браузеру, что обработчик не собирается отменять прокрутку.
+        Тогда браузер начинает ее немедленно, обеспечивая максимально плавный интерфейс, параллельно обрабатывая событие.</p>
+        <p>Для некоторых браузеров (Firefox, Chrome) опция <code>passive</code> по умолчанию включена в <code>true</code>
+        для таких событий, как <code>touchstart</code> и <code>touchmove</code>.</p>
+    </article>
+
+    <article>
+        <h2>event.defaultPrevented</h2>
+        <p>Свойство <code>event.defaultPrevented</code> установлено в <code>true</code>, если действие по умолчанию было
+        предотвращено, и <code>false</code>, если нет.</p>
+        <p>Рассмотрим практическое применение этого свойства для улучшения архитектуры.</p>
+        <p>Помните, в главе «Всплытие и погружение» мы говорили о <code>event.stopPropagation()</code> и упоминали,
+        что останавливать «всплытие» - плохо?</p>
+        <p>Иногда вместо этого мы можем использовать <code>event.defaultPrevented</code>, чтобы просигналить другим
+        обработчикам, что событие обработано.</p>
+        <p>Давайте посмотрим практический пример.</p>
+        <p>По умолчанию браузер при событии <code>contextmenu</code> (клик правой кнопкой мыши) показывает контекстное
+        меню со стандартными опциями. Мы можем отменить событие по умолчанию и показать свое меню, как здесь:</p>
+        <code>
+            &ltbutton&gtПравый клик вызывает контекстное меню браузера&lt/button&gt<br>
+            <br>
+            &ltbutton oncontextmenu="alert('Рисуем наше меню'); return false"&gt<br>
+            &nbsp;&nbsp;Правый клик вызывает наше контекстное меню<br>
+            &lt/button&gt
+        </code>
+        <div style="margin: 5px">
+            <button>Правый клик вызывает контекстное меню браузера</button>
+
+            <button oncontextmenu="alert('Рисуем наше меню'); return false">
+                Правый клик вызывает наше меню
+            </button>
+        </div>
+        <p>Теперь в дополнение к этому контекстному меню реализуем контекстное меню для всего документа.</p>
+        <p>При правом клике должно показываться ближайшее контекстное меню.</p>
+        <code>
+            &ltp&gtПравый клик здесь вызывает контекстное меню документа&lt/p&gt<br>
+            &ltbutton id="elem"&gtПравый клик здесь вызывает контекстное меню кнопки&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.oncontextmenu = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;event.preventDefault();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Контекстное меню кнопки');<br>
+            &nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;document.oncontextmenu = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;event.preventDefault();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Контекстное меню документа');<br>
+            &nbsp;&nbsp;};<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px; border: 1px solid black; padding: 5px; display: flex">
+            <p style="text-align: center">Правый клик здесь вызывает контекстное меню документа</p>
+            <button id="elem1">Правый клик здесь вызывает контекстное меню кнопки</button>
+        </div>
+        <script>
+            let elem1 = document.getElementById('elem1');
+            elem1.oncontextmenu = function(event) {
+                event.preventDefault();
+                alert('Контекстное меню кнопки');
+            };
+
+            let doc1 = elem1.closest('div');
+            doc1.style.width = elem1.previousElementSibling.offsetWidth + 100 + 'px';
+            doc1.oncontextmenu = function(event) {
+                event.preventDefault();
+                alert('Контекстное меню документа');
+            };
+        </script>
+        <p>Проблема заключается в том, что когда мы кликаем по элементу <code>elem</code>, то мы получаем два меню:
+        контекстное меню для кнопки и (событие всплывает вверх) контекстное меню для документа.</p>
+        <p>Как это поправить? Одно из решений - это подумать: «Когда мы обрабатываем правый клик в обработчике на кнопке,
+        остановить всплытие», и вызвать <code>event.stopPropagation()</code>:</p>
+        <code>
+            &ltp&gtПравый клик вызывает контекстное меню документа&lt/p&gt<br>
+            &ltbutton id="elem"&gtПравый клик вызывает контекстное меню кнопки (добавлен event.stopPropagation)&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.oncontextmenu = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;event.preventDefault();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;event.stopPropagation();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Контекстное меню кнопки');<br>
+            &nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;document.oncontextmenu = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;event.preventDefault();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Контекстное меню документа');<br>
+            &nbsp;&nbsp;};<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px; border: 1px solid black; padding: 5px; display: flex;">
+            <p style="text-align: center">Правый клик вызывает контекстное меню документа</p>
+            <button id="elem2">Правый клик вызывает контекстное меню кнопки (добавлен event.stopPropagation)</button>
+        </div>
+        <script>
+            let elem2 = document.getElementById('elem2');
+            elem2.oncontextmenu = function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+                alert('Контекстное меню кнопки');
+            };
+
+            let doc2 = elem2.closest('div');
+            doc2.style.width = elem2.previousElementSibling.offsetWidth + 100 + 'px';
+            doc2.oncontextmenu = function(event) {
+                event.preventDefault();
+                alert('Контекстное меню документа');
+            };
+        </script>
+        <p>Теперь контекстное меню работает как задумано. Но цена слишком высока. Мы навсегда запретили доступ к
+        информации о правых кликах для любого внешнего кода, включая счетчики, которые могли бы собирать статистику,
+        и т.п. Это слегка неразумно.</p>
+        <p>Альтернативным решением было бы проверить в обработчике <code>document</code>, было ли отменено действие
+        по умолчанию? Если да, тогда событие было обработано, и нам не нужно на него реагировать.</p>
+        <code>
+            &ltp&gtПравый клик вызывает контекстное меню документа (добавлена проверка event.defaultPrevented)&lt/p&gt<br>
+            &ltbutton id="elem"&gtПравый клик вызывает контекстное меню кнопки&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;elem.oncontextmenu = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;event.preventDefault();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Контекстное меню кнопки');<br>
+            &nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;document.oncontextmenu = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (event.defaultPrevented) return;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;event.preventDefault();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Контекстное меню документа');<br>
+            &nbsp;&nbsp;};<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px; border: 1px solid black; padding: 5px; display: flex;">
+            <p style="text-align: center">Правый клик вызывает контекстное меню документа (добавлена проверка event.defaultPrevented)</p>
+            <button id="elem3">Правый клик вызывает контекстное меню кнопки</button>
+        </div>
+        <script>
+            let elem3 = document.getElementById('elem3');
+            elem3.oncontextmenu = function(event) {
+                event.preventDefault();
+                alert('Контекстное меню кнопки');
+            };
+
+            let doc3 = elem3.closest('div');
+            doc3.style.width = elem3.previousElementSibling.offsetWidth + 100 + 'px';
+            doc3.oncontextmenu = function(event) {
+                if (event.defaultPrevented) return;
+
+                event.preventDefault();
+                alert('Контекстное меню документа');
+            };
+        </script>
+        <p>Сейчас все работает правильно. Если у нас есть вложенные элементы и каждый из них имеет контекстное
+        меню, то код также будет работать. Просто убедитесь, что проверяете <code>event.defaultPrevented</code>
+        в каждом обработчике <code>contextmenu</code>.</p>
+
+        <article class="note">
+            <h3><code>event.stopPropagation()</code> и <code>event.preventDefault()</code></h3>
+            <p>Как мы можем видеть, <code>event.stopPropagation()</code> и <code>event.preventDefault()</code>
+            (также известный как <code>return false</code>) - это две разные функции. Они никак не связаны друг с другом.</p>
+        </article>
+
+        <article class="note">
+            <h3>Архитектура вложенных контекстных меню</h3>
+            <p>Есть также несколько альтернативных путей, чтобы реализовать вложенные контекстные меню.
+            Одним из них является единый и глобальный объект с обработчиком <code>document.contextmenu</code>
+            и методами, позволяющими хранить в нем другие обработчики.</p>
+            <p>Объект будет перехватывать любой клик правой кнопкой мыши, просматривать сохраненные обработчики
+            и запускать соответствующий.</p>
+            <p>Но при этом каждый фрагмент кода, которому требуется контекстное меню, должен знать об этом
+            объекте и использовать его вместо собственного обработчика <code>contextmenu</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Действий браузера по умолчанию достаточно много:</p>
+        <ul>
+            <li>
+                <p><code>mousedown</code> - начинает выделять текст (если двигать мышкой).</p>
+            </li>
+            <li>
+                <p><code>click</code> на <code>&ltinput type="checkbox"&gt</code> - ставит или убирает галочку
+                в <code>input</code>.</p>
+            </li>
+            <li>
+                <p><code>submit</code> - при нажатии на <code>&ltinput type="submit"&gt</code> или при нажатии
+                клавиши <kbd>Enter</kbd> в форме данные отправляются на сервер.</p>
+            </li>
+            <li>
+                <p><code>keydown</code> - при нажатии клавиши в поле ввода появляется символ.</p>
+            </li>
+            <li>
+                <p><code>contextmenu</code> - при правом клике показывается контекстное меню браузера.</p>
+            </li>
+            <li>
+                <p>... И многие другие...</p>
+            </li>
+        </ul>
+        <p>Все эти действия можно отменить, если мы хотим обработать событие исключительно при помощи JavaScript.</p>
+        <p>Чтобы отменить действие браузера по умолчанию, используйте <code>event.preventDefault()</code> или
+        <code>return false</code>. Второй метод работает, только если обработчик назначен через <code>on&ltсобытие&gt</code>.</p>
+        <p>Опция <code>passive: true</code> для <code>addEventListener</code> сообщает браузеру, что действие по
+        умолчанию не будет отменено. Это очень полезно для некоторых событий на мобильных устройствах, таких как
+        <code>touchstart</code> и <code>touchmove</code>, чтобы сообщить браузеру, что он не должен ожидать выполнения
+        всех обработчиков, а ему следует сразу приступать к выполнению действия по умолчанию, например, к прокрутке.</p>
+        <p>Если событие по умолчанию отменено, то значение <code>event.defaultPrevented</code> становится <code>true</code>,
+        иначе <code>false</code>.</p>
+
+        <article class="warning">
+            <h3>Сохраняйте семантику, не злоупотребляйте</h3>
+            <p>Технически, отменяя действия браузера по умолчанию и добавляя JavaScript, мы можем настроить поведение
+            любого элемента. Например, мы можем заставить ссылку <code>&lta&gt</code> работать как кнопку, а
+            кнопку <code>&ltbutton&gt</code> вести себя как ссылка (перенаправлять на другой URL).</p>
+            <p>Но нам следует сохранять семантическое значение HTML элементов. Например, не кнопки, а тег
+            <code>&lta&gt</code> должен применяться для переходов по ссылкам.</p>
+            <p>Помимо того, что это «хорошо», это делает ваш HTML лучше с точки зрения доступности для людей с
+            ограниченными возможностями и с особых устройств.</p>
+            <p>Также, если мы рассматриваем пример с тегом <code>&lta&gt</code>, то обратите внимание: браузер
+            предоставляет возможность открывать ссылки в новом окне (кликая правой кнопкой мыши или используя
+            другие возможности). И пользователям это нравится. Но если мы заменим ссылку кнопкой и стилизуем ее
+            как ссылку, используя CSS, то специфичные функции браузера для тега <code>&lta&gt</code> все равно работать
+            не будут.</p>
+        </article>
+    </article>
+</body>
+</html>

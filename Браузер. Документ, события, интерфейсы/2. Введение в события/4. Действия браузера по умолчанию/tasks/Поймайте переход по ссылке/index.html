@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Поймайте переход по ссылке</title>
+</head>
+<body>
+    <fieldset id="contents">
+        <legend>#contents</legend>
+        <p>Как насчет того, чтобы прочитать <a href="https://wikipedia.org/">Википедию</a> или посетить
+        <a href="https://w3.org/">W3.org</a> и узнать о современных стандартах?</p>
+    </fieldset>
+
+    <script>
+        contents.addEventListener('click', function(event) {
+            let target = event.target.closest('a');
+
+            if (!target) return;
+
+            let href = target.getAttribute('href');
+            if (!confirm(`Перейти на ${href}?`) || !contents.contains(target)) {
+                event.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

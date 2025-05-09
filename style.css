@@ -10,14 +10,14 @@ code {
     background-color: aliceblue;
 }
 
-article.note h2:first-child::before {
+article.note h2:first-child::before, article.note h3:first-child::before {
     color: blue;
     content: "\24D8";
     margin-right: 5px;
     font-weight: lighter;
 }
 
-article.warning h2:first-child::before {
+article.warning h2:first-child::before, article.warning h3:first-child::before {
     color: red;
     content: "\26A0";
     margin-right: 5px;
