@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Генерация пользовательских событий</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Генерация пользовательских событий</h2>
+        <p>Можно не только назначать обработчики, но и генерировать события из JavaScript-кода.</p>
+        <p>Пользовательские события могут быть использованы при создании графических компонентов. Например, корневой
+        элемент нашего меню, реализованного при помощи JavaScript, может генерировать события, относящиеся к этому
+        меню: <code>open</code> (меню раскрыто), <code>select</code> (выбран пункт меню) и т.п. А другой код
+        может слушать эти события и узнавать, что происходит с меню.</p>
+        <p>Можно генерировать не только совершенно новые, придуманные нами события, но и встроенные, такие как
+        <code>click</code>, <code>mousedown</code> и другие. Это бывает полезно для автоматического тестирования.</p>
+    </article>
+
+    <article>
+        <h2>Конструктор Event</h2>
+        <p>Встроенные классы для событий формируют иерархию аналогично классам для DOM-элементов. Ее корнем является
+        встроенные класс <code>Event</code>.</p>
+        <p>Событие встроенного класса <code>Event</code> можно создать так:</p>
+        <code>
+            let event = new Event(type[, options]);
+        </code>
+        <p>Где:</p>
+        <ul>
+            <li>
+                <p><i>type</i> - тип события, строка, например <code>click</code> или же любой придуманный нами -
+                <code>my-event</code>.</p>
+            </li>
+            <li>
+                <p><i>options</i> - объект с тремя необязательными свойствами:</p>
+                <ul>
+                    <li>
+                        <p><code>bubbles: true/false</code> - если <code>true</code>, тогда событие всплывает.</p>
+                    </li>
+                    <li>
+                        <p><code>cancelable: true/false</code> - если <code>true</code>, тогда можно отменить действие
+                        по умолчанию. Позже мы разберем, что это значит для пользовательских событий.</p>
+                    </li>
+                    <li>
+                        <p><code>composed: true/false</code> - если <code>true</code>, тогда событие будет всплывать
+                        наружу за пределы Shadow DOM. Позже мы разберем это в разделе «Веб-компоненты».</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>По умолчанию все три свойства установлены в <code>false</code>:
+        <code>{bubbles: false, cancelable: false, composed: false}</code>.</p>
+    </article>
+
+    <article>
+        <h2>Метод dispatchEvent</h2>
+        <p>После того как объект события создан, мы должны запустить его на элементе, вызвав метод
+        <code>elem.dispatchEvent(event)</code>.</p>
+        <p>Затем обработчики отреагируют на него, как будто это обычное браузерное событие. Если при создании указан
+        флаг <code>bubbles</code>, то оно будет всплывать.</p>
+        <p>В примере ниже событие <code>click</code> инициируется JavaScript-кодом так, как будто кликнули по кнопке:</p>
+        <code>
+            &ltbutton id="elem" onclick="alert('Клик!');"&gtАвтоклик&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let event = new Event('click');<br>
+            &nbsp;&nbsp;elem.dispatchEvent(event);<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            <button onclick="alert(`Клик!\nevent.isTrusted: ${event.isTrusted}`)">Автоклик</button>
+            <script>
+                let event = new Event('click');
+                document.currentScript.previousElementSibling.dispatchEvent(event);
+            </script>
+        </div>
+
+        <article class="note">
+            <h3>event.isTrusted</h3>
+            <p>Можно легко отличить «настоящее» событие от сгенерированного кодом.</p>
+            <p>Свойство <code>event.isTrusted</code> принимает значение <code>true</code> для событий, порождаемых
+            реальными действиями пользователя, и <code>false</code> для генерируемых кодом.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Пример всплытия</h2>
+        <p>Мы можем создать всплывающее событие с именем <code>"hello"</code> и поймать его на <code>document</code>.</p>
+        <p>Все, что нужно сделать - это установить флаг <code>bubbles</code> в <code>true</code>:</p>
+        <code>
+            &lth1 id="elem"&gtПривет из кода!&lt/h1&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Ловим на document...<br>
+            &nbsp;&nbsp;document.addEventListener('hello', function(event) { // (1)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`Привет от ${event.target.tagName}`); // Привет от H1<br>
+            &nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// ... Запуск события на элементе!<br>
+            &nbsp;&nbsp;let event = new Event('hello', {bubbles: true}); // (2)<br>
+            &nbsp;&nbsp;elem.dispatchEvent(event);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Обработчик на document сработает и выведет сообщение<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            <h1>Привет из кода!</h1>
+            <script>
+                document.addEventListener('hello', function(event) {
+                    alert(`Привет от ${event.target.tagName}`);
+                });
+
+                let hello_event = new Event('hello', {bubbles: true});
+                document.currentScript.previousElementSibling.dispatchEvent(hello_event);
+            </script>
+        </div>
+        <p>Обратите внимание:</p>
+        <ol>
+            <li>
+                <p>Мы должны использовать <code>addEventListener</code> для наших собственных событий, т.к.
+                <code>on&ltevent&gt</code>-свойства существуют только для встроенных событий, то есть
+                <code>document.onhello</code> не сработает.</p>
+            </li>
+            <li>
+                <p>Мы обязаны передать флаг <code>bubbles: true</code>, иначе наше событие не будет всплывать.</p>
+            </li>
+        </ol>
+        <p>Механизм всплытия идентичен как для встроенного события (<code>click</code>), так и для пользовательского
+        события (<code>hello</code>). Также одинакова работа фаз всплытия и погружения.</p>
+    </article>
+
+    <article>
+        <h2>MouseEvent, KeyboardEvent и другие</h2>
+        <p>Для некоторых конкретных типов событий есть свои специфические конструкторы. Вот небольшой список конструкторов
+        для различных событий пользовательского интерфейса, которые можно найти в спецификации
+        <a href="https://www.w3.org/TR/uievents" target="_blank">UI Event</a>:</p>
+        <ul>
+            <li>
+                <p><code>UIEvent</code></p>
+            </li>
+            <li>
+                <p><code>FocusEvent</code></p>
+            </li>
+            <li>
+                <p><code>MouseEvent</code></p>
+            </li>
+            <li>
+                <p><code>WheelEvent</code></p>
+            </li>
+            <li>
+                <p><code>KeyboardEvent</code></p>
+            </li>
+            <li>
+                <p>...</p>
+            </li>
+        </ul>
+        <p>Стоит использовать их вместо <code>new Event</code>, если мы хотим создавать такие события. К примеру,
+        <code>new MouseEvent('click')</code>.</p>
+        <p>Специфический конструктор позволяет указать стандартные свойства для данного типа события.</p>
+        <p>Например, <code>clientX/clientY</code> для события мыши:</p>
+        <code>
+            let event = new MouseEvent('click', {<br>
+            &nbsp;&nbsp;bubbles: true,<br>
+            &nbsp;&nbsp;cancelable: true,<br>
+            &nbsp;&nbsp;clientX: 100,<br>
+            &nbsp;&nbsp;clientY: 100<br>
+            });<br>
+            <br>
+            alert(event.clientX); // 100
+        </code>
+        <p>Обратите внимание: этого нельзя было бы сделать с обычным конструктором <code>Event</code>.</p>
+        <p>Давайте проверим:</p>
+        <code>
+            let event = new Event('click', {<br>
+            &nbsp;&nbsp;bubbles: true, // Только свойства bubbles и cancelable<br>
+            &nbsp;&nbsp;cancelable: true, // работают в конструкторе Event<br>
+            &nbsp;&nbsp;clientX: 100,<br>
+            &nbsp;&nbsp;clientY: 100<br>
+            });<br>
+            <br>
+            alert(event.clientX); // undefined, неизвестное свойство проигнорировано!
+        </code>
+        <p>Впрочем, использование конкретного конструктора не является обязательным, можно обойтись <code>Event</code>,
+        а свойства записать в объект отдельно, после создания, вот так: <code>event.clientX = 100</code>. Здесь
+        это скорее вопрос удобства и желания следовать правилам. События, которые генерирует браузер, всегда имеют
+        правильный тип.</p>
+        <p>Полный список свойств по типам событий вы найдете в спецификации, например,
+        <a href="https://www.w3.org/TR/uievents/#mouseevent" target="_blank">MouseEvent</a>.</p>
+    </article>
+
+    <article>
+        <h2>Пользовательские события</h2>
+        <p>Для генерации событий совершенно новых типов, таких как <code>"hello"</code>, следует использовать конструктор
+        <code>new CustomEvent</code>. Технически <code>CustomEvent</code> абсолютно идентичен <code>Event</code>
+        за исключением одной небольшой детали.</p>
+        <p>У второго аргумента-объекта есть дополнительное свойство <code>detail</code>, в котором можно указывать
+        информацию для передачи в событие.</p>
+        <p>Например:</p>
+        <code>
+            &lth1 id="elem"&gtПривет для Васи!&lt/h1&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Дополнительная информация приходит в обработчик вместе с событием<br>
+            &nbsp;&nbsp;elem.addEventListener('hello', function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(event.detail.name);<br>
+            &nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;elem.dispatchEvent(new CustomEvent('hello', {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;detail: {name: 'Вася'}<br>
+            &nbsp;&nbsp;}));<br>
+            &lt/script&gt
+        </code>
+        <p>Свойство <code>detail</code> может содержать любые данные. Надо сказать, что никто не мешает и в обычное
+        <code>new Event</code> записать любые свойства. Но <code>CustomEvent</code> предоставляет специальное поле
+        <code>detail</code> во избежание конфликтов с другими свойствами события.</p>
+        <p>Кроме того, класс события описывает, что это за событие, и если оно не браузерное, а пользовательское,
+        то лучше использовать <code>CustomEvent</code>, чтобы явно об этом сказать.</p>
+    </article>
+
+    <article>
+        <h2>event.preventDefault()</h2>
+        <p>Для многих браузерных событий есть «действия по умолчанию», такие, как переход по ссылке, выделение и т.п.</p>
+        <p>Для новых, пользовательских событий браузерных действий, конечно, нет, но код, который генерирует такое
+        событие, может предусматривать какие-то свои действия после события.</p>
+        <p>Вызов <code>event.preventDefault()</code> является возможностью для обработчика события сообщить в
+        сгенерировавший событие код, что эти действия надо отменить.</p>
+        <p>Тогда вызов <code>elem.dispatchEvent(event)</code> вернет <code>false</code>. И код, сгенерировавший событие,
+        узнает, что продолжать не нужно.</p>
+        <p>Рассмотрим практический пример - прячущегося кролика (могло бы быть скрывающееся меню или что-то еще).</p>
+        <p>Ниже вы можете видеть кролика <code>#rabbit</code> и функцию <code>hide()</code>, которая при вызове
+        генерирует на нем событие <code>"hide"</code>, уведомляя всех интересующихся, что кролик собирается спрятаться.</p>
+        <p>Любой обработчик может узнать об этом, подписавшись на событие <code>hide</code> через
+        <code>rabbit.addEventListener('hide', ...)</code> и, при желании, отменить действие по умолчанию через
+        <code>event.preventDefault()</code>. Тогда кролик не исчезнет.</p>
+        <code>
+            &ltpre id="rabbit"&gt<br>
+            &nbsp;&nbsp;|\&nbsp;&nbsp;&nbsp;/|<br>
+            &nbsp;&nbsp;&nbsp;\|_|/<br>
+            &nbsp;&nbsp;&nbsp;/. .\<br>
+            &nbsp;&nbsp;=\_Y_/=<br>
+            &nbsp;&nbsp;&nbsp;{>o<}<br>
+            &lt/pre&gt<br>
+            &ltbutton onclick="hide()"&gtHide()&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// hide() будет вызван при щелчке по кнопке<br>
+            &nbsp;&nbsp;function hide() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let event = new CustomEvent('hide', {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cancelable: true // Без этого флага preventDefault не сработает<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;});<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (!rabbit.dispatchEvent(event)) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Действие отменено обработчиком');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;} else {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rabbit.hidden = true;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;rabbit.addEventListener('hide', function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (confirm('Вызвать preventDefault?')) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event.preventDefault();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;});<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            <pre id="rabbit" style="transform: translate(-120px, 10px)">
+                  |\   /|
+                   \|_|/
+                   /. .\
+                  =\_Y_/=
+                   {>o<}
+            </pre>
+            <button onclick="hide()">Hide()</button>
+            <script>
+                function hide() {
+                    let hide_event = new CustomEvent('hide', {cancelable: true});
+
+                    if (rabbit.hidden) {
+                        rabbit.hidden = false;
+                        return
+                    }
+
+                    if (!rabbit.dispatchEvent(hide_event)) {
+                        alert('Действие было отменено обработчиком')
+                    } else {
+                        rabbit.hidden = true;
+                    }
+                }
+                rabbit.addEventListener('hide', function(event) {
+                    if (confirm('Вызвать preventDefault?')) {
+                        event.preventDefault();
+                    }
+                });
+            </script>
+        </div>
+        <p>Обратите внимание: событие должно содержать флаг <code>cancelable: true</code>. Иначе, вызов
+        <code>event.preventDefault()</code> будет проигнорирован.</p>
+    </article>
+
+    <article>
+        <h2>Вложенные события обрабатываются синхронно</h2>
+        <p>Обычно события обрабатываются асинхронно. То есть, если браузер обрабатывает <code>onclick</code> и в процессе
+        этого произойдет новое событие, то оно ждет, пока закончится обработка <code>onclick</code>.</p>
+        <p>Исключением является ситуация, когда событие инициировано из обработчика другого события.</p>
+        <p>Тогда управление сначала переходит в обработчик вложенного события и уже после этого возвращается назад.</p>
+        <p>В примере ниже событие <code>menu-open</code> обрабатывается синхронно во время обработки <code>onclick</code>:</p>
+        <code>
+            &ltbutton id="menu"&gtМеню (нажми меня)&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;menu.onclick = function() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(1);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// alert('Вложенное событие')<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;menu.dispatchEvent(new CustomEvent('menu-open', {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bubbles: true<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}));<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(2);<br>
+            &nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;document.addEventListener('menu-open', () => alert('Вложенное событие'))<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            <button id="menu">Меню (нажми меня)</button>
+
+            <script>
+                menu.onclick = function(event) {
+                    alert(1);
+
+                    menu.dispatchEvent(new CustomEvent('menu-open', {bubbles: true}));
+
+                    alert(2);
+                }
+
+                document.addEventListener('menu-open', () => alert('Вложенное событие'));
+            </script>
+        </div>
+        <p>Порядок вывода: 1 → Вложенное событие → 2.</p>
+        <p>Обратите внимание, что вложенное событие <code>menu-open</code> успевает всплыть и запустить обработчик
+        на <code>document</code>. Обработка вложенного события полностью завершается до того, как управление
+        возвращается во внешний код (<code>onclick</code>).</p>
+        <p>Это справедливо не только для <code>dispatchEvent</code>, но и для других ситуаций. JavaScript в обработчике
+        может вызвать другие методы, которые приведут к другим событиям - они тоже обрабатываются синхронно.</p>
+        <p>Если нам это не подходит, то мы можем либо поместить <code>dispatchEvent</code> (или любой другой код,
+        инициирующий события) в конец обработчика <code>onclick</code>, либо, если это неудобно, можно обернуть
+        генерацию события в <code>setTimeout</code> с нулевой задержкой:</p>
+        <code>
+            &ltbutton id="menu"&gtМеню (нажми меня)&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;menu.onclick = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(1);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;setTimeout(() => menu.dispatchEvent(new CustomEvent('menu-open', {bubbles: true})));<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(2);<br>
+            &nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;document.addEventListener('menu-open', () => alert('Вложенное событие'));<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            <button id="menu2">Меню (нажми меня)</button>
+
+            <script>
+                menu2.onclick = function(event) {
+                    alert(1);
+
+                    setTimeout(() => menu.dispatchEvent(new CustomEvent('menu-open2', {bubbles: true})));
+
+                    alert(2);
+                }
+
+                document.addEventListener('menu-open2', () => alert('Вложенное событие'));
+            </script>
+        </div>
+        <p>Теперь <code>dispatchEvent</code> запускается асинхронно после исполнения текущего кода, включая
+        <code>menu.onclick</code>, поэтому обработчики полностью независимы.</p>
+        <p>Новый порядок вывода: 1 → 2 → Вложенное событие.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Чтобы сгенерировать событие из кода, вначале надо создать объект события.</p>
+        <p>Базовый конструктор <code>Event(name, options)</code> принимает обязательное имя события и
+        <code>options</code> - объект с двумя свойствами:</p>
+        <ul>
+            <li>
+                <p><code>bubbles: true</code> чтобы событие всплывало.</p>
+            </li>
+            <li>
+                <p><code>cancelable: true</code> если мы хотим, чтобы <code>event.preventDefault()</code> работал.</p>
+            </li>
+        </ul>
+        <p>Особые конструкторы встроенных событий <code>MouseEvent</code>, <code>KeyboardEvent</code> и другие принимают
+        специфичные для каждого конкретного типа события свойства. Например, <code>clientX</code> для событий мыши.</p>
+        <p>Для пользовательских событий стоит применять конструктор <code>CustomEvent</code>. У него есть дополнительная
+        опция <code>detail</code>, с помощью которой можно передавать информацию в объекте события. После чего все
+        обработчики смогут получить к ней доступ через <code>event.detail</code>.</p>
+        <p>Несмотря на техническую возможность генерировать встроенные браузерные события типа <code>click</code>
+        или <code>keydown</code>, пользоваться ей стоит с большой осторожностью.</p>
+        <p>Весьма часто, когда разработчик хочет сгенерировать встроенное событие - это вызвано «кривой» архитектурой кода.</p>
+        <p>Как правило, генерация встроенных событий полезна в следующих случаях:</p>
+        <ul>
+            <li>
+                <p>Либо как явный и грубый хак, чтобы заставить работать сторонние библиотеки, в которых не предусмотрены
+                другие средства взаимодействия.</p>
+            </li>
+            <li>
+                <p>Либо для автоматического тестирования, чтобы скриптом «нажать кнопку» и посмотреть, произошло ли
+                нужное действие.</p>
+            </li>
+        </ul>
+        <p>Пользовательские события со своими именами часто создают для улучшения архитектуры, чтобы сообщить о том,
+        что происходит внутри наших меню, слайдеров, каруселей и т.д.</p>
+    </article>
+</body>
+</html>
