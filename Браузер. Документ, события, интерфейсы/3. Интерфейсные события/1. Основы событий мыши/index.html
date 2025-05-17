@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Основы событий мыши</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Основы событий мыши</h2>
+        <p>В этой главе мы более детально рассмотрим события мыши и их свойства.</p>
+        <p>Сразу заметим: эти события бывают не только из-за мыши, то и эмулируются на других устройствах, в частности,
+        на мобильных, для совместимости.</p>
+    </article>
+
+    <article>
+        <h2>Типы событий мыши</h2>
+        <p>Мы уже видели некоторые из этих событий:</p>
+        <ul>
+            <li>
+                <p><code>mousedown/mouseup</code> - кнопка мыши нажата/отпущена над элементом.</p>
+            </li>
+            <li>
+                <p><code>mouseover/mouseout</code> - курсор мыши появляется над элементом и уходит с него.</p>
+            </li>
+            <li>
+                <p><code>mousemove</code> - каждое движение мыши над элементом генерирует это событие.</p>
+            </li>
+            <li>
+                <p><code>click</code> - вызывается при <code>mousedown</code>, а затем <code>mouseup</code> над одним
+                и тем же элементом, если использовалась левая кнопка мыши.</p>
+            </li>
+            <li>
+                <p><code>dblclick</code> - вызывается двойным кликом на элементе.</p>
+            </li>
+            <li>
+                <p><code>contextmenu</code> - вызывается при попытке открыть контекстное меню, как правило, нажатием
+                правой кнопки мыши. Но заметим, это не совсем событие мыши, оно может вызываться и специальной
+                клавишей клавиатуры.</p>
+            </li>
+        </ul>
+        <p>... Есть также несколько иных типов событий, которые мы рассмотрим позже.</p>
+    </article>
+
+    <article>
+        <h2>Порядок событий</h2>
+        <p>Как вы можете видеть из приведенного выше списка, действие пользователя может вызвать несколько событий.</p>
+        <p>Например, клик мышью вначале вызывает <code>mousedown</code>, когда кнопка нажата, затем <code>mouseup</code>
+        и <code>click</code>, когда она отпущена.</p>
+        <p>В случае, когда одно действие инициирует несколько событий, порядок их выполнения фиксирован. То есть
+        обработчики событий вызываются в следующем порядке: <code>mousedown</code> → <code>mouseup</code> →
+        <code>click</code>.</p>
+        <p>Кликните на кнопку ниже, и вы увидите события. Также попробуйте двойной клик.</p>
+        <p>В окне теста ниже все события мыши записываются, и если задержка между ними более одной секунды, то они
+        разделяются горизонтальной чертой.</p>
+        <p>Кроме того, мы можем видеть свойство <code>button</code>, которое позволяет нам определить кнопку мыши; это
+        объясняется ниже.</p>
+        <div style="margin: 5px;">
+            <button id="click_btn">Кликни меня левой или правой кнопкой мыши</button>
+            <button id="clear_btn">Очистить</button>
+            <textarea id="text_area" style="display: block; height: 150px; margin: 5px 0"></textarea>
+        </div>
+        <script>
+            function changeSizeTextArea() {
+                text_area.style.width = click_btn.offsetWidth + 'px';
+                if (document.body.clientWidth >= click_btn.offsetWidth + clear_btn.offsetWidth) {
+                    text_area.style.width = click_btn.offsetWidth + clear_btn.offsetWidth + 'px';
+                }
+            }
+            changeSizeTextArea();
+            window.addEventListener('resize', changeSizeTextArea);
+
+            function appendText(text) {
+                text_area.value += text + '\n';
+                text_area.scrollTop = text_area.scrollHeight;
+            }
+
+            let mouseEvents = ["mousedown", "mouseup", "click", "dblclick", "contextmenu"];
+
+            function handleMouseEvents(event) {
+                let tab = ' '.repeat(15 - event.type.length);
+                if (firstEntry) {
+                    appendText(`${event.type}${tab}button=${event.button}`);
+                    firstEntry = false;
+                } else {
+                    if (Date.now() - timestamp > 500) {
+                        appendText('-'.repeat(23));
+                    }
+                    appendText(`${event.type}${tab}button=${event.button}`);
+                }
+                timestamp = Date.now();
+            }
+
+            let timestamp = Date.now();
+            let firstEntry = true;
+
+            mouseEvents.forEach((event) => click_btn.addEventListener(event, handleMouseEvents));
+
+            clear_btn.addEventListener('click', function() {
+                text_area.value = '';
+                firstEntry = true;
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Кнопки мыши</h2>
+        <p>События, связанные с кликом, всегда имеют свойство <code>button</code>, которое позволяет получить конкретную
+        кнопку мыши.</p>
+        <p>Обычно мы не используем его для событий <code>click</code> и <code>contextmenu</code>, потому что первое
+        происходит только при щелчке левой кнопкой мыши, а второе - только при щелчке правой кнопкой мыши.</p>
+        <p>С другой стороны, обработчикам <code>mousedown</code> и <code>mouseup</code> может потребоваться
+        <code>event.button</code>, потому что эти события срабатывают на любую кнопку, таким образом <code>button</code>
+        позволяет различать «нажатие правой кнопки» и «нажатие левой кнопки».</p>
+        <p>Возможными значениями <code>event.button</code> являются:</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Состояние кнопки</th>
+                    <th><code>event.button</code></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Левая кнопка (основная)</td>
+                    <td>0</td>
+                </tr>
+                <tr>
+                    <td>Средняя кнопка (вспомогательная)</td>
+                    <td>1</td>
+                </tr>
+                <tr>
+                    <td>Правая кнопка (вторичная)</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>Кнопка X1 (назад)</td>
+                    <td>3</td>
+                </tr>
+                <tr>
+                    <td>Кнопка X2 (вперед)</td>
+                    <td>4</td>
+                </tr>
+            </tbody>
+        </table>
+        <p>Большинство мышек имеют только левую и правую кнопки, поэтому возможные значения это 0 или 2. Сенсорные устройства
+        также генерируют аналогичные события, когда кто-то нажимает на них.</p>
+        <p>Также есть свойство <code>event.buttons</code>, в котором все нажатые в данные момент кнопки представлены
+        в виде целого числа, по одному биту на кнопку. На практике это свойство используется очень редко, вы можете
+        найти подробную информацию по адресу <a href="https://developer.mozilla.org/ru/docs/Web/api/MouseEvent/buttons">MDN</a>,
+        если вам это когда-нибудь понадобится.</p>
+
+        <article class="warning">
+            <h3>Устаревшее свойство <code>event.which</code></h3>
+            <p>В старом коде вы можете встретить <code>event.which</code> свойство - это старый нестандартный способ
+            получения кнопки с возможными значениями:</p>
+            <ul>
+                <li>
+                    <p><code>event.which == 1</code> - левая кнопка.</p>
+                </li>
+                <li>
+                    <p><code>event.which == 2</code> - средняя кнопка.</p>
+                </li>
+                <li>
+                    <p><code>event.which == 3</code> - правая кнопка.</p>
+                </li>
+            </ul>
+            <p>На данный момент <code>event.which</code> устарел, нам не следует его использовать.</p>
+        </article>
+
+        <p>Средняя кнопка сейчас - скорее экзотика, и используется очень редко.</p>
+    </article>
+
+    <article>
+        <h2>Модификаторы: shift, alt, ctrl и meta</h2>
+        <p>Все события мыши включают в себя информацию о нажатых клавишах-модификаторах.</p>
+        <p>Свойства события:</p>
+        <ul>
+            <li>
+                <p><code>shiftKey</code>: <kbd>Shift</kbd></p>
+            </li>
+            <li>
+                <p><code>altKey</code>: <kbd>Alt</kbd> (или <kbd>Opt</kbd> для Mac)</p>
+            </li>
+            <li>
+                <p><code>ctrlKey</code>: <kbd>Ctrl</kbd></p>
+            </li>
+            <li>
+                <p><code>metaKey</code>: <kbd>Cmd</kbd> для Mac</p>
+            </li>
+        </ul>
+        <p>Они равны <code>true</code>, если во время события была нажата соответствующая клавиша.</p>
+        <p>Например, кнопка внизу работает только при комбинации <kbd>Alt+Shift</kbd>+клик:</p>
+        <code>
+            &ltbutton id="button"&gtНажми Alt+Shift+Click на мне!&lt/button&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;button.onclick = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (event.altKey && event.shiftKey) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert('Ура!');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;};<br>
+            &lt/script&gt
+        </code>
+        <div style="margin: 5px">
+            <button>Нажми <kbd>Alt+Shift+Click</kbd> на мне!</button>
+            <script>
+                document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                    if (event.altKey && event.shiftKey) {
+                        alert('Ура!')
+                    }
+                });
+            </script>
+        </div>
+
+        <article class="warning">
+            <h3>Внимание: обычно на Mac используется клавиша <kbd>Cmd</kbd> вместо <kbd>Ctrl</kbd></h3>
+            <p>В Windows и Linux клавишами-модификаторами являются <kbd>Alt</kbd>, <kbd>Shift</kbd> и <kbd>Ctrl</kbd>.
+            На Mac есть еще одна: <kbd>Cmd</kbd>, которой соответствует свойство <code>metaKey</code>.</p>
+            <p>В большинстве приложений, когда в Windows/Linux используется <kbd>Ctrl</kbd>, на Mac используется
+            <kbd>Cmd</kbd>.</p>
+            <p>То есть, когда пользователь Windows нажимает <kbd>Ctrl+Enter</kbd> и <kbd>Ctrl+A</kbd>, пользователь
+            Mac нажимает <kbd>Cmd+Enter</kbd> или <kbd>Cmd+A</kbd> и так далее.</p>
+            <p>Поэтому, если мы хотим поддерживать такие комбинации, как <kbd>Ctrl</kbd>+клик, то для Mac имеет
+            смысл использовать <kbd>Cmd</kbd>+клик. Это удобней для пользователей Mac.</p>
+            <p>Даже если мы и хотели бы заставить людей на Mac использовать именно <code>Ctrl</code>+клик, это
+            довольно сложно. Проблема в том, что левый клик в сочетании с <kbd>Ctrl</kbd> интерпретируется как
+            <i>правый клик</i> на MacOS и генерирует событие <code>contextmenu</code>, а не <code>click</code>
+            как на Windows/Linux.</p>
+            <p>Поэтому, если мы хотим, чтобы пользователям всех операционных систем было удобно, то вместе с
+            <code>ctrlKey</code> нам нужно проверять <code>metaKey</code>.</p>
+            <p>Для JS-кода это означает, что мы должны проверить <code>if (event.ctrlKey || event.metaKey)</code>.</p>
+        </article>
+
+        <article class="warning">
+            <h3>Не забывайте про мобильные устройства</h3>
+            <p>Комбинации клавиш хороши в качестве дополнения к рабочему процессу. Так что, если посетитель использует
+            клавиатуру - они работают.</p>
+            <p>Но если на их устройстве ее нет - тогда должен быть способ жить без клавиш-модификаторов.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>ClientX/Y, pageX/Y</h2>
+        <p>Все события мыши имеют координаты двух видов:</p>
+        <ol>
+            <li>
+                <p>Относительно окна: <code>clientX</code> и <code>clientY</code>.</p>
+            </li>
+            <li>
+                <p>Относительно документа: <code>pageX</code> и <code>pageY</code>.</p>
+            </li>
+        </ol>
+        <p>Мы уже рассмотрели разницу между ними в главе
+        <a target="_blank" href="../../1.%20Документ/11.%20Координаты/index.html">Координаты</a>.</p>
+        <p>Если вкратце, то относительные координаты документа <code>pageX/Y</code> отсчитываются от левого верхнего
+        угла документа и не меняются при прокрутке страницы, в то время как <code>clientX/Y</code> отсчитываются
+        от левого верхнего угла текущего окна. Когда страница прокручивается, они меняются.</p>
+        <p>Например, если у нас есть окно размером 500х500, и курсов мыши находится в левом верхнем углу, то
+        значения <code>clientX</code> и <code>clientY</code> равны <code>0</code>, независимо от того, как прокручивается
+        страница.</p>
+        <p>А если мышь находится в центре окна, то значения <code>clientX</code> и <code>clientY</code> равны
+        <code>250</code> независимо от того, в каком месте документа она находится и до какого места документ прокручен.
+        В этом они похожи на <code>position: fixed</code>.</p>
+        <p>Наведите курсор мыши на поле ввода, чтобы увидеть <code>clientX/clientY</code> (пример находится в
+        <code>iframe</code>, поэтому координаты определяются относительно этого <code>iframe</code>):</p>
+        <code>
+            &ltinput onmousemove="this.value=event.clientX+':'+event.clientY" value="Наведи на меня мышь"&gt
+        </code>
+        <iframe style="display: block; margin: 5px; height: 50px; width: 300px"></iframe>
+        <script>
+            let iframe = document.querySelector('iframe');
+            let input = document.createElement('input');
+            input.value = 'Наведи на меня мышь';
+            input.onmousemove = function(event) {
+                input.value = event.clientX + ':' + event.clientY;
+            };
+            iframe.contentDocument.body.append(input);
+        </script>
+        <p>Координаты относительно документа <code>pageX</code>, <code>pageY</code> отсчитываются не от окна, а от левого
+        верхнего угла документа. Подробнее о координатах вы можете узнать в главе
+        <a target="_blank" href="../../1.%20Документ/11.%20Координаты/index.html">Координаты</a>.</p>
+    </article>
+
+    <article>
+        <h2>Отключаем выделение</h2>
+        <p>Двойной клик мыши имеет побочный эффект, который может быть неудобен в некоторых интерфейсах: он выделяет текст.</p>
+        <p>Например, двойной клик на тексте ниже выделяет его в дополнение к нашему обработчику:</p>
+        <code>
+            &ltspan ondblclick="alert('dblclick')"&gtСделайте двойной клик на мне&lt/span&gt
+        </code>
+        <div style="margin: 5px; border: 1px solid black; width: 30%; height: 30px; padding: 5px">
+            <span ondblclick="alert('dblclick')">Сделайте двойной клик на мне</span>
+        </div>
+        <p>Если зажать левую кнопку мыши и, не отпуская кнопку, провести мышью, то также будет выделение,
+        которое в интерфейсах может быть «не кстати».</p>
+        <p>Есть несколько способов запретить выделение, о которых вы можете прочитать в главе
+        <a target="_blank" href="https://learn.javascript.ru/selection-range">Selection и Range</a>.</p>
+        <p>В данном случае самым разумным будет отменить действие браузера по умолчанию при событии
+        <code>mousedown</code>, это отменит оба этих выделения:</p>
+        <code>
+            До...<br>
+            &ltb ondblclick="alert('Клик!')" onmousedown="return false"&gt<br>
+            &nbsp;&nbsp;Сделайте двойной клик на мне<br>
+            &lt/b&gt<br>
+            ...После
+        </code>
+        <div style="margin: 5px; border: 1px black solid; padding: 5px; width: 30%; height: 30px">
+            До...
+            <b ondblclick="alert('Клик!')" onmousedown="return false">
+                Сделайте двойной клик на мне
+            </b>
+            ...После
+        </div>
+        <p>Теперь выделенный жирным элемент не выделяется при двойном клике, а также на нем нельзя начать выделение,
+        зажав кнопку мыши.</p>
+        <p>Заметим, что текст внутри него по-прежнему можно поделить, если начать выделение не на самом тексте,
+        а до него или после. Обычно это нормально воспринимается пользователями.</p>
+
+        <article class="note">
+            <h3>Предотвращение копирования</h3>
+            <p>Если мы хотим отключить выделение для защиты содержимого страницы от копирования, то мы можем использовать
+            другое событие: <code>oncopy</code>.</p>
+            <code>
+                &ltdiv oncopy="alert('Копирование запрещено!'); return false;"&gt<br>
+                &nbsp;&nbsp;Уважаемый пользователь,<br>
+                &nbsp;&nbsp;Копирование информации запрещено для вас.<br>
+                &nbsp;&nbsp;Если вы знаете JS или HTML, вы можете найти всю нужную вам информацию в исходном коде страницы.<br>
+                &lt/div&gt
+            </code>
+            <div style="margin: 5px; padding: 5px; border: 1px solid black" oncopy="alert('Копирование запрещено!'); return false;">
+                Уважаемый пользователь, копирование запрещено для вас. Если вы знаете JS и HTML, вы сможете найти всю
+                нужную вам информацию в исходном коде страницы.
+            </div>
+            <p>Если вы попытаетесь скопировать текст в <code>&ltdiv&gt</code>, у вас это не получится, потому что
+            срабатывание события <code>oncopy</code> по умолчанию запрещено.</p>
+            <p>Конечно, пользователь имеет доступ к HTML-кода страницы и может взять текст оттуда, но не все знают,
+            как это сделать.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>События мыши имеют следующие свойства:</p>
+        <ul>
+            <li>
+                <p>Кнопка: <code>button</code>.</p>
+            </li>
+            <li>
+                <p>Клавиши-модификаторы (<code>true</code> если нажаты): <code>altKey</code>, <code>ctrlKey</code>,
+                <code>shiftKey</code> и <code>metaKey</code> (Mac).</p>
+                <ul>
+                    <li>
+                        <p>Если вы планируете обработать <kbd>Ctrl</kbd>, то не забудьте, что пользователи Mac
+                        обычно используют <kbd>Cmd</kbd>, поэтому лучше проверить
+                        <code>if (e.metaKey || e.ctrlKey)</code>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Координаты относительно окна: <code>clientX/clientY</code>.</p>
+            </li>
+            <li>
+                <p>Координаты относительно документа: <code>pageX/pageY</code>.</p>
+            </li>
+        </ul>
+        <p>Действие по умолчанию события <code>mousedown</code> - начало выделения, если в интерфейсе оно скорее мешает,
+        его можно отменить.</p>
+    </article>
+</body>
+</html>

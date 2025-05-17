@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Выделяемый список</title>
+    <style>
+        .selected {
+            background-color: rgb(0, 255, 0);
+        }
+    </style>
+</head>
+<body>
+    <p>Кликни на элемент списка, чтобы выделить его.</p>
+    <ul>
+        <li>Кристофер Робин</li>
+        <li>Винни Пух</li>
+        <li>Тигра</li>
+        <li>Кенга</li>
+        <li>Кролик. Просто кролик.</li>
+    </ul>
+
+    <script>
+        let ul = document.querySelector('ul');
+
+        ul.addEventListener('mousedown', (event) => event.preventDefault());
+
+        ul.addEventListener('click', function(event) {
+            let target = event.target;
+            if (target.tagName !== 'LI') return;
+
+            if (!event.ctrlKey) {
+                for (let li of ul.querySelectorAll('li.selected')) {
+                    li.classList.remove('selected');
+                }
+            }
+            target.classList.add('selected');
+        });
+    </script>
+</body>
+</html>
