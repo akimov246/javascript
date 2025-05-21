@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Движение мыши: mouseover/out, mouseenter/leave</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <link href="smiley-style.css" rel="stylesheet">
+    <style>
+        table#bagua1 td, table#bagua2 td{
+            width: 33%;
+        }
+
+        .nw {
+            background-color: rgb(153, 153, 153)
+        }
+
+        .n {
+            background-color: rgb(0, 51, 255);
+            color: white;
+        }
+
+        .ne {
+            background-color: rgb(255, 255, 102)
+        }
+
+        .w {
+            background-color: rgb(255, 255, 0)
+        }
+
+        .c {
+            background-color: rgb(102, 0, 204);
+            color: white;
+        }
+
+        .e {
+            background-color: rgb(0, 153, 255);
+            color: white;
+        }
+
+        .sw {
+            background-color: rgb(153, 102, 51);
+            color: white;
+        }
+
+        .s {
+            background-color: rgb(255, 102, 0);
+            color: white;
+        }
+
+        .se {
+            background-color: rgb(0, 204, 51);
+            color: white;
+        }
+    </style>
+
+    <style>
+        #parent2, #parent3, #parent4 {
+            background: #99C0C3;
+            width: 160px;
+            height: 120px;
+            position: relative;
+        }
+
+        #child2, #child3, #child4 {
+            background: #FFDE99;
+            width: 50%;
+            height: 50%;
+            left: 50%;
+            top: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+        }
+
+        #clear_btn2, #clear_btn3, #clear_btn4, #clear_btn5{
+            display: block;
+        }
+
+        #log2, #log3, #log4 {
+            width: 350px;
+            height: 120px;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Движение мыши: mouseover/out, mouseenter/leave</h2>
+        <p>В этой главе мы более подробно рассмотрим события, возникающие при движении указателя мыши над элементами
+        страницы.</p>
+    </article>
+
+    <article>
+        <h2>События mouseover/mouseout, relatedTarget</h2>
+        <p>Событие <code>mouseover</code> происходит в момент, когда курсор оказывается над элементом, а событие
+        <code>mouseout</code> - в момент, когда курсор уходит с элемента.</p>
+        <img src="https://learn.javascript.ru/article/mousemove-mouseover-mouseout-mouseenter-mouseleave/mouseover-mouseout.svg"
+             alt
+             style="width: 30%">
+        <p>Эти события являются особенными, потому что у них имеется свойство <code>relatedTarget</code>. Оно
+        «дополняет» <code>target</code>. Когда мышь переходит с одного элемента на другой, то один из них будет
+        <code>target</code>, а другой <code>relatedTarget</code>.</p>
+        <p>Для события <code>mouseover</code>:</p>
+        <ul>
+            <li>
+                <p><code>event.target</code> - это элемент, <i>на который</i> курсор перешел.</p>
+            </li>
+            <li>
+                <p><code>event.relatedTarget</code> - это элемент, <i>с которого</i> курсор ушел
+                (<code>relatedTarget</code> → <code>target</code>).</p>
+            </li>
+        </ul>
+        <p>Для события <code>mouseout</code> наоборот:</p>
+        <ul>
+            <li>
+                <p><code>event.target</code> - это элемент, <i>с которого</i> курсор ушел.</p>
+            </li>
+            <li>
+                <p><code>event.relatedTarget</code> - это элемент, <i>на который</i> курсор перешел
+                (<code>target</code> → <code>relatedTarget</code>).</p>
+            </li>
+        </ul>
+        <p>В примере ниже каждое лицо и его черты - отдельные элементы. При движении указателя по этим элементам
+        в текстовом поле отображаются происходящие события.</p>
+        <p>Каждое из них содержит информацию о <code>target</code> и <code>relatedTarget</code>:</p>
+        <div id="container">
+            <div class="smiley-green">
+                <div class="left-eye"></div>
+                <div class="right-eye"></div>
+                <div class="smile"></div>
+            </div>
+            <div class="smiley-yellow">
+                <div class="left-eye"></div>
+                <div class="right-eye"></div>
+                <div class="smile"></div>
+            </div>
+            <div class="smiley-red">
+                <div class="left-eye"></div>
+                <div class="right-eye"></div>
+                <div class="smile"></div>
+            </div>
+        </div>
+        <textarea id="log">События будут показываться здесь!</textarea>
+        <script>
+            let container = document.getElementById('container');
+            let log = document.getElementById('log');
+
+            function handler(event) {
+                let target = event.target;
+
+                if (target.tagName !== 'DIV') return;
+
+                function str(elem) {
+                    let className = elem.className;
+                    let id = elem.id;
+                    let tagName = elem.tagName;
+                    return className || id || tagName || 'null';
+                }
+
+                log.value += `\n${event.type}: target=${str(event.target)} relatedTarget=${str(event.relatedTarget)}`;
+                log.scrollTop = log.scrollHeight;
+
+                if (event.type === 'mouseover') {
+                    event.target.style.background = 'pink';
+                } else if (event.type === 'mouseout') {
+                    event.target.style.background = '';
+                }
+            }
+
+            container.addEventListener('mouseover', handler);
+            container.addEventListener('mouseout', handler);
+        </script>
+
+        <article class="warning">
+            <h3>Свойство <code>relatedTarget</code> может быть <code>null</code></h3>
+            <p>Свойство <code>relatedTarget</code> может быть <code>null</code>.</p>
+            <p>Это нормально и означает, что указатель мыши перешел не с другого элемента, а из-за пределов окна браузера.
+            Или же, наоборот, ушел за пределы окна.</p>
+            <p>Следует держать в уме такую возможность при использовании <code>event.relatedTarget</code> в своем
+            коде. Если, например, написать <code>event.relatedTarget.tagName</code>, то при отсутствии
+            <code>event.relatedTarget</code> будет ошибка.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Пропуск элементов</h2>
+        <p>Событие <code>mousemove</code> происходит при движении мыши. Однако, это не означает, что указанное событие
+        генерируется при прохождении каждого пикселя.</p>
+        <p>Браузер периодически проверяет позицию курсора и, заметив изменения, генерирует события <code>mousemove</code>.</p>
+        <p>Это означает, что если пользователь двигает мышкой очень быстро, то некоторые DOM-элементы могут быть пропущены:</p>
+        <img src="https://learn.javascript.ru/article/mousemove-mouseover-mouseout-mouseenter-mouseleave/mouseover-mouseout-over-elems.svg"
+             alt
+             style="width: 50%">
+        <p>Если курсор мыши передвинулся очень быстро с элемента <code>#FROM</code> на элемент <code>#TO</code>, как это
+        показано выше, то лежащие между ними элементы <code>&ltdiv&gt</code> (или некоторые из них) могут быть пропущены.
+        Событие <code>mouseout</code> может запуститься на элементе <code>#FROM</code> и затем сразу же сгенерируется
+        <code>mouseover</code> на элементе <code>#TO</code>.</p>
+        <p>Это хорошо с точки зрения производительности, потому что если промежуточных элементов много, вряд ли мы
+        действительно хотим обрабатывать вход и выход для каждого.</p>
+        <p>С другой стороны, мы должны иметь в виду, что указатель мыши не «посещает» все элементы на своем пути.
+        Он может и «прыгать».</p>
+        <p>В частности возможно, что указатель запрыгнет в середину страницы из-за пределов окна браузера. В этом случае
+        значение <code>relatedTarget</code> будет <code>null</code>, так как курсор пришел «из ниоткуда»:</p>
+        <img src="https://learn.javascript.ru/article/mousemove-mouseover-mouseout-mouseenter-mouseleave/mouseover-mouseout-from-outside.svg"
+             alt
+             style="width: 50%">
+        <p>Вы можете проверить это «вживую» на тестовом стенде ниже:</p>
+        <p>В его HTML есть два элемента, <code>&ltdiv id="child"&gt</code> вложен в <code>&ltdiv id="parent"&gt</code>.
+        Если быстро провести мышью над ними, то событие может возникнуть только на внутреннем элементе или только на внешнем,
+        а может вообще не сгенерировать никаких событий.</p>
+        <p>Также попробуйте поставить курсор на внутренний элемент, а затем очень быстро сделайте движение мышкой вниз
+        через внешний элемент. Если у вас получится достаточно быстро, то на родительском элементе не будет сгенерировано
+        никаких событий. То есть, мышь пройдет через внешний элемент, не замечая его.</p>
+        <div id="container2">
+            <div id="parent2">parent
+                <div id="child2">child</div>
+            </div>
+        </div>
+        <textarea id="log2"></textarea>
+        <button id="clear_btn2">Очистить</button>
+        <script>
+            let mouseEvents = ['mousemove', 'mouseover', 'mouseout'];
+            let container2 = document.getElementById('container2');
+            container2.style.width = document.getElementById('parent2').offsetWidth + 'px';
+            let timestamp = 0;
+            let previousEvent;
+            let counter = 1;
+
+            function mouseEventsHandler(event) {
+
+                if (Date.now() - timestamp > 1000) {
+                    log2.value += '--------------------------\n';
+                    counter = 1;
+                    previousEvent = undefined;
+                }
+
+                if (previousEvent !== event.type) {
+                    log2.value += `${event.type}\ttarget=${event.target.id.slice(0, event.target.id.length - 1)}\n`;
+                    counter = 1;
+                } else {
+                    counter++;
+                    if (counter === 2) {
+                        log2.value = log2.value.trimEnd() + ' x2\n';
+                    } else {
+                        log2.value = log2.value.slice(0, log2.value.lastIndexOf('x') + 1) + counter + '\n';
+                    }
+                }
+
+                log2.scrollTop = log2.scrollHeight;
+                previousEvent = event.type;
+                timestamp = Date.now();
+            }
+
+            mouseEvents.forEach((event) => {
+                container2.addEventListener(event, (event) => mouseEventsHandler(event));
+            });
+
+            clear_btn2.onclick = function () {
+                log2.value = '';
+                counter = 1;
+                previousEvent = undefined;
+                timestamp = 0;
+            };
+        </script>
+
+        <article class="note">
+            <h3>Если был <code>mouseover</code>, то будет и <code>mouseout</code></h3>
+            <p>Несмотря на то, что при быстрых переходах промежуточные элементы могут игнорироваться, в одном мы
+            можем быть уверены: элемент может быть пропущен только целиком.</p>
+            <p>Если указатель «официально» зашел на элемент, то есть было событие <code>mouseover</code>, то при
+            выходе с него обязательно будет <code>mouseout</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Событие mouseout при переходе на потомка</h2>
+        <p>Важная особенность события <code>mouseout</code> - оно генерируется в том числе, когда указатель переходит
+        с элемента на его потомка.</p>
+        <p>То есть, визуально указатель все еще на элементе, но мы получим <code>mouseout</code>!</p>
+        <img src="https://learn.javascript.ru/article/mousemove-mouseover-mouseout-mouseenter-mouseleave/mouseover-to-child.svg"
+             alt
+             style="width: 40%">
+        <p>Это выглядит странно, но легко объясняется.</p>
+        <p><b>По логике браузера, курсор мыши может быть только над одним элементом в любой момент времени -
+        над самым глубоко вложенным и верхним по z-index.</b></p>
+        <p>Таким образом, если курсор переход на другой элемент (пусть даже дочерний), то он покидает предыдущий.</p>
+        <p>Обратите внимание на важную деталь.</p>
+        <p>Событие <code>mouseover</code>, происходящее в потомке, всплывает. Поэтому если на родительском элементе
+        есть такой обработчик, то оно его вызовет.</p>
+        <img src="https://learn.javascript.ru/article/mousemove-mouseover-mouseout-mouseenter-mouseleave/mouseover-bubble-nested.svg"
+             alt
+             style="width: 40%">
+        <p>Вы можете наглядно увидеть это в примере ниже: <code>&ltdiv id="child"&gt</code> находится внутри
+        <code>&ltdiv id="parent"&gt</code>. На родителе определены обработчики событий <code>mouseover/out</code>, которые
+        выводят информацию о них в текстовом поле.</p>
+        <p>При переходе мышью с внешнего элемента на внутренний, вы увидите сразу два события:
+        <code>mouseout [target: parent]</code> (ушли с родителя) и <code>mouseover [target: child]</code> (перешли
+        на потомка, событие всплыло).</p>
+        <div id="container3">
+            <div id="parent3">parent
+                <div id="child3">child</div>
+            </div>
+        </div>
+        <textarea id="log3"></textarea>
+        <button id="clear_btn3">Очистить</button>
+        <script>
+            let mouseEvents3 = ['mouseover', 'mouseout'];
+            let parent3 = document.getElementById('parent3');
+            function mouseEventsHandler3(event) {
+                let date = new Date();
+                let h = date.getHours().toString().padStart(2, '0');
+                let m = date.getMinutes().toString().padStart(2, '0');
+                let s = date.getSeconds().toString().padStart(2, '0');
+
+                if (event.type !== previousEvent) {
+                    log3.value += `${h}:${m}:${s} | ${event.type} [target: ${event.target.id.slice(0, event.target.id.length - 1)}]\n`;
+                }
+                log3.scrollTop = log3.scrollHeight;
+                previousEvent = event.type;
+            }
+
+            mouseEvents3.forEach((event) => parent3.addEventListener(event, mouseEventsHandler3));
+            clear_btn3.onclick = function() {
+                log3.value = '';
+                previousEvent = undefined;
+            };
+        </script>
+        <p>При переходе с родителя элемента на потомка - на родителе сработают два обработчика: и <code>mouseout</code>
+        и <code>mouseover</code>:</p>
+        <code>
+            parent.onmouseout = function(event) {<br>
+            &nbsp;&nbsp;// event.target: внешний элемент<br>
+            };<br>
+            parent.onmouseover = function(event) {<br>
+            &nbsp;&nbsp;// event.target: внутренний элемент (всплыло)<br>
+            };
+        </code>
+        <p>Если код внутри обработчиков не смотрит на <code>target</code>, то он подумает, что мышь ушла с элемента
+        <code>parent</code> и вернулась на него обратно. Но это не так! Мышь никуда не уходила, она просто перешла
+        на потомка.</p>
+        <p>Если при уходе с элемента что-то происходит, например, запускается анимация, то такая интерпретация
+        происходящего может давать нежелательные побочные эффекты.</p>
+        <p>Чтобы этого избежать, можно смотреть на <code>relatedTarget</code> и, если мышь все еще внутри элемента,
+        то игнорировать такие события.</p>
+        <p>Или же можно использовать другие события: <code>mouseenter</code> и <code>mouseleave</code>, которые мы сейчас
+        изучим, с ними такая проблема не возникает.</p>
+    </article>
+
+    <article>
+        <h2>События mouseenter и mouseleave</h2>
+        <p>События <code>mouseenter/mouseleave</code> похожи на <code>mouseover/mouseout</code>. Они тоже генерируются,
+        когда курсор мыши переходит на элемент или покидает его.</p>
+        <p>Но есть и пара важных отличий:</p>
+        <ol>
+            <li>
+                <p>Переходы внутри элемента, на его потомки и с них, не считаются.</p>
+            </li>
+            <li>
+                <p>События <code>mouseenter/mouseleave</code> не всплывают.</p>
+            </li>
+        </ol>
+        <p>События <code>mouseenter/mouseleave</code> предельно просты и понятны.</p>
+        <p>Когда указатель появляется над элементом - генерируется <code>mouseenter</code>, причем не имеет значения,
+        где именно указатель: на самом элементе или на его потомке.</p>
+        <p>Событие <code>mouseleave</code> происходит, когда курсор покидает элемент.</p>
+        <p>Вот тот же пример, что и выше, но на этот раз на верхнем элементе стоят обработчики
+        <code>mouseenter/mouseleave</code> вместо <code>mouseover/mouseout</code>.</p>
+        <p>Как вы сами можете увидеть, генерируются только события, связанные с движением курсора относительно
+        верхнего <code>&ltdiv&gt</code>. Ничего не произойдет при переходе на внутренний <code>&ltdiv&gt</code>
+        и обратно. Переходы на потомки игнорируются.</p>
+        <div id="container4">
+            <div id="parent4">parent
+                <div id="child4">child</div>
+            </div>
+        </div>
+        <textarea id="log4"></textarea>
+        <button id="clear_btn4">Очистить</button>
+        <script>
+            let mouseEvents4 = ['mouseenter', 'mouseleave'];
+
+            function mouseEventsHandler4(event) {
+                let date4 = new Date();
+                let h4 = date4.getHours().toString().padStart(2, '0');
+                let m4 = date4.getMinutes().toString().padStart(2, '0');
+                let s4 = date4.getSeconds().toString().padStart(2, '0');
+
+                log4.value += `${h4}:${m4}:${s4} | ${event.type} [target: ${event.target.id.slice(0, event.target.id.length - 1)}]\n`;
+                log4.scrollTop = log4.scrollHeight;
+            }
+
+            mouseEvents4.forEach((event) => document.getElementById('parent4').addEventListener(event, mouseEventsHandler4));
+            clear_btn4.onclick = () => log4.value = '';
+        </script>
+    </article>
+
+    <article>
+        <h2>Делегирование событий</h2>
+        <p>События <code>mouseenter/leave</code> просты и легки в использовании. Но они не всплывают. Таким образом,
+        мы не можем их делегировать.</p>
+        <p>Представьте ситуацию, когда мы хотим обрабатывать события, сгенерированные при движении курсора по ячейкам
+        таблицы. И в таблице сотни ячеек.</p>
+        <p>Очевидное решение - определить обработчик на родительском элементе <code>&lttable&gt</code> и там
+        обрабатывать возникающие события. Но, так как <code>mouseenter/leave</code> не всплывают, то если событие
+        происходит на ячейке <code>&lttd&gt</code>, то только обработчик на <code>&lttd&gt</code> может поймать его.</p>
+        <p>Обработчики событий <code>mouseenter/leave</code> на <code>&lttable&gt</code> срабатывают, если курсор
+        оказывается над таблицей в целом или же уходит с нее. Невозможно получить какую-либо информацию о переходах
+        между ячейками внутри таблицы.</p>
+        <p>Что ж, не проблема - будем использовать <code>mouseover/mouseout</code>.</p>
+        <p>Начнем с простых обработчиков, которые выделяют текущий элемент под указателем мыши:</p>
+        <code>
+            // Выделим элемент под мышью<br>
+            table.onmouseover = function(event) {<br>
+            &nbsp;&nbsp;let target = event.target;<br>
+            &nbsp;&nbsp;target.style.background = 'pink';<br>
+            };<br>
+            <br>
+            table.onmouseout = function(event) {<br>
+            &nbsp;&nbsp;let target = event.target;<br>
+            &nbsp;&nbsp;target.style.background = '';<br>
+            };
+        </code>
+        <p>Вот они в действии. При переходе между элементами этой таблицы, текущий будет подсвечен:</p>
+        <table id="bagua1">
+            <thead>
+            <tr>
+                <th colspan="3">Квадрат <i>Bagua</i>: Направление, Элемент, Цвет, значение</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="nw">
+                    <b>Северо-Запад</b><br>
+                    Металл<br>
+                    Серебро<br>
+                    Старейшины
+                </td>
+                <td class="n">
+                    <b>Север</b><br>
+                    Вода<br>
+                    Синий<br>
+                    Перемены
+                </td>
+                <td class="ne">
+                    <b>Северо-Восток</b><br>
+                    Земля<br>
+                    Желтый<br>
+                    Направление
+                </td>
+            </tr>
+            <tr>
+                <td class="w">
+                    <b>Запад</b><br>
+                    Металл<br>
+                    Золото<br>
+                    Молодость
+                </td>
+                <td class="c">
+                    <b>Центр</b><br>
+                    Все<br>
+                    Пурпурный<br>
+                    Гармония
+                </td>
+                <td class="e">
+                    <b>Восток</b><br>
+                    Дерево<br>
+                    Синий<br>
+                    Будущее
+                </td>
+            </tr>
+            <tr>
+                <td class="sw">
+                    <b>Юго-Запад</b><br>
+                    Земля<br>
+                    Коричневый<br>
+                    Спокойствие
+                </td>
+                <td class="s">
+                    <b>Юг</b><br>
+                    Огонь<br>
+                    Оранжевый<br>
+                    Слава
+                </td>
+                <td class="se">
+                    <b>Юго-Восток</b><br>
+                    Дерево<br>
+                    Зеленый<br>
+                    Роман
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <textarea id="log5"></textarea>
+        <button id="clear_btn5">Очистить</button>
+        <script>
+            let bagua1 = document.getElementById('bagua1');
+
+            bagua1.addEventListener('mouseover', function(event) {
+                let target = event.target;
+                target.style.background = 'pink';
+                log5.value += `${event.type}${' '.repeat(10 - event.type.length)}${target.tagName}\n`;
+                log5.scrollTop = log5.scrollHeight;
+            });
+            bagua1.addEventListener('mouseout', function(event) {
+                let target = event.target;
+                target.style.background = '';
+                log5.value += `${event.type}${' '.repeat(10 - event.type.length)}${target.tagName}\n`;
+                log5.scrollTop = log5.scrollHeight;
+            });
+
+            log5.style.height = '120px';
+            log5.style.width = bagua1.offsetWidth - 6 + 'px';
+
+            clear_btn5.addEventListener('click', () => log5.value = '');
+        </script>
+        <p>В нашем случае мы хотим обрабатывать переходы именно между ячейками <code>&lttd&gt</code>: вход на ячейку
+        и выход с нее. Прочие переходы, в частности, внутри ячейки <code>&lttd&gt</code> или вообще вне любых
+        ячеек, нас не интересуют, хорошо бы их отфильтровать.</p>
+        <p>Можно достичь этого так:</p>
+        <ul>
+            <li>
+                <p>Запомнить текущую ячейку <code>&lttd&gt</code> в переменную, которую назовем <code>currentElem</code>.</p>
+            </li>
+            <li>
+                <p>На <code>mouseover</code> - игнорировать событие, если мы все еще внутри той же самой ячейки
+                <code>&lttd&gt</code>.</p>
+            </li>
+            <li>
+                <p>На <code>mouseout</code> - игнорировать событие, если это не уход с текущей ячейки <code>&lttd&gt</code>.</p>
+            </li>
+        </ul>
+        <p>Вот пример кода, учитывающего все ситуации:</p>
+        <code>
+            // Ячейка &lttd&gt под курсором в данный момент (если есть)<br>
+            let currentElem = null;<br>
+            <br>
+            table.onmouseover = function(event) {<br>
+            &nbsp;&nbsp;// Перед тем как войти на следующий элемент, курсор всегда покидает предыдущий<br>
+            &nbsp;&nbsp;// если currentElem есть, то мы еще не ушли с предыдущего &lttd&gt<br>
+            &nbsp;&nbsp;// это переход внутри - игнорируем такое событие<br>
+            &nbsp;&nbsp;if (currentElem) return;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let target = event.target.closest('td');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Переход не на &lttd&gt - игнорировать<br>
+            &nbsp;&nbsp;if (!target) return;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Переход на &lttd&gt, но вне нашей таблицы (возможно при вложенных таблицах) - игнорировать<br>
+            &nbsp;&nbsp;if (!table.contains(target)) return;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Ура, мы нашли новый &lttd&gt<br>
+            &nbsp;&nbsp;currentElem = target;<br>
+            &nbsp;&nbsp;target.style.background = 'pink';<br>
+            };<br>
+            <br>
+            table.onmouseout = function(event) {<br>
+            &nbsp;&nbsp;// Если мы не в &lttd&gt, то игнорируем уход мыши<br>
+            &nbsp;&nbsp;// это какой-то переход внутри таблицы, но вне &lttd&gt<br>
+            &nbsp;&nbsp;// например, с &lttr&gt на другой &lttr&gt<br>
+            &nbsp;&nbsp;if (!currentElem) return;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Мы покидаем элемент - но куда? Возможно, на потомка?<br>
+            &nbsp;&nbsp;let relatedTarget = event.relatedTarget;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;while (relatedTarget) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Поднимаемся по дереву элементов и проверяем - внутри ли мы currentElem или нет<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// если да, то это переход внутри элемента - игнорируем<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (relatedTarget === currentElem) return;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;relatedTarget = relatedTarget.parentNode;<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Мы действительно покинули элемент<br>
+            &nbsp;&nbsp;currentElem.style.background = '';<br>
+            &nbsp;&nbsp;currentElen = null;<br>
+            };
+        </code>
+        <p>Полный пример со всеми деталями:</p>
+        <table id="bagua2">
+            <thead>
+            <tr>
+                <th colspan="3">Квадрат <i>Bagua</i>: Направление, Элемент, Цвет, значение</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="nw">
+                    <b>Северо-Запад</b><br>
+                    Металл<br>
+                    Серебро<br>
+                    Старейшины
+                </td>
+                <td class="n">
+                    <b>Север</b><br>
+                    Вода<br>
+                    Синий<br>
+                    Перемены
+                </td>
+                <td class="ne">
+                    <b>Северо-Восток</b><br>
+                    Земля<br>
+                    Желтый<br>
+                    Направление
+                </td>
+            </tr>
+            <tr>
+                <td class="w">
+                    <b>Запад</b><br>
+                    Металл<br>
+                    Золото<br>
+                    Молодость
+                </td>
+                <td class="c">
+                    <b>Центр</b><br>
+                    Все<br>
+                    Пурпурный<br>
+                    Гармония
+                </td>
+                <td class="e">
+                    <b>Восток</b><br>
+                    Дерево<br>
+                    Синий<br>
+                    Будущее
+                </td>
+            </tr>
+            <tr>
+                <td class="sw">
+                    <b>Юго-Запад</b><br>
+                    Земля<br>
+                    Коричневый<br>
+                    Спокойствие
+                </td>
+                <td class="s">
+                    <b>Юг</b><br>
+                    Огонь<br>
+                    Оранжевый<br>
+                    Слава
+                </td>
+                <td class="se">
+                    <b>Юго-Восток</b><br>
+                    Дерево<br>
+                    Зеленый<br>
+                    Роман
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <script>
+            let bagua2 = document.getElementById('bagua2');
+            let currentElem;
+
+            bagua2.addEventListener('mouseover', function(event) {
+                if (currentElem) return;
+
+                let target = event.target.closest('td');
+                if (!target) return;
+
+                if (!bagua2.contains(target)) return;
+
+                currentElem = target;
+                target.style.background = 'pink';
+            });
+
+            bagua2.addEventListener('mouseout', function(event) {
+
+                if (!currentElem) return;
+
+                let relatedTarget = event.relatedTarget;
+
+                while (relatedTarget) {
+                    if (relatedTarget === currentElem) return;
+
+                    relatedTarget = relatedTarget.parentNode;
+                }
+
+                currentElem.style.background = '';
+                currentElem = null;
+            });
+        </script>
+        <p>Попробуйте подвигать курсор между ячейками и внутри них. Быстро или медленно - без разницы. В отличие от
+        предыдущего примера выделяется только сама ячейке <code>&lttd&gt</code>.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Мы рассмотрели события <code>mouseover</code>, <code>mouseout</code>, <code>mousemove</code>,
+        <code>mouseenter</code>, <code>mouseleave</code>.</p>
+        <p>Особенности, на которые стоит обратить внимание:</p>
+        <ul>
+            <li>
+                <p>При быстром движении мыши события не будут возникать на промежуточных элементах.</p>
+            </li>
+            <li>
+                <p>События <code>mouseover/out</code> и <code>mouseenter/leave</code> имеют дополнительное свойство:
+                <code>relatedTarget</code>. Оно дополняет свойство <code>target</code> и содержит ссылку на элемент,
+                с/на который мы переходим.</p>
+            </li>
+        </ul>
+        <p>События <code>mouseover/out</code> возникают, даже когда происходит переход с родительского элемента на
+        потомка. С точки зрения браузера, курсор мыши может быть только над одним элементом в любой момент времени -
+        над самым глубоко вложенным.</p>
+        <p>События <code>mouseenter/leave</code> в этом отличаются. Они генерируются, когда курсор переходит на элемент
+        в целом или уходит с него. Также они не всплывают.</p>
+    </article>
+</body>
+</html>

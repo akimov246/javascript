@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Умная подсказка</title>
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <div id="elem" class="clock">
+        <span class="hours">12</span> :
+        <span class="minutes">30</span> :
+        <span class="seconds">00</span>
+    </div>
+
+    <script>
+        let clock = document.getElementById('elem');
+        let timerID;
+        let coords = clock.getBoundingClientRect();
+        let tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.innerText = 'Подсказка';
+        tooltip.style.top = coords.bottom + 5 + 'px';
+        tooltip.style.left = coords.left + 5 + 'px';
+        let tooltipIsActive = false;
+
+        clock.addEventListener('mouseenter', function() {
+            timerID = setTimeout(() => {
+                document.body.append(tooltip);
+                tooltipIsActive = true;
+            }, 500);
+        });
+
+        clock.addEventListener('mouseleave', function() {
+            clearTimeout(timerID);
+            if (tooltipIsActive) {
+                tooltip.remove();
+                tooltipIsActive = false;
+            }
+        });
+
+    </script>
+</body>
+</html>

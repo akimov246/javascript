@@ -1,0 +1,101 @@
+#container {
+    border: 1px solid brown;
+    padding: 10px;
+    width: 330px;
+    margin: 5px;
+    box-sizing: border-box;
+}
+
+[class^='smiley-'] {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin-right: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+.left-eye {
+    width: 18%;
+    height: 18%;
+    top: 29%;
+    left: 22%;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.right-eye {
+    width: 18%;
+    height: 18%;
+    top: 29%;
+    right: 22%;
+    border-radius: 50%;
+    position: absolute;
+}
+
+.smiley-green {
+    background: #a9db7a;
+    border: 5px solid #92c563;
+}
+
+.smiley-green .left-eye, .smiley-green .right-eye {
+    background: #84b458;
+}
+
+.smiley-green .smile {
+    position: absolute;
+    top: 67%;
+    left: 16.5%;
+    width: 70%;
+    height: 15%;
+    background: #84b458;
+    border-bottom-left-radius: 100%;
+    border-bottom-right-radius: 100%;
+}
+
+.smiley-yellow {
+    background: #eed16a;
+    border: 5px solid #dbae51;
+}
+
+.smiley-yellow .left-eye, .smiley-yellow .right-eye {
+    background: #dba652;
+}
+
+.smiley-yellow .smile {
+    position: absolute;
+    top: 67%;
+    left: 16.5%;
+    width: 70%;
+    height: 15%;
+    background: #dba652;
+    border-radius: 8px;
+}
+
+.smiley-red {
+    background: #ee9295;
+    border: 5px solid #e27378;
+}
+
+.smiley-red .left-eye, .smiley-red .right-eye {
+    background: #e27378;
+}
+
+.smiley-red .smile {
+    position: absolute;
+    top: 67%;
+    left: 16.5%;
+    width: 70%;
+    height: 15%;
+    background: #e27378;
+    border-bottom-left-radius: 100%;
+    border-bottom-right-radius: 100%;
+    transform: rotate(180deg);
+}
+
+#log {
+    height: 120px;
+    width: 450px;
+    box-sizing: border-box;
+    margin: 0 5px 5px 5px;
+}
