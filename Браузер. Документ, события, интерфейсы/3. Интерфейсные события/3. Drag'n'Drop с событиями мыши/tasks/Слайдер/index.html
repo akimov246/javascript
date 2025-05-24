@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Слайдер</title>
+    <style>
+        .slider {
+            margin: 20px;
+            padding: 5px;
+        }
+
+        .line {
+            background: lightgrey;
+            height: 20px;
+            width: 250px;
+            border-radius: 5px;
+            position: relative;
+        }
+
+        .runner {
+            position: absolute;
+            background: blue;
+            border-radius: 3px;
+            top: -10%;
+            height: 120%;
+            width: 4%;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="slider">
+        <div class="line">
+            <div class="runner"></div>
+        </div>
+    </div>
+
+    <script>
+        let runner = document.querySelector('.runner');
+        let line = document.querySelector('.line');
+        let lineCoords = line.getBoundingClientRect();
+
+        runner.addEventListener('mousedown', function(event) {
+            let shiftX = event.clientX - runner.getBoundingClientRect().left;
+
+            function moveAt(pageX) {
+                let left;
+                pageX -= shiftX;
+
+                left = pageX - lineCoords.left;
+                if (pageX <= lineCoords.left) {
+                    left = 0;
+                }
+                if (pageX + runner.offsetWidth >= lineCoords.right) {
+                    left = lineCoords.right - lineCoords.left - runner.offsetWidth;
+                }
+
+                runner.style.left = left + 'px';
+            }
+
+            function onMouseMove(event) {
+                moveAt(event.pageX);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+
+            runner.addEventListener('mouseup', function() {
+                document.removeEventListener('mousemove', onMouseMove);
+            }, {once: true});
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drag'n'Drop с событиями мыши</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <style>
+        .field {
+            width: 1200px;
+            height: 200px;
+        }
+
+        .square {
+            width: 50px;
+            height: 50px;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Drag'n'Drop с событиями мыши</h2>
+        <p>Drag'n'Drop - отличный способ улучшить интерфейс. Захват элемента мышкой и его перенос визуально упростят
+        что угодно: от копирования и перемещения документов (как в файловых менеджерах) до оформления заказа
+        («положить в корзину»).</p>
+        <p>В современном стандарте HTML5 есть раздел о Drag and Drop - и там есть специальные события именно для
+        Drag'n'Drop переноса, такие как <code>dragstart</code>, <code>dragend</code> и так далее.</p>
+        <p>Они интересны тем, что позволяют легко решать простые задачи. Например, можно перетащить файл в браузер,
+        так что JS получит доступ к его содержимому.</p>
+        <p>Но у них есть и ограничения. Например, нельзя организовать перенос «только по горизонтали» или
+        «только по вертикали». Также нельзя ограничить перенос внутри заданной зоны. Есть и другие интерфейсные задачи,
+        которые такими встроенными событиями не реализуемы. Кроме того, мобильные устройства плохо их поддерживают.</p>
+        <p>Здесь мы будем рассматривать Drag'n'Drop при помощи событий мыши.</p>
+    </article>
+
+    <article>
+        <h2>Алгоритм Drag'n'Drop</h2>
+        <p>Базовый алгоритм Drag'n'Drop выглядит так:</p>
+        <ol>
+            <li>
+                <p>При <code>mousedown</code> - готовим элемент к перемещению, если необходимо (например, создаем его копию).</p>
+            </li>
+            <li>
+                <p>Затем при <code>mousemove</code> передвигаем элемент на новые координаты путем смены <code>left/top</code>
+                и <code>position: absolute</code>.</p>
+            </li>
+            <li>
+                <p>При <code>mouseup</code> - остановить перенос элемента и произвести все действия, связанные с окончанием
+                Drag'n'Drop.</p>
+            </li>
+        </ol>
+        <p>Это и есть основа Drag'n'Drop. Позже мы сможем расширить этот алгоритм, например, подсветив элементы при
+        наведении на них мыши.</p>
+        <p>В следующем примере эти шаги реализованы для переноса мяча:</p>
+        <code>
+            ball.onmousedown = function(event) { // (1) отследить нажатие<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// (2) подготовить к перемещению:<br>
+            &nbsp;&nbsp;// разместить поверх остального содержимого и в абсолютных координатах<br>
+            &nbsp;&nbsp;ball.style.position = 'absolute';<br>
+            &nbsp;&nbsp;ball.style.zIndex = 1000;<br>
+            &nbsp;&nbsp;// Переместим в body, чтобы мяч был точно не внутри position: relative<br>
+            &nbsp;&nbsp;document.body.append(ball);<br>
+            &nbsp;&nbsp;// и установим абсолютно спозиционированный мяч под курсор<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;moveAt(event.pageX, event.pageY);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Передвинуть мяч под координаты курсора<br>
+            &nbsp;&nbsp;// и сдвинуть на половину ширины/высоты для центрирования<br>
+            &nbsp;&nbsp;function moveAt(pageX, pageY) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;ball.style.left = pageX - ball.offsetWidth / 2 + 'px';<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;ball.style.top = pageY - ball.offsetHeight / 2 + 'px';<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;function onMouseMove(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;moveAt(event.pageX, event.pageY);<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// (3) перемещать по экрану<br>
+            &nbsp;&nbsp;document.addEventListener('mousemove', onMouseMove);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// (4) положить мяч, удалить более ненужные обработчики событий<br>
+            &nbsp;&nbsp;ball.onmouseup = function() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.removeEventListener('mousemove', onMouseMove);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;ball.onmouseup = null;<br>
+            &nbsp;&nbsp;};<br>
+            };
+        </code>
+        <p>Если запустить этот код, то мы заметим нечто странное. При начале переноса мяч «раздваивается» и переносится
+        не сам мяч, а его «клон».</p>
+        <p>Это можно увидеть в действии:</p>
+        <iframe class="field" src="examples/field1.html"></iframe>
+        <p>Попробуйте перенести мяч мышкой и вы увидите описанное поведение.</p>
+        <p>Все потому, что браузер имеет свой собственный Drag'n'Drop, который автоматически запускается и вступает
+        в конфликт с нашим. Это происходит именно для картинок и некоторых других элементов.</p>
+        <p>Его нужно отключить:</p>
+        <code>
+            ball.ondragstart = function() {<br>
+            &nbsp;&nbsp;return false;<br>
+            };
+        </code>
+        <p>Теперь все будет в порядке.</p>
+        <p>В действии:</p>
+        <iframe class="field" src="examples/field2.html"></iframe>
+        <p>Есть еще одна деталь - событие <code>mousemove</code> отслеживается на <code>document</code>, а не на
+        <code>ball</code>. С первого взгляда кажется, что мышь всегда над мячом и обработчик <code>mousemove</code>
+        можно повесить на сам мяч, а не на документ.</p>
+        <p>Но, как мы помним, событие <code>mousemove</code> возникает хоть и часто, но не для каждого пикселя.
+        Поэтому из-за быстрого движения указатель может спрыгнуть с мяча и оказаться где-нибудь в середине документа
+        (или даже за пределами окна).</p>
+        <p>Вот почему мы должны отслеживать <code>mousemove</code> на всем <code>document</code>, чтобы поймать его.</p>
+    </article>
+
+    <article>
+        <h2>Правильное позиционирование</h2>
+        <p>В примерах выше мяч позиционируется так, что его центр оказывается под указателем мыши:</p>
+        <code>
+            ball.style.left = pageX - ball.offsetWidth / 2 + 'px';<br>
+            ball.style.top = pageY - ball.offsetHeight / 2 + 'px';
+        </code>
+        <p>Неплохо, но есть побочные эффекты. Мы, для начала переноса, можем нажать мышью на любом месте мяча.
+        Если мячик «взят» за самый край - то в начале переноса он резко «прыгает», центрируясь под указатель мыши.</p>
+        <p>Было бы лучше, если бы изначальный сдвиг курсора относительно элемента сохранятся.</p>
+        <p>Где захватили, за ту «часть элемента» и переносим:</p>
+        <img src="https://learn.javascript.ru/article/mouse-drag-and-drop/ball_shift.svg" alt style="width: 15%">
+        <p>Обновим наш алгоритм:</p>
+        <ol>
+            <li>
+                <p>Когда человек нажимает на мячик (<code>mousedown</code>) - запомним расстояние от курсора до левого
+                верхнего угла шара в переменных <code>shiftX/shiftY</code>. Далее будем удерживать это расстояние
+                при перетаскивании.</p>
+                <p>Чтобы получить этот сдвиг, мы можем вычесть координаты:</p>
+                <code>
+                    // onmousedown<br>
+                    let shiftX = event.clientX - ball.getBoundingClientRect().left;<br>
+                    let shiftY = event.clientY - ball.getBoundingClientRect().top;
+                </code>
+            </li>
+            <li>
+                <p>Далее при переносе мяча мы позиционируем его с тем же сдвигом относительно указателя мыши, вот так:</p>
+                <code>
+                    // onmousemove<br>
+                    // ball имеет position: absolute<br>
+                    ball.style.left = event.pageX - shiftX + 'px';<br>
+                    ball.style.top = event.pageY - shiftY + 'px';
+                </code>
+            </li>
+        </ol>
+        <p>Итоговый код с правильным позиционированием:</p>
+        <code>
+            ball.onmousedown = function(event) {<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let shiftX = event.clientX - ball.getBoundingClientRect().left;<br>
+            &nbsp;&nbsp;let shiftY = event.clientY - ball.getBoundingClientRect().top;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;ball.style.position = 'absolute';<br>
+            &nbsp;&nbsp;ball.style.zIndex = 1000;<br>
+            &nbsp;&nbsp;document.body.append(ball);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;moveAt(event.pageX, event.pageY);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Переносим мяч на координаты (pageX, pageY),<br>
+            &nbsp;&nbsp;// дополнительно учитывая изначальный сдвиг относительно указателя мыши<br>
+            &nbsp;&nbsp;function moveAt(pageX, pageY) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp; ball.style.left = pageX - shiftX + 'px';<br>
+            &nbsp;&nbsp;&nbsp;&nbsp; ball.style.top = pageY - shiftY + 'px';<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;function onMouseMove(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;moveAt(event.pageX, event.pageY);<br>
+            &nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Передвигаем мяч при событии mousemove<br>
+            &nbsp;&nbsp;document.addEventListener('mousemove', onMouseMove);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Отпустить мяч, удалить ненужные обработчики<br>
+            &nbsp;&nbsp;ball.addEventListener('mouseup', function() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;document.removeEventListener('mousemove', onMouseMove);<br>
+            &nbsp;&nbsp;}, {once: true});<br>
+            };<br>
+            <br>
+            ball.addEventListener('dragstart', function() {<br>
+            &nbsp;&nbsp;event.preventDefault();<br>
+            });
+        </code>
+        <p>В действии (внутри фрейма):</p>
+        <iframe class="field" src="examples/field3.html"></iframe>
+        <p>Различие особенно заметно, если захватить мяч за правый нижний угол. В предыдущем примере мячик «прыгнет»
+        серединой под курсор, в этом - будет плавно переноситься с текущей позиции.</p>
+    </article>
+
+    <article>
+        <h2>Цели переноса (droppable)</h2>
+        <p>В предыдущих примерах мяч можно было бросить просто где угодно в пределах окна. В реальности мы
+        обычно берем один элемент и перетаскиваем в другой. Например, «файл» в «папку» или что-то еще.</p>
+        <p>Абстрактно говоря, мы берем перетаскиваемый (draggable) элемент и помещаем его в другой элемент
+        «цели переноса» (droppable).</p>
+        <p>Нам нужно знать:</p>
+        <ul>
+            <li>
+                <p>Куда пользователь положил элемент в конце переноса, чтобы обработать его окончание</p>
+            </li>
+            <li>
+                <p>и, желательно, над какой потенциальной целью (элемент, куда можно положить, например, изображение папки)
+                он находится в процессе переноса, чтобы подсветить ее.</p>
+            </li>
+        </ul>
+        <p>Решение довольно интересное и немного хитрое, давайте рассмотрим его.</p>
+        <p>Какой может быть первая мысль? Возможно, установить обработчики событий <code>mouseover/mouseup</code>
+        на элемент - потенциальную цель переноса?</p>
+        <p>Но это не работает.</p>
+        <p>Проблема в том, что при перемещении перетаскиваемый элемент всегда находится поверх других элементов.
+        А события мыши срабатывают только на верхнем элементе, но не на нижнем.</p>
+        <p>Например, у нас есть два элемента <code>&ltdiv&gt</code>: красный поверх синего (полностью перекрывает).
+        Не получится поймать событие на синем, потому что красный сверху:</p>
+        <code>
+            &ltstyle&gt<br>
+            &nbsp;&nbsp;div {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;width: 50px;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;height: 50px;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;position: absolute;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;top: 0;<br>
+            &nbsp;&nbsp;}<br>
+            &lt/style&gt<br>
+            &ltdiv style="background: blue" onmouseover="alert('Никогда не сработает')"&gt&lt/div&gt<br>
+            &ltdiv style="background: red" onmouseover="alert('Над красным!')"&gt&lt/div&gt<br>
+        </code>
+        <div style="margin: 5px; border: 1px solid black; height: 100px; padding: 5px;">
+            <div class="square" style="background: blue" data-alert="Никогда не сработает"></div>
+            <div class="square" style="background: red" data-alert="Над красным!"></div>
+        </div>
+        <script>
+            function onMouseOver(event) {
+                alert(event.target.dataset.alert);
+            }
+
+            for (let square of document.querySelectorAll('.square')) {
+                square.addEventListener('mouseover', onMouseOver);
+            }
+        </script>
+        <p>То же самое с перетаскиваемым элементом. Мяч всегда находится поверх других элементов, поэтому события
+        срабатывают на нем. Какие бы обработчики мы ни ставили на нижние элементы, они не будут выполнены.</p>
+        <p>Вот почему первоначальная идея поставить обработчики на потенциальные цели переноса нереализуема.
+        Обработчики не сработают.</p>
+        <p>Так что же делать?</p>
+        <p>Существует метод <code>document.elementFromPoint(clientX, clientY)</code>. Он возвращает наиболее глубоко
+        вложенные элемент по заданным координатам окна (или <code>null</code>, если указанные координаты находятся
+        за пределами окна).</p>
+        <p>Мы можем использовать его, чтобы из любого обработчика событий мыши выяснить, над какой мы потенциальной
+        целью переноса, вот так:</p>
+        <code>
+            // Внутри обработчика события мыши<br>
+            ball.hidden = true; // (*) Прячем переносимый элемент<br>
+            <br>
+            let elemBelow = document.elementFromPoint(event.clientX, event.clientY);<br>
+            // elemBelow - элемент под мячом (возможная цель переноса)<br>
+            <br>
+            ball.hidden = false;
+        </code>
+        <p>Заметим, что нужно спрятать мяч перед вызовом функции <code>(*)</code>. В противном случае по этим координатам
+        мы будем получать мяч, ведь это и есть элемент непосредственно под указателем: <code>elemBelow=ball</code>.
+        Так что мы прячем его и тут же показываем обратно.</p>
+        <p>Мы можем использовать этот код для проверки того, над каким элементом мы «летим», в любое время. И обработать
+        окончание переноса, когда оно случится.</p>
+        <p>Расширенный код <code>onMouseMove</code> с поиском потенциальных целей переноса:</p>
+        <code>
+            // Потенциальная цель переноса, над которой мы пролетаем прямо сейчас<br>
+            let currentDroppable = null;<br>
+            <br>
+            function onMouseMove(event) {<br>
+            &nbsp;&nbsp;moveAt(event.pageX, event.pageY);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;ball.hidden = true;<br>
+            &nbsp;&nbsp;let elemBelow = document.elementFromPoint(event.clientX, event.clientY);<br>
+            &nbsp;&nbsp;ball.hidden = false;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Событие mousemove может произойти и когда указатель за пределами окна (мяч перетащили за пределы окна)<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Если clientX/clientY за пределами окна, elementFromPoint вернет null<br>
+            &nbsp;&nbsp;if (!elemBelow) return;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Потенциальные цели переноса помечены классом droppable (может быть и другая логика)<br>
+            &nbsp;&nbsp;let droppableBelow = elemBelow.closest('.droppable');<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;if (currentDroppable !== droppableBelow) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Мы либо залетаем на цели, либо улетаем из нее<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// внимание: оба значения могут быть null<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// &nbsp;&nbsp;currentDroppable=null,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// &nbsp;&nbsp;&nbsp;&nbsp;если мы были не над droppable до этого события (например, над пустым пространством)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// &nbsp;&nbsp;droppableBelow=null,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// &nbsp;&nbsp;&nbsp;&nbsp;если мы не над droppable именно сейчас, во время этого события<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (currentDroppable) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Логика обработки процесса «вылета» из droppable (удаляем подсветку)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leaveDroppable(currentDroppable);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;currentDroppable = droppableBelow;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;if (currentDroppable) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Логика обработки процесса, когда мы «влетаем» в элемент droppable<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;enterDroppable(currentDroppable);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;}<br>
+            }
+        </code>
+        <p>В приведенном ниже примере, когда мяч перетаскивается через футбольные ворота, ворота подсвечиваются.</p>
+        <iframe class="field" src="examples/field4.html"></iframe>
+        <p>Теперь в течение всего процесса в переменной <code>currentDroppable</code> мы храним текущую потенциальную
+        цель переноса, над которой мы сейчас, можем ее подсветить или сделать что-то еще.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Мы рассмотрели основной алгоритм Drag'n'Drop.</p>
+        <p>Ключевые идеи:</p>
+        <ol>
+            <li>
+                <p>Поток событий: <code>ball.mousedown</code> → <code>document.mousemove</code> →
+                <code>ball.mouseup</code> (не забудьте отменить браузерный <code>dragstart</code>).</p>
+            </li>
+            <li>
+                <p>В начале перетаскивания: запоминаем начальное смещение указателя относительно элемента:
+                <code>shiftX/shiftY</code> - и сохраняем его при перетаскивании.</p>
+            </li>
+            <li>
+                <p>Выявляем потенциальные цели для переноса под указателем с помощью <code>document.elementFromPoint</code>.</p>
+            </li>
+        </ol>
+        <p>На этой основе можно сделать многое:</p>
+        <ul>
+            <li>
+                <p>На <code>mouseup</code> - по-разному завершить перенос: изменять данные, перемещать элементы.</p>
+            </li>
+            <li>
+                <p>Можно подсвечивать элементы, пока мышь «пролетает» над ними.</p>
+            </li>
+            <li>
+                <p>Можно ограничить перетаскивание определенной областью или направлением.</p>
+            </li>
+            <li>
+                <p>Можно использовать делегирование событий для <code>mousedown/up</code>. Один обработчик событий
+                на большой зоне, который проверяет <code>event.target</code>, может управлять Drag'n'Drop для сотен
+                элементов.</p>
+            </li>
+            <li>
+                <p>И так далее.</p>
+            </li>
+        </ul>
+        <p>Существуют фреймворки, которые строят архитектуру поверх этого алгоритма, создавая такие классы, как
+        <code>DragZone</code>, <code>Droppable</code>, <code>Draggable</code>. Большинство из них делают вещи,
+        аналогичные описанным выше. Вы можете и сами создать вашу собственную реализацию переноса, как видите,
+        это достаточно просто, возможно, проще, чем адаптация чего-то готового.</p>
+    </article>
+</body>
+</html>

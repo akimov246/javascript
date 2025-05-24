@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>field3</title>
+    <style>
+        .ball {
+            display: block;
+            width: 50px;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+Перетащите мяч.
+<img class="ball" src="https://js.cx/clipart/ball.svg" alt>
+<script>
+    let ball = document.querySelector('.ball');
+
+    ball.addEventListener('dragstart', function(event) {
+        event.preventDefault();
+    });
+
+    ball.addEventListener('mousedown', function(event) {
+
+        let shiftX = event.clientX - ball.getBoundingClientRect().left;
+        let shiftY = event.clientY - ball.getBoundingClientRect().top;
+
+        ball.style.zIndex = 1000;
+        moveAt(event.pageX, event.pageY);
+
+        function moveAt(pageX, pageY) {
+            ball.style.left = pageX - shiftX + 'px';
+            ball.style.top = pageY - shiftY + 'px';
+        }
+
+        function onMouseMove(event) {
+            moveAt(event.pageX, event.pageY);
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+
+        ball.addEventListener('mouseup', function() {
+            document.removeEventListener('mousemove', onMouseMove);
+        }, {once: true});
+    });
+</script>
+</body>
+</html>

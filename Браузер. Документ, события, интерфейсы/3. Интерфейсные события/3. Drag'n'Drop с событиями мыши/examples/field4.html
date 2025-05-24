@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>field4</title>
+    <style>
+        .ball {
+            display: block;
+            width: 50px;
+            position: absolute;
+            left: 150px;
+            top: 100px;
+        }
+
+        .gate {
+            display: block;
+            margin: 10px;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+Перетащите мяч.
+<img class="gate droppable" src="https://en.js.cx/clipart/soccer-gate.svg" alt>
+<img class="ball" src="https://js.cx/clipart/ball.svg" alt>
+<script>
+    let ball = document.querySelector('.ball');
+    let currentDroppable;
+
+    ball.addEventListener('dragstart', function(event) {
+        event.preventDefault();
+    });
+
+    ball.addEventListener('mousedown', function(event) {
+
+        let shiftX = event.clientX - ball.getBoundingClientRect().left;
+        let shiftY = event.clientY - ball.getBoundingClientRect().top;
+
+        ball.style.zIndex = 1000;
+        moveAt(event.pageX, event.pageY);
+
+        function moveAt(pageX, pageY) {
+            ball.style.left = pageX - shiftX + 'px';
+            ball.style.top = pageY - shiftY + 'px';
+        }
+
+        function onMouseMove(event) {
+            moveAt(event.pageX, event.pageY);
+
+            ball.style.display = 'none';
+            let elemBelow = document.elementFromPoint(event.clientX, event.clientY);
+            ball.style.display = 'block';
+
+            if (!elemBelow) return;
+
+            let droppableBelow = elemBelow.closest('.droppable');
+
+            if (currentDroppable !== droppableBelow) {
+                if (currentDroppable) {
+                    currentDroppable.style.background = '';
+                }
+
+                currentDroppable = droppableBelow;
+                if (currentDroppable) {
+                    currentDroppable.style.background = 'pink';
+                }
+            }
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+
+        ball.addEventListener('mouseup', function() {
+            document.removeEventListener('mousemove', onMouseMove);
+        }, {once: true});
+    });
+</script>
+</body>
+</html>
