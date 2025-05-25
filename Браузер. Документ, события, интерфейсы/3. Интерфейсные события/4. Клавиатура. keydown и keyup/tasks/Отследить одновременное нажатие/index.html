@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Отследить одновременное нажатие</title>
+</head>
+<body>
+    <script>
+        function runOnKeys(func, ...keys) {
+            let keysPressedNow = new Set();
+            document.addEventListener('keydown', function(event) {
+                keysPressedNow.add(event.code);
+                for (let k of keys) {
+                    if (!keysPressedNow.has(k)) return;
+                }
+                func.call(this, `Нажаты: ${keys.join(', ')}.`);
+                keysPressedNow.clear();
+            });
+
+            document.addEventListener('keyup', function(event) {
+                keysPressedNow.delete(event.code);
+            });
+        }
+
+        runOnKeys((...args) => alert(args), 'Digit1', 'KeyA');
+    </script>
+</body>
+</html>

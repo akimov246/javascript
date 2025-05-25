@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Клавиатура: keydown и keyup</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <style>
+        #test {
+            margin: 5px;
+            border: 2px solid red;
+            width: 60%;
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        #test input[type='text'] {
+            font-size: 150%;
+            width: 95%;
+            display: block;
+        }
+
+        #test textarea {
+            width: 95%;
+            height: 250px;
+            border: 1px solid black;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Клавиатура: keydown и keyup</h2>
+        <p>Прежде чем перейти к клавиатуре, обратите внимание, что на современных устройствах есть и другие способы
+        «ввести что-то». Например, распознавание речи (это особенно актуально на мобильных устройствах) или
+        Копировать/Вставить с помощью мыши.</p>
+        <p>Поэтому, если мы хотим корректно отслеживать ввод в поле <code>&ltinput&gt</code>, то одних клавиатурных
+        событий недостаточно. Существует специальное событие <code>input</code>, чтобы отслеживать любые изменения
+        в поле <code>&ltinput&gt</code>. И оно справляется с такой задачей намного лучше. Мы рассмотрим его позже в
+        главе «События: change, input, cut, copy, paste».</p>
+        <p>События клавиатуры же должны использоваться, если мы хотим обрабатывать взаимодействие пользователя именно
+        с клавиатурой (в том числе виртуальной). К примеру, если нам нужно реагировать на стрелочные клавиши
+        <kbd>Up</kbd> и <kbd>Down</kbd> или горячие клавиши (включая комбинации клавиш).</p>
+    </article>
+
+    <article id="article-test">
+        <h2>Тестовый стенд</h2>
+        <p>Для того, чтобы лучше понять, как работают события клавиатуры, можно использовать тестовый стенд ниже.</p>
+        <p>Сфокусируйтесь на поле и нажмите какую-нибудь клавишу.</p>
+        <div id="test">
+            <form onsubmit="return false;">
+                <p>Предотвратить действие по умолчанию для:
+                    <label><input type="checkbox" name="keydownStop"> keydown</label>
+                    <label><input type="checkbox" name="keyupStop"> keyup</label>
+                </p>
+                <p>
+                    Игнорировать:
+                    <label><input type="checkbox" name="keydownIgnore"> keydown</label>
+                    <label><input type="checkbox" name="keyupIgnore"> keyup</label>
+                </p>
+                Сфокусируйтесь на поле и нажмите какую-нибудь клавишу:
+                <input type="text" placeholder="Клавишу нажимать тут">
+                <textarea></textarea>
+                <button onclick="area.value = '';">Очистить</button>
+            </form>
+        </div>
+        <script>
+            let keyInput = document.querySelector('#test input[type="text"]');
+            let form = document.querySelector('#test form');
+            let area = document.querySelector('#test textarea');
+            let lastTime = 0;
+
+            keyInput.onkeydown = keyInput.onkeyup = keyInput.onkeypress = handler;
+
+            function handler(event) {
+                if (form.elements[event.type + 'Ignore']?.checked) return;
+
+                let text = event.type +
+                    ' key=' + event.key +
+                    ' code=' + event.code +
+                    (event.shiftKey ? ' shiftKey' : '') +
+                    (event.ctrlKey ? ' ctrlKey' : '') +
+                    (event.altKey ? ' altKey' : '') +
+                    (event.metaKey ? ' metaKey' : '') +
+                    (event.repeat ? ' (repeat)' : '') + '\n';
+
+                if (area.value && Date.now() - lastTime > 250) {
+                    area.value += '-'.repeat(50) + '\n';
+                }
+                lastTime = Date.now();
+
+                area.value += text;
+                area.scrollTop = area.scrollHeight;
+
+                if (form.elements[event.type + 'Stop']?.checked) {
+                    event.preventDefault();
+                }
+            }
+        </script>
+    </article>
+
+    <article>
+        <h2>События keydown и keyup</h2>
+        <p>Событие <code>keydown</code> происходит при нажатии клавиши, а <code>keyup</code> - при отпускании.</p>
+
+        <h3>event.code и event.key</h3>
+        <p>Свойство <code>key</code> объекта события позволяет получить символ, а свойство <code>code</code> -
+        «физический код клавиши».</p>
+        <p>К примеру, одну и ту же клавишу <kbd>Z</kbd> можно нажать с клавишей <kbd>Shift</kbd> и без нее.
+        В результате получится два разных символа: <code>z</code> в нижнем регистре и <code>Z</code> в верхнем регистре.</p>
+        <p>Свойство <code>event.key</code> - это непосредственно символ, и он может различаться. Но <code>event.code</code>
+        всегда будет тот же:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Клавиша</th>
+                <th><code>event.key</code></th>
+                <th><code>event.code</code></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><kbd>Z</kbd></td>
+                <td><code>z</code> (нижний регистр)</td>
+                <td><code>KeyZ</code></td>
+            </tr>
+            <tr>
+                <td><kbd>Shift+Z</kbd></td>
+                <td><code>Z</code> (верхний регистр)</td>
+                <td><code>KeyZ</code></td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Если пользователь работает с разными языками, то при переключении на другой язык символ изменится
+        с <code>"Z"</code> на совершенно другой. Получившееся станет новым значением <code>event.key</code>,
+        тогда как <code>event.code</code> останется тем же: <code>"KeyZ"</code>.</p>
+
+        <article class="note">
+            <h3>«KeyZ» и другие клавишные коды</h3>
+            <p>У каждой клавиши есть код, который зависит от ее расположения на клавиатуре. Подробно о клавишных
+            кодах можно прочитать в <a href="https://www.w3.org/TR/uievents-code/" target="_blank">спецификации о кодах событий UI</a>.</p>
+            <p>Например:</p>
+            <ul>
+                <li>
+                    <p>Буквенные клавиши имеют коды по типу <code>"Key&ltбуква&gt"</code>: <code>"KeyA"</code>,
+                    <code>"KeyB"</code> и т.д.</p>
+                </li>
+                <li>
+                    <p>Коды числовых клавиш строятся по принципу: <code>"Digit&ltчисло&gt"</code>:
+                    <code>"Digit0"</code>, <code>"Digit1"</code> и т.д.</p>
+                </li>
+                <li>
+                    <p>Код специальных клавиш - это их имя: <code>"Enter"</code>, <code>"Backspace"</code>,
+                    <code>"Tab"</code> и т.д.</p>
+                </li>
+            </ul>
+            <p>Существует несколько широко распространенных раскладок клавиатуры, и в спецификации приведены
+            клавишные коды к каждой из них.</p>
+            <p>Можно прочитать их в <a href="https://www.w3.org/TR/uievents-code/" target="_blank">разделе спецификации, посвященном буквенно-цифровым клавишам</a>
+            или просто нажмите нужную клавишу на <a href="#article-test">тестовом стенде</a> выше и посмотрите.</p>
+        </article>
+
+        <article class="warning">
+            <h3>Регистр важен: <code>"KeyZ"</code>, а не <code>"keyZ"</code></h3>
+            <p>Выглядит очевидно, но многие все равно ошибаются.</p>
+            <p>Пожалуйста, избегайте опечаток: правильно <code>KeyZ</code>, а не <code>keyZ</code>.
+            Условие <code>event.code === "keyZ"</code> работать не будет: первая буква в слове <code>"Key"</code>
+            должна быть заглавная.</p>
+        </article>
+
+        <p>А что, если клавиша не буквенно-цифровая? Например, <code>Shift</code> или <code>F1</code>, или какая-либо
+        другая специальная клавиша? В таких случаях значение свойство <code>event.key</code> примерно то же,
+        что и у <code>event.code</code>:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Клавиша</th>
+                <th><code>event.key</code></th>
+                <th><code>event.code</code></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><kbd>F1</kbd></td>
+                <td><code>F1</code></td>
+                <td><code>F1</code></td>
+            </tr>
+            <tr>
+                <td><kbd>Backspace</kbd></td>
+                <td><code>Backspace</code></td>
+                <td><code>Backspace</code></td>
+            </tr>
+            <tr>
+                <td><kbd>Shift</kbd></td>
+                <td><code>Shift</code></td>
+                <td><code>ShiftRight</code> или <code>ShiftLeft</code></td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Обратите внимание, что <code>event.code</code> точно указывает, какая именно клавиша нажата. Так, большинство
+        клавиатур имеют по две клавиши <kbd>Shift</kbd>: слева и справа. <code>event.code</code> уточняет,
+        какая именно из них была нажата, в то время как <code>event.key</code> сообщает о «смысле» клавиши:
+        что вообще было нажато (<code>Shift</code>).</p>
+        <p>Допустим, мы хотим обработать горячую клавишу <kbd>Ctrl+Z</kbd> (или <kbd>Cmd+Z</kbd> для Mac). Большинство
+        текстовых редакторов к этой комбинации подключают действие «отменить». Мы можем поставить обработчик
+        событий на <code>keydown</code> и проверять, какая клавиша была нажата.</p>
+        <p>Здесь возникает дилемма: в нашем обработчике стоит проверять значение <code>event.key</code> или
+        <code>event.code</code>?</p>
+        <p>С одной стороны, значение <code>event.key</code> - это символ, он изменяется в зависимости от языка,
+        и если у пользователя установлено в ОС несколько языков, и он переключается между ними, нажатие на одну и ту же
+        клавишу будет давать разные символы. Так что имеет смысл проверять <code>event.code</code>, ведь его значение
+        всегда одно и то же.</p>
+        <p>Вот пример кода:</p>
+        <code>
+            document.addEventListener('keydown', function(event) {<br>
+            &nbsp;&nbsp;if (event.code === 'KeyZ' && (event.ctrlKey || event.metaKey)) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert('Отменить');<br>
+            &nbsp;&nbsp;}<br>
+            });
+        </code>
+        <p>С другой стороны, с <code>event.code</code> тоже есть проблемы. На разных раскладках к одной и той же
+        клавише могут быть привязаны разные символы.</p>
+        <p>Например, вот схему стандартной (US) раскладки («QWERTY») и под ней немецкой («QWERTZ») раскладки:</p>
+        <img src="https://learn.javascript.ru/article/keyboard-events/us-layout.svg" alt style="width: 40%;">
+        <img src="https://learn.javascript.ru/article/keyboard-events/german-layout.svg" alt style="width: 40%; display: block">
+        <p>Для одной и той же клавиши в американской раскладке значение <code>event.code</code> равно «Z», в то время
+        как в немецкой «Y».</p>
+        <p>Буквально, для пользователей с немецкой раскладкой <code>event.code</code> при нажатии на <kbd>Y</kbd>
+        будет равен <code>KeyZ</code>.</p>
+        <p>Если мы будем проверять в нашем коде <code>event.code === 'KeyZ'</code>, то для людей с немецкой раскладкой
+        такая проверка сработает, когда они нажимают <kbd>Y</kbd>.</p>
+        <p>Звучит очень странно, но это и в самом деле так. В <a href="https://www.w3.org/TR/uievents-code/#table-key-code-alphanumeric-writing-system" target="_blank">спецификации</a>
+        прямо упоминается такое поведение.</p>
+        <p>Так что <code>event.code</code> может содержать неправильный символ при неожиданной раскладке. Одни и те же
+        буквы на разных раскладках могут сопоставляться с разными физическими клавишами, что приводит к разным кодам.
+        К счастью, это происходит не со всеми кодами, а с несколькими, например <code>KeyA</code>, <code>KeyQ</code>,
+        <code>KeyZ</code> (как мы уже видели), и не происходит со специальными клавишами, такими как <code>Shift</code>.
+        Вы можете найти полный список проблемных кодов в <a href="https://www.w3.org/TR/uievents-code/#table-key-code-alphanumeric-writing-system" target="_blank">спецификации</a>.</p>
+        <p>Чтобы отслеживать символы, зависящие от раскладки, <code>event.key</code> надежнее.</p>
+        <p>С другой стороны, преимущество <code>event.code</code> заключается в том, что его значение всегда остается
+        неизменным, будучи привязанным к физическому местоположению клавиши, даже если пользователь меняет язык.
+        Так что горячие клавиши, использующие это свойство, будут работать даже в случае переключения языка.</p>
+        <p>Хотим поддерживать клавиши, меняющиеся при раскладке? Тогда <code>event.key</code> - верный выбор.</p>
+        <p>Или мы хотим, чтобы горячая клавиша срабатывала даже после переключения на другой язык? Тогда
+        <code>event.code</code> может быть лучше.</p>
+    </article>
+
+    <article>
+        <h2>Автоповтор</h2>
+        <p>При долгом нажатии клавиши возникает автоповтор: <code>keydown</code> срабатывает снова и снова, и когда
+        клавишу отпускают, то срабатывает <code>keyup</code>. Так что ситуация, когда много <code>keydown</code>
+        и один <code>keyup</code>, абсолютно нормальна.</p>
+        <p>Для событий, вызванных автоповтором, у объекта события свойство <code>event.repeat</code> равно <code>true</code>.</p>
+    </article>
+
+    <article>
+        <h2>Действия по умолчанию</h2>
+        <p>Действия по умолчанию весь разнообразны, много чего можно инициировать нажатием на клавиатуре.</p>
+        <p>Для примера:</p>
+        <ul>
+            <li>
+                <p>Появление символа (самое очевидное).</p>
+            </li>
+            <li>
+                <p>Удаление символа (клавиша <kbd>Delete</kbd>).</p>
+            </li>
+            <li>
+                <p>Прокрутка страницы (клавиша <kbd>PageDown</kbd>).</p>
+            </li>
+            <li>
+                <p>Открытие диалогового окна браузера «Сохранить» (<kbd>Ctrl+S</kbd>).</p>
+            </li>
+            <li>
+                <p>... И так далее.</p>
+            </li>
+        </ul>
+        <p>Предотвращение стандартного действия с помощью <code>event.preventDefault()</code> работает практически
+        во всех сценариях, кроме тех, которые происходят на уровне операционной системы. Например, комбинация
+        <kbd>Alt+F4</kbd> инициирует закрытие браузера в Windows, что бы мы ни делали в JavaScript.</p>
+        <p>Для примера, <code>&ltinput&gt</code> ниже ожидает телефонный номер, так что ничего кроме чисел,
+        <code>+</code>, <code>()</code> или <code>-</code> принято не будет:</p>
+        <code>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;function checkPhoneKey(key) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return (key >= '0' && key <= '9') || key === '+' || key === '(' || key === ')' || key === '-';<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt<br>
+            &ltinput onkeydown="return checkPhoneKey(event.key)" placeholder="Введите телефон" type="tel"&gt
+        </code>
+        <div style="margin: 5px">
+            <input id="tel1" type="tel" placeholder="Введите телефон">
+        </div>
+        <script>
+            let tel1 = document.getElementById('tel1');
+
+            tel1.addEventListener('keydown', function(event) {
+                let key = event.key;
+
+                if (!((key >= '0' && key <= '9') || key === '+' || key === '(' || key === ')' || key === '-')) {
+                    event.preventDefault();
+                }
+            });
+        </script>
+        <p>Заметьте, что специальные клавиши, такие как <kbd>Backspace</kbd>, <kbd>Left</kbd>, <kbd>Right</kbd>,
+        <kbd>Ctrl+V</kbd>, в этом поле для ввода не работают. Это побочный эффект чересчур жесткого фильтра
+        <code>checkPhoneKey</code>.</p>
+        <p>Добавим ему немного больше свободы:</p>
+        <code>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;function checkPhoneKey(key) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return (key >= '0' && key <= '9') || key === '+' || key === '(' || key === ')' || key === '-' ||<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Delete' || key === 'Backspace';<br>
+            &nbsp;&nbsp;}<br>
+            &lt/script&gt<br>
+            &ltinput onkeydown="return checkPhoneKey(event.key)" placeholder="Введите телефон" type="tel"&gt
+        </code>
+        <div style="margin: 5px">
+            <input id="tel2" type="tel" placeholder="Введите телефон">
+        </div>
+        <script>
+            let tel2 = document.getElementById('tel2');
+
+            tel2.addEventListener('keydown', function(event) {
+                let key = event.key;
+
+                if (!((key >= '0' && key <= '9') || key === '+' || key === '(' || key === ')' || key === '-' ||
+                key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Delete' || key === 'Backspace')) {
+                    event.preventDefault();
+                }
+            });
+        </script>
+        <p>Теперь стрелочки и удаление прекрасно работают.</p>
+        <p>... Впрочем, мы все равно можем ввести в <code>&ltinput&gt</code> что угодно с помощью правого клика мыши
+        и пункта «Вставить» контекстного меню. Так что такой фильтр не обладает 100% надежностью. Мы можем просто
+        оставить все как есть, потому что в большинстве случаев это работает. Альтернатива - отслеживать событие
+        <code>input</code>, оно генерируется после любых изменений в поле <code>&ltinput&gt</code>, и мы можем
+        проверять новое значение и подчеркивать/изменять его, если оно не подходит.</p>
+    </article>
+
+    <article>
+        <h2>«Дела минувших дней»</h2>
+        <p>В прошлом существовало также событие <code>keypress</code>, а также свойства <code>keyCode</code>,
+        <code>charCode</code>, <code>which</code> у объекта события.</p>
+        <p>Но количество браузерных несовместимостей при работе с ними было столь велико, что у разработчиков
+        спецификации не было другого выхода, кроме как объявить из устаревшими и создать новые, современные
+        события (которые и описываются в этой главе). Старый код еще работает, так как браузеры продолжают
+        поддерживать и <code>keypress</code>, и <code>keyCode</code> с <code>charCode</code>, и <code>which</code>,
+        но более нет никакой необходимости в их использовании.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Нажатие клавиши всегда генерирует клавиатурное событие, будь то буквенно-цифровая клавиша или специальная
+        типа <kbd>Shift</kbd> или <kbd>Ctrl</kbd> и т.д. Единственным исключением является клавиша <kbd>Fn</kbd>,
+        которая присутствует на клавиатуре некоторых ноутбуков. События на клавиатуре для нее нет, потому что она
+        обычно работает на уровне более низком, чем даже ОС.</p>
+        <p>События клавиатуры:</p>
+        <ul>
+            <li>
+                <p><code>keydown</code> - при нажатии на клавишу (если клавиша остается нажатой, происходит автоповтор).</p>
+            </li>
+            <li>
+                <p><code>keyup</code> - при отпускании клавиши.</p>
+            </li>
+        </ul>
+        <p>Главные свойства для работы с клавиатурными событиями:</p>
+        <ul>
+            <li>
+                <p><code>code</code> - «код клавиши» (<code>"KeyA"</code>, <code>"ArrowLeft"</code> и так далее),
+                особый код, привязанный к физическому расположении клавиши на клавиатуре.</p>
+            </li>
+            <li>
+                <p><code>key</code> - символ (<code>"A"</code>, <code>"a"</code> и так далее), для не буквенно-цифровых
+                групп клавиш (таких, как <kbd>Esc</kbd>) обычно имеет такое же значение, что и <code>code</code>.</p>
+            </li>
+        </ul>
+        <p>В прошлом события клавиатуры иногда использовались для отслеживания ввода данных пользователем в полях формы.
+        Это ненадежно, потому как ввод данных не обязательно может осуществляться с помощью клавиатуры. Существуют
+        события <code>input</code> и <code>change</code> специально для обработки ввода (рассмотренные позже
+        в главе «События: change, input, cut, copy, paste»). Они срабатывают в результате любого ввода,
+        включая Копировать/Вставить мышью и распознавание речи.</p>
+        <p>События клавиатуры же должны использоваться только по назначению - для клавиатуры. Например, чтобы реагировать
+        на горячие или специальные клавиши.</p>
+    </article>
+</body>
+</html>
