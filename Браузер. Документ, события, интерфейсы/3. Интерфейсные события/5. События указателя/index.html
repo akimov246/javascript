@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>События указателя</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <style>
+        .slider {
+            border-radius: 5px;
+            background: #E0E0E0;
+            width: 310px;
+            height: 15px;
+            margin: 5px;
+        }
+
+        .thumb {
+            width: 10px;
+            height: 25px;
+            border-radius: 3px;
+            position: relative;
+            left: 10px;
+            top: -5px;
+            background: blue;
+            cursor: pointer;
+        }
+
+        #multi-touch {
+            border: 1px solid black;
+            width: 100%;
+            height: 200px;
+            overflow: scroll;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .ball {
+            width: 5%;
+        }
+
+        #ball2 {
+            touch-action: none;
+            -webkit-touch-callout: none; /* Отключает меню при долгом тапе */
+            -webkit-user-select: none; /* Отключает выделение */
+            -webkit-user-drag: none; /* Отключает перетаскивание */
+            user-select: none;
+        }
+
+        .area {
+            display: block;
+            width: 30%;
+            height: 120px;
+        }
+
+        .container {
+            margin: 5px;
+            border: 1px solid lightgrey;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>События указателя</h2>
+        <p>События указателя (Pointer events) - это современный способ обработки ввода с помощью различных указывающих
+        устройств, таких как мышь, перо/стилус, сенсорный экран и так далее.</p>
+    </article>
+
+    <article>
+        <h2>Краткая история</h2>
+        <p>Сделаем небольшой обзор, чтобы вы поняли общую картину и место событий указателя среди других типов событий.</p>
+        <ul>
+            <li>
+                <p>Давным-давно, в прошлом, существовали только события мыши.</p>
+                <p>Затем получили широкое распространение сенсорные устройства, в частности телефоны и планшеты.
+                Чтобы скрипты корректно работали, они генерировали (и до сих пор генерируют) события мыши.
+                Например, касание сенсорного экрана генерирует событие <code>mousedown</code>. Таким образом,
+                сенсорные устройства позволяли работать с существующими веб-страницами.</p>
+                <p>Но сенсорные устройства во многих аспектах мощнее, чем мышь. Например, они позволяют касаться
+                экрана сразу в нескольких местах («мульти-тач»). Однако, события мыши не имеют необходимых
+                свойств для обработки таких прикосновений.</p>
+            </li>
+            <li>
+                <p>Поэтому появились события касания (Touch events), такие как <code>touchstart</code>, <code>touchend</code>,
+                <code>touchmove</code>, которые имеют специфические для касания свойства (мы не будем здесь рассматривать
+                их подробно, потому что события указателя еще лучше).</p>
+                <p>Но и этих событий оказалось недостаточно, так как существует много других устройств, таких как перо,
+                у которых есть свои особенности. Кроме того, универсальный код, который отслеживал бы и события касаний
+                и события мыши, неудобно писать.</p>
+            </li>
+            <li>
+                <p>Для решения этих задач был внедрен стандарт Point Events («События указателя»). Он предоставляет единый
+                набор событий для всех типов указывающих устройств.</p>
+            </li>
+        </ul>
+        <p>К настоящему времени спецификация <a href="https://www.w3.org/TR/pointerevents2/" target="_blank">Pointer Events Level 2</a>
+        поддерживается всеми основными браузерами, а <a href="https://w3c.github.io/pointerevents/" target="_blank">Pointer Events Level 3</a>
+        находится в разработке и почти полностью совместима с Pointer Events Level 2.</p>
+        <p>Если вы не разрабатываете под старые браузеры, такие как Internet Explorer 10, Safari 12, или более ранние
+        версии, больше нет необходимости использовать события мыши или касаний - можно переходить сразу на события указателя.</p>
+        <p>При этом ваш код будет корректно работать и с сенсорными устройствами и с мышью. Впрочем, у событий указателя есть
+        важные особенности, которые нужно знать, чтобы их правильно использовать, без лишних сюрпризов. Мы отметим их в этой статье.</p>
+    </article>
+
+    <article>
+        <h2>Типы событий указателя</h2>
+        <p>Схема именований событий указателя похожа на события мыши:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>События указателя</th>
+                <th>Аналогичные события мыши</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>pointerdown</code></td>
+                <td><code>mousedown</code></td>
+            </tr>
+            <tr>
+                <td><code>pointerup</code></td>
+                <td><code>mouseup</code></td>
+            </tr>
+            <tr>
+                <td><code>pointermove</code></td>
+                <td><code>mousemove</code></td>
+            </tr>
+            <tr>
+                <td><code>pointerover</code></td>
+                <td><code>mouseover</code></td>
+            </tr>
+            <tr>
+                <td><code>pointerout</code></td>
+                <td><code>mouseout</code></td>
+            </tr>
+            <tr>
+                <td><code>pointerenter</code></td>
+                <td><code>mouseenter</code></td>
+            </tr>
+            <tr>
+                <td><code>pointerleave</code></td>
+                <td><code>mouseleave</code></td>
+            </tr>
+            <tr>
+                <td><code>pointercancel</code></td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>getpointercapture</code></td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>lostpointercapture</code></td>
+                <td>-</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Как мы видим, для каждого <code>mouse&ltсобытия&gt</code> есть соответствующее <code>pointer&ltсобытие&gt</code>,
+        которое играет аналогичную роль. Также есть 3 дополнительных события указателя, у которых нет соответствующего
+        аналога <code>mouse...</code>, скоро мы их разберем.</p>
+
+        <article class="note">
+            <h3>Замена <code>mouse&ltсобытий&gt</code> на <code>pointer&ltсобытия&gt</code> в коде</h3>
+            <p>Мы можем заменить события <code>mouse...</code> на аналогичные <code>pointer...</code> в коде и быть
+            уверенными, что с мышью по-прежнему все будет работать нормально.</p>
+            <p>При этом поддержка сенсорных устройств «волшебным» образом улучшится. Хотя, возможно, кое-где понадобится
+            добавить <code>touch-action: none</code> в CSS. Подробнее мы разберем это ниже, в секции про <code>pointercancel</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Свойства событий указателя</h2>
+        <p>События указателя содержат те же свойства, что и события мыши, например <code>clientX/Y</code>, <code>target</code>
+        и т.п., и несколько дополнительных:</p>
+        <ul>
+            <li>
+                <p><code>pointerId</code> - уникальный идентификатор указателя, вызвавшего событие.</p>
+                <p>Идентификатор генерируется браузером. Это свойство позволяет обрабатывать несколько указателей,
+                например сенсорный экран со стилусом и мульти-тач (увидим примеры ниже).</p>
+            </li>
+            <li>
+                <p><code>pointerType</code> - тип указывающего устройства. Должен быть строкой с одним из значений:
+                «mouse», «pen» или «touch».</p>
+                <p>Мы можем использовать это свойство, чтобы определять разное поведение для разных типов указателей.</p>
+            </li>
+            <li>
+                <p><code>isPrimary</code> - равно <code>true</code> для основного указателя (первый палец в мульти-тач).</p>
+            </li>
+        </ul>
+        <p>Некоторые устройства измеряют область контакта и степень надавливания, например пальца на сенсорном экране,
+        для этого есть дополнительные свойства:</p>
+        <ul>
+            <li>
+                <p><code>width</code> - ширина области соприкосновения указателя (например, пальца) с устройством.
+                Если не поддерживается, например мышью, то всегда равно <code>1</code>.</p>
+            </li>
+            <li>
+                <p><code>height</code> - высота области соприкосновения указателя с устройством. Если не поддерживается,
+                например мышью, то всегда равно <code>1</code>.</p>
+            </li>
+            <li>
+                <p><code>pressure</code> - степень давления указателя в диапазоне от 0 до 1. Для устройств, которые не
+                поддерживают давление, принимает значение <code>0.5</code> (нажато) либо <code>0</code>.</p>
+            </li>
+            <li>
+                <p><code>tangentialPressure</code> - нормализованное тангенциальное давление.</p>
+            </li>
+            <li>
+                <p><code>tiltX</code>, <code>tiltY</code>, <code>twist</code> - специфичные для пера свойства,
+                описывающие положение пера относительно сенсорной поверхности.</p>
+            </li>
+        </ul>
+        <p>Эти свойства большинством устройств не поддерживаются, поэтому редко используются. При необходимости,
+        подробности о них можно найти в <a href="https://w3c.github.io/pointerevents/#pointerevent-interface" target="_blank">спецификации</a>.</p>
+    </article>
+
+    <article>
+        <h2>Мульти-тач</h2>
+        <p>Одной из функций, которую абсолютно не поддерживают события мыши, является мульти-тач: возможность касаться сразу
+        нескольких мест на телефоне или планшете или выполнять специальные жесты.</p>
+        <p>События указателя позволяют обрабатывать мульти-тач с помощью свойства <code>pointerId</code> и <code>isPrimary</code>.</p>
+        <p>Вот что происходит, когда пользователь касается сенсорного экрана в одном месте, а затем в другом:</p>
+        <ol>
+            <li>
+                <p>При касании первым пальцем:</p>
+                <ul>
+                    <li>
+                        <p>Происходит событие <code>pointerdown</code> со свойством <code>isPrimary=true</code> и некоторым
+                        <code>pointerId</code>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>При касании вторым и последующими пальцами (при остающемся первом):</p>
+                <ul>
+                    <li>
+                        <p>Происходит событие <code>pointerdown</code> со свойством <code>isPrimary=false</code> и уникальным
+                        <code>pointerId</code> для каждого касания.</p>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>Обратите внимание: <code>pointerId</code> присваивается не на все устройство, а для каждого касающегося пальца.
+        Если коснуться экрана 5 пальцами одновременно, получим 5 событий <code>pointerdown</code>, каждое со своими
+        координатами и индивидуальным <code>pointerId</code>.</p>
+        <p>События, связанные с первым пальцем, всегда содержат свойство <code>isPrimary=true</code>.</p>
+        <p>Мы можем отслеживать несколько касающихся экрана пальцев, используя их <code>pointerId</code>. Когда
+        пользователь перемещает, а затем убирает палец, получаем события <code>pointermove</code> и <code>pointerup</code>
+        с тем же <code>pointerId</code>, что и при событии <code>pointerdown</code>.</p>
+        <p>Вот небольшое демо, выводящее события <code>pointerdown</code> и <code>pointerup</code>:</p>
+        <div id="multi-touch">
+        </div>
+        <script>
+            let mt = document.getElementById('multi-touch');
+            mt.innerText += 'Multi-touch here\n';
+            mt.onpointerdown = mt.onpointerup = pointerDownUpHandler;
+            function pointerDownUpHandler(event) {
+                //event.preventDefault();
+                mt.innerText += `${event.type} isPrimary=${event.isPrimary} pointerId=${event.pointerId}\n`;
+                mt.scrollTop = mt.scrollHeight;
+            }
+        </script>
+        <p>Обратите внимание: чтобы увидеть разницу в <code>pointerId/isPrimary</code>, вам нужно использовать устройство
+        с сенсорным экраном, такое как телефон или планшет. Для устройств без поддержки мульти-тач, таких, как мышь,
+        всегда будет один и тот же <code>pointerId</code> со свойством <code>isPrimary=true</code>, для всех событий указателя.</p>
+    </article>
+
+    <article>
+        <h2>Событие: pointercancel</h2>
+        <p>Событие <code>pointercancel</code> происходит, когда текущее действие с указателем по какой-то причине
+        прерывается, и события указателя больше не генерируются.</p>
+        <p>К таким причинам можно отнести:</p>
+        <ul>
+            <li>
+                <p>Указывающее устройство было физически выключено.</p>
+            </li>
+            <li>
+                <p>Изменилась ориентация устройства (перевернули планшет).</p>
+            </li>
+            <li>
+                <p>Браузер решил сам обработать действие, считая его жестом мыши, масштабированием и т.п.</p>
+            </li>
+        </ul>
+        <p>Мы продемонстрируем <code>pointercancel</code> на практическом примере, чтобы увидеть, как это влияет на нас.</p>
+        <p>Допустим, мы реализуем перетаскивание («drag-and-drop») для нашего мяча, как в начале статьи
+        <a href="../3.%20Drag'n'Drop%20с%20событиями%20мыши/index.html" target="_blank">Drag'n'Drop с событиями мыши</a>.</p>
+        <p>Вот последовательность действий пользователя и соответствующие события:</p>
+        <ol>
+            <li>
+                <p>Пользователь нажимает на изображении, чтобы начать перетаскивание.</p>
+                <ul>
+                    <li>
+                        <p>Происходит событие <code>pointerdown</code>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Затем он перемещает указатель, двигая изображение.</p>
+                <ul>
+                    <li>
+                        <p>Происходит событие <code>pointermove</code> (возможно, несколько раз).</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>И тут происходит сюрприз! Браузер имеет встроенную поддержку «Drag'n'Drop» для изображений,
+                которая запускает и перехватывает процесс перетаскивания, генерируя при этом событие
+                <code>pointercancel</code>.</p>
+                <ul>
+                    <li>
+                        <p>Теперь браузер сам обрабатывает перетаскивание изображения. У пользователя есть возможность
+                        перетащить изображение мяча даже за пределы браузера, в свою почтовую программу или файловый
+                        менеджер.</p>
+                    </li>
+                    <li>
+                        <p>Событий <code>pointermove</code> для нас больше не генерируется.</p>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>Таким образом, браузер «перехватывает» действие: в начале переноса drag-and-drop запускается событие
+        <code>pointercancel</code>, и после этого события <code>pointermove</code> больше не генерируются.</p>
+        <p>Вот демо drag'n'drop с записью событий указателя (только <code>up/down</code>, <code>move</code> и
+        <code>cancel</code>) в <code>textarea</code>:</p>
+        <div class="container">
+            <p>Drag the ball</p>
+            <img id=ball1 class="ball" src="https://js.cx/clipart/ball.svg" alt>
+            <textarea id="area1" class="area"></textarea>
+        </div>
+        <script>
+            let ball1 = document.getElementById('ball1');
+            let area1 = document.getElementById('area1');
+            let counter1 = 1;
+            let previousEvent1;
+
+            ball1.onpointermove = ball1.onpointerdown = ball1.onpointerup = ball1.onpointercancel = ballPointerEventsHandler1;
+
+            function ballPointerEventsHandler1(event) {
+                if (event.type === previousEvent1) {
+                    counter1++;
+                    if (counter1 === 2) {
+                        area1.value = area1.value.trim() + ' * 2\n';
+                    } else if (counter1 > 2) {
+                        let idx = area1.value.trim().lastIndexOf('*') + 1;
+                        area1.value = area1.value.trim().slice(0, idx) + ' ' + counter1 + '\n';
+                    }
+                } else {
+                    area1.value += `${event.type}\n`;
+                    counter1 = 1;
+                }
+                previousEvent1 = event.type;
+                area1.scrollTop = area1.scrollHeight;
+            }
+        </script>
+        <p>Мы бы хотели реализовать перетаскивание самостоятельно, поэтому давайте скажем браузеру не перехватывать его.</p>
+        <p><b>Предотвращайся действие браузера по умолчанию, чтобы избежать <code>pointercancel</code>.</b></p>
+        <p>Нужно сделать две вещи:</p>
+        <ol>
+            <li>
+                <p>Предотвратить запуск встроенного drag'n'drop.</p>
+                <ul>
+                    <li>
+                        <p>Мы можем сделать это, задав <code>ball.ondragstart = () => false</code>, как описано
+                        в статье <a href="../3.%20Drag'n'Drop%20с%20событиями%20мыши/index.html" target="_blank">Drag'n'Drop с событиями мыши</a>.</p>
+                    </li>
+                    <li>
+                        <p>Это сработает для событий мыши.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Для устройств с сенсорным экраном существуют другие действия браузера, связанные с касаниями,
+                кроме drag'n'drop. Чтобы с ними не возникало проблем:</p>
+                <ul>
+                    <li>
+                        <p>Мы можем предотвратить их, добавив в CSS свойство <code>#ball {touch-action: none}</code>.</p>
+                    </li>
+                    <li>
+                        <p>Затем наш код начнет корректно работать на устройствах с сенсорным экраном.</p>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>После того как мы это сделаем, события будут работать как и ожидается, браузер не будет перехватывать
+        процесс и не будет вызывать событие <code>pointercancel</code>.</p>
+        <p>В данном демо произведены нужные действия:</p>
+        <div class="container">
+            <p>Drag the ball</p>
+            <img id=ball2 class="ball" src="https://js.cx/clipart/ball.svg" alt>
+            <textarea id="area2" class="area"></textarea>
+        </div>
+        <script>
+            let ball2 = document.getElementById('ball2');
+            let area2 = document.getElementById('area2');
+            let counter2 = 1;
+            let previousEvent2;
+
+            ball2.onpointermove = ball2.onpointerdown = ball2.onpointerup = ball2.onpointercancel = ballPointerEventsHandler2;
+
+            function ballPointerEventsHandler2(event) {
+                if (event.type === previousEvent2) {
+                    counter2++;
+                    if (counter2 === 2) {
+                        area2.value = area2.value.trim() + ' * 2\n';
+                    } else if (counter2 > 2) {
+                        let idx = area2.value.trim().lastIndexOf('*') + 1;
+                        area2.value = area2.value.trim().slice(0, idx) + ' ' + counter2 + '\n';
+                    }
+                } else {
+                    area2.value += `${event.type}\n`;
+                    counter2 = 1;
+                }
+                previousEvent2 = event.type;
+                area2.scrollTop = area2.scrollHeight;
+            }
+        </script>
+        <p>Как вы можете видеть, событие <code>pointercancel</code> больше не срабатывает.</p>
+        <p>Теперь мы можем добавить код для перемещения мяча и наш drag'n'drop будет работать и для мыши и для устройств
+        с сенсорным экраном.</p>
+    </article>
+
+    <article>
+        <h2>Захват указателя</h2>
+        <p>Захват указателя - особая возможность событий указателя.</p>
+        <p>Общая идея очень проста, но поначалу может показаться странной, так как для других событий ничего подобного
+        просто нет.</p>
+        <p>Основной метод:</p>
+        <ul>
+            <li>
+                <p><code>elem.setPointerCapture(pointerId)</code> - привязывает события с данным <code>pointerId</code>
+                к <code>elem</code>. После такого вызова все события указателя с таким <code>pointerId</code> будут
+                иметь <code>elem</code> в качестве целевого элемента (как будто произошли над <code>elem</code>),
+                вне зависимости от того, где в документе они произошли.</p>
+            </li>
+        </ul>
+        <p>Другими словами, <code>elem.setPointerCapture(pointerId)</code> меняет <code>target</code> всех дальнейших
+        событий с данным <code>pointerId</code> на <code>elem</code>.</p>
+        <p>Эта привязка отменяется:</p>
+        <ul>
+            <li>
+                <p>Автоматически, при возникновении события <code>pointerup</code> или <code>pointercancel</code>.</p>
+            </li>
+            <li>
+                <p>Автоматически, если <code>elem</code> удаляется из документа.</p>
+            </li>
+            <li>
+                <p>При вызове <code>elem.releasePointerCapture(pointerId)</code>.</p>
+            </li>
+        </ul>
+        <p><b>Захват указателя используется для упрощения операций с переносом (drag'n'drop) элементов.</b></p>
+        <p>В качестве примера давайте вспомним реализацию слайдера из статьи
+        <a href="../3.%20Drag'n'Drop%20с%20событиями%20мыши/index.html" target="_blank">Drag'n'Drop с событиями мыши</a>.</p>
+        <p>Мы сделаем элемент для слайдера - полоску с «ползунком» (<code>thumb</code>) внутри:</p>
+        <code>
+            &ltdiv class="slider"&gt<br>
+            &nbsp;&nbsp;&ltdiv class="thumb"&gt&lt/div&gt<br>
+            &lt/div&gt
+        </code>
+        <p>Со стилями это выглядит следующим образом:</p>
+        <div class="slider">
+            <div class="thumb"></div>
+        </div>
+        <p>Затем он работает так:</p>
+        <ol>
+            <li>
+                <p>Пользователь сначала нажимает на ползунок <code>thumb</code> - срабатывает <code>pointerdown</code>.</p>
+            </li>
+            <li>
+                <p>Затем двигает его указателем - срабатывает <code>pointermove</code>, и наш код перемещает элемент
+                <code>thumb</code>.</p>
+                <ul>
+                    <li>
+                        <p>Причем, по мере движения, указатель может покидать ползунок, перемещаться выше или ниже.
+                        При этом ползунок должен передвигаться строго по горизонтали, на одной линии с указателем.</p>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>В решении, основанном на событиях мыши, для отслеживания всех движений указателя, включая те, которые
+        происходят выше/ниже элемента <code>thumb</code>, мы должны были назначить обработчик события
+        <code>mousemove</code> на весь документ <code>document</code>.</p>
+        <p>Однако, это не самое правильное решение. Одна из проблем - это то, что движения указателя по документу
+        могут вызвать сторонние эффекты, заставить работать другие обработчики (например <code>mouseover</code>),
+        не имеющие отношения к слайдеру.</p>
+        <p>Именно здесь вступает в игру <code>setPointerCapture</code>:</p>
+        <ul>
+            <li>
+                <p>Мы можем вызывать <code>thumb.setPointerCapture(event.pointerId)</code> в обработчике <code>pointerdown</code>.</p>
+            </li>
+            <li>
+                <p>Тогда дальнейшие события указателя до <code>pointerup/cancel</code> будут привязаны к <code>thumb</code>.</p>
+            </li>
+            <li>
+                <p>Затем, когда произойдет <code>pointerup</code> (передвижение завершено), привязка будет автоматически
+                удалена, нам об этом не нужно беспокоиться.</p>
+            </li>
+        </ul>
+        <p>Так что, даже если пользователь будет двигать указателем по всему документу, обработчики событий будут
+        вызваны на <code>thumb</code>. Причем все свойства объекта события, такие как <code>clientX/clientY</code>,
+        будут корректны - захват указателя влияет только на <code>target/currentTarget</code>.</p>
+        <p>Вот основной код:</p>
+        <code>
+            thumb.onpointerdown = function(event) {<br>
+            &nbsp;&nbsp;// Перенацелить все события указателя (до pointerup) на thumb<br>
+            &nbsp;&nbsp;thumb.setPointerCapture(event.pointerId);<br>
+            &nbsp;&nbsp;// Начать отслеживание перемещения указателя<br>
+            &nbsp;&nbsp;thumb.onpointermove = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// Перемещение слайдера: отслеживание thumb, т.к. все события указателя перенацелены на него<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let newLeft = event.clientX - slider.getBoundingClientRect().left;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;thumb.style.left = newLeft + 'px';<br>
+            &nbsp;&nbsp;};<br>
+            &nbsp;&nbsp;// Если сработало событие pointerup, завершить отслеживание перемещения указателя<br>
+            &nbsp;&nbsp;thumb.onpointerup = function(event) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;thumb.onpointermove = null;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;thumb.onpointerup = null;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;// ... При необходимости также обработайте «конец перемещения»<br>
+            &nbsp;&nbsp;};<br>
+            };<br>
+            // Примечание: нет необходимости вызывать thumb.releasePointerCapture, это происходит автоматически при pointerup
+        </code>
+        <p>Полное демо:</p>
+        <div class="container">
+            <div class="slider" id="slider">
+                <div class="thumb" id="thumb"></div>
+            </div>
+            <p style="border: 1px solid black; padding: 5px" onpointermove="this.innerText=new Date();">Mouse over here to see the date</p>
+        </div>
+        <script>
+            let slider = document.getElementById('slider');
+            let thumb = document.getElementById('thumb');
+
+            thumb.addEventListener('pointerdown', function(event) {
+                thumb.setPointerCapture(event.pointerId);
+
+                let shiftX = event.clientX - thumb.getBoundingClientRect().left;
+
+                thumb.onpointermove = function(event) {
+                    let newLeft = event.clientX - slider.getBoundingClientRect().left - shiftX;
+                    if (newLeft < 0) {
+                        newLeft = 0;
+                    }
+                    let rightEdge = slider.offsetWidth - thumb.offsetWidth;
+                    if (newLeft > rightEdge) {
+                        newLeft = rightEdge;
+                    }
+                    thumb.style.left = newLeft + 'px';
+                }
+
+                thumb.addEventListener('pointerup', function() {
+                    thumb.onpointermove = null;
+                }, {once: true});
+            });
+        </script>
+        <p>В демонстрационном примере также имеется дополнительный элемент с обработчиком <code>onmouseover</code>, показывающий
+        текущую дату.</p>
+        <p>Обратите внимание: пока вы перетаскиваете ползунок, вы можете навести курсор на этот элемент, и его обработчик
+        <i>не сработает</i>.</p>
+        <p>Таким образом, благодаря <code>setPointerCapture</code> перетаскивание теперь не имеет побочных эффектов.</p>
+        <p>Таким образом, мы имеем два бонуса:</p>
+        <ol>
+            <li>
+                <p>Код становится чище, поскольку нам больше не нужно добавляться/удалять обработчики для всего
+                документа. Удаление привязки происходит автоматически.</p>
+            </li>
+            <li>
+                <p>Если в документе есть какие-то другие обработчики <code>pointermove</code>, то они не будут
+                нечаянно вызваны, пока пользователь находится в процессе перетаскивания слайдера.</p>
+            </li>
+        </ol>
+
+        <h3>События при захвате указателя</h3>
+        <p>Существует два связанных с захватом события:</p>
+        <ul>
+            <li>
+                <p><code>gotpointercapture</code> срабатывает, когда элемент использует <code>setPointerCapture</code>
+                для включения захвата.</p>
+            </li>
+            <li>
+                <p><code>lostpointercapture</code> срабатывает при освобождении от захвата: явно с помощью
+                <code>releasePointerCapture</code> или автоматически, когда происходит событие <code>pointerup/pointercancel</code>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>События указателя позволяют одновременно обрабатывать действия с помощью мыши, касания и пера, в едином фрагменте кода.</p>
+        <p>События указателя расширяют события мыши. Мы можем заменить <code>mouse</code> на <code>pointer</code> в названиях
+        событий и код продолжит работать для мыши, при этом получив лучшую поддержку других типов устройств.</p>
+        <p>При обработке переносов и сложных касаний, которые браузер может попытаться обработать сам, не забывайте
+        отменять действие браузера и ставить <code>touch-action: none</code> в CSS для элементов, с которыми мы взаимодействуем.</p>
+        <p>Дополнительные возможности событий указателя:</p>
+        <ul>
+            <li>
+                <p>Поддержка мультитач с помощью <code>pointerId</code> и <code>isPrimary</code>.</p>
+            </li>
+            <li>
+                <p>Особые свойства для определенных устройств, такие как <code>pressure</code>, <code>width/height</code> и другие.</p>
+            </li>
+            <li>
+                <p>Захват указателя: мы можем перенаправить все события указателя на определенный элемент до наступления
+                события <code>pointerup</code>/<code>pointercancel</code>.</p>
+            </li>
+        </ul>
+        <p>На данный момент события указателя поддерживаются в основных браузерах, поэтому мы можем безопасно переходить
+        на них, особенно если нет необходимости в поддержке IE10 и Safari12. И даже для этих браузеров есть полифилы,
+        которые добавляют эту поддержку.</p>
+    </article>
+</body>
+</html>
