@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Прокрутка</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Прокрутка</h2>
+        <p>Событие прокрутки <code>scroll</code> позволяет реагировать на прокрутку страницы или элемента. Есть много
+        хороших вещей, которые при этом можно сделать.</p>
+        <p>Например:</p>
+        <ul>
+            <li>
+                <p>Показать/скрыть дополнительные элементы управления или информацию, основываясь на том, в какой части
+                документа находится пользователь.</p>
+            </li>
+            <li>
+                <p>Подгрузить данные, когда пользователь прокручивает страницу вниз до конца.</p>
+            </li>
+        </ul>
+        <p>Вот небольшая функция для отображения текущей прокрутки:</p>
+        <code>
+            windows.addEventsListener('scroll', function() {<br>
+            &nbsp;&nbsp;document.getElementById('showScroll').innerHTML = pageYOffset + 'px';<br>
+            });
+        </code>
+        <p>В действии:</p>
+        <p>Текущая прокрутка = <b id="currentScroll">0px</b></p>
+        <script>
+            window.addEventListener('scroll', function() {
+                document.getElementById('currentScroll').innerHTML = scrollY + 'px';
+            });
+        </script>
+        <p>Событие <code>scroll</code> работает как на <code>window</code>, так и на других элементах, на которых
+        включена прокрутка.</p>
+    </article>
+
+    <article>
+        <h2>Предотвращение прокрутки</h2>
+        <p>Как можно сделать что-то непрокручиваемым?</p>
+        <p>Нельзя предотвратить прокрутку, используя <code>event.preventDefault()</code> в обработчике <code>onscroll</code>,
+        потому что он срабатывает <i>после</i> того, как прокрутка уже произошла.</p>
+        <p>Но можно предотвратить прокрутку, используя <code>event.preventDefault()</code> на событии, которое вызывает
+        прокрутку, например, на событии <code>keydown</code> для клавиш <kbd>PageUp</kbd> и <kbd>PageDown</kbd>.</p>
+        <p>Если поставить на них обработчики, в которых вызвать <code>event.preventDefault()</code>, то прокрутка не
+        начнется.</p>
+        <p>Способов инициировать прокрутку много, поэтому более надежный способ - использовать CSS свойство <code>overflow</code>.</p>
+    </article>
+</body>
+</html>
