@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавьте пункт к выпадающему списку</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+        }
+
+        select {
+            width: 20%;
+        }
+    </style>
+</head>
+<body>
+    <select id="genres">
+        <option value="rock">Рок</option>
+        <option value="blues">Блюз</option>
+    </select>
+
+    <script>
+        let select = document.getElementById('genres');
+        let selectedOption = select.options[select.selectedIndex];
+        let selectedValue = selectedOption.value;
+        let selectedText = selectedOption.text;
+        console.log(`Выбранный пункт:\n\tЗначение: ${selectedValue}\n\tТекст: ${selectedText}`);
+
+        let optionClassic = new Option('Классика', 'classic', true, true);
+        select.append(optionClassic);
+    </script>
+</body>
+</html>

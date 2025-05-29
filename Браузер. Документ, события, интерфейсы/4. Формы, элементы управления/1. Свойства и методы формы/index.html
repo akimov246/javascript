@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойства и методы формы</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Свойства и методы формы</h2>
+        <p>Формы и элементы управления, такие как <code>&ltinput&gt</code>, имеют множество специальных свойств и событий.</p>
+        <p>Работать с формами станет намного удобнее, когда мы их изучим.</p>
+    </article>
+
+    <article>
+        <h2>Навигация: формы и элементы</h2>
+        <p>Формы в документе входят в специальную коллекцию <code>document.forms</code>.</p>
+        <p>Это так называемая «именованная» коллекция: мы можем использовать для получения формы как ее имя, так и
+        порядковый номер в документе.</p>
+        <code>
+            document.forms.my - форма с именем <span style="color: green">"my"</span> (name=<span style="color: green">"my"</span>)<br>
+            document.forms[0] - первая форма в документе
+        </code>
+        <p>Когда мы уже получили форму, любой элемент доступен в именованной коллекции <code>form.elements</code>.</p>
+        <p>Например:</p>
+        <code>
+            &ltform name="my"&gt<br>
+            &nbsp;&nbsp;&ltinput name="one" value="1"&gt<br>
+            &nbsp;&nbsp;&ltinput name="two" value="2"&gt<br>
+            &lt/form&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Получаем форму<br>
+            &nbsp;&nbsp;let form = document.forms.my; // &ltform name="my"&gt element<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// Получаем элемент<br>
+            &nbsp;&nbsp;let elem = form.elements.one; // &ltinput name="one"&gt element<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;alert(elem.value); // 1<br>
+            &lt/script&gt
+        </code>
+        <p>Может быть несколько элементов с одним и тем же именем, это часто бывает с кнопками-переключателями
+        <code>radio</code>.</p>
+        <p>В этом случае <code>form.elements[name]</code> является коллекцией, например:</p>
+        <code>
+            &ltform&gt<br>
+            &nbsp;&nbsp;&ltinput type="radio" name="age" value="10"&gt<br>
+            &nbsp;&nbsp;&ltinput type="radio" name="age" value="20"&gt<br>
+            &lt/form&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;let form = document.forms[0];<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;let ageElems = form.elements.age;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;alert(ageElems[0]); // [object HTMLInputElement]<br>
+            &lt/script&gt
+        </code>
+        <p>Эти навигационные свойства не зависят от структуры тегов внутри формы. Все элементы управления формы,
+        как бы глубоко они не находились в форме, доступны в коллекции <code>form.elements</code>.</p>
+
+        <article class="note">
+            <h3><code>&ltfieldset&gt</code> как «подформа»</h3>
+            <p>Форма может содержать один или несколько элементов <code>&ltfieldset&gt</code> внутри себя. Они также
+            поддерживают свойство <code>elements</code>, в котором находятся элементы управления внутри них.</p>
+            <p>Например:</p>
+            <code>
+                &ltbody&gt<br>
+                &nbsp;&nbsp;&ltform id="form"&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&ltfieldset name="userFields"&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltlegend&gtinfo&lt/legend&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&ltinput name="login" type="text"&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&lt/fieldset&gt<br>
+                &nbsp;&nbsp;&lt/form&gt<br>
+                &nbsp;&nbsp;<br>
+                &nbsp;&nbsp;&ltscript&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert(form.elements.login); // &ltinput name="login"&gt<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;let fieldset = form.elements.userFields;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert(fieldset); // HTMLFieldSetElement<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;// Мы можем достать элемент по имени как из формы, так и из fieldset с ним<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;alert(fieldset.elements.login === form.elements.login); // true<br>
+                &nbsp;&nbsp;&lt/script&gt<br>
+                &lt/body&gt
+            </code>
+        </article>
+
+        <article class="warning">
+            <h3>Сокращенная форма записи: <code>form.name</code></h3>
+            <p>Есть более короткая запись: мы можем получить доступ к элементу через <code>form[index/name]</code>.</p>
+            <p>Другими словами, вместо <code>form.elements.login</code> мы можем написать <code>form.login</code>.</p>
+            <p>Это также работает, но есть небольшая проблема: если мы получаем элемент, а затем меняем его свойство
+            <code>name</code>, то он все еще будет доступен под старым именем (также, как и под новым).</p>
+            <p>В этом легче разобраться на примере:</p>
+            <code>
+                &ltform id="form"&gt<br>
+                &nbsp;&nbsp;&ltinput name="login"&gt<br>
+                &lt/form&gt<br>
+                <br>
+                &ltscript&gt<br>
+                &nbsp;&nbsp;alert(form.elements.login === form.login); // true, ведь это одинаковые &ltinput&gt<br>
+                &nbsp;&nbsp;<br>
+                &nbsp;&nbsp;form.login.name = 'username'; // Изменяем свойство name у элемента input<br>
+                &nbsp;&nbsp;<br>
+                &nbsp;&nbsp;// form.elements обновили свои имена:<br>
+                &nbsp;&nbsp;alert(form.elements.login); // undefined<br>
+                &nbsp;&nbsp;alert(form.elements.username); // input<br>
+                &nbsp;&nbsp;<br>
+                &nbsp;&nbsp;// А в form мы можем использовать оба имени: новое и старое<br>
+                &nbsp;&nbsp;alert(form.username === form.login); // true<br>
+                &lt/script&gt
+            </code>
+            <p>Обычно это не вызывает проблем, так как мы редко меняем имена у элементов формы.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Обратная ссылка: element.form</h2>
+        <p>Для любого элемента форма доступна через <code>element.form</code>. Так что форма ссылается на все элементы,
+        а эти элементы ссылаются на форму.</p>
+        <p>Вот иллюстрация:</p>
+        <img src="https://learn.javascript.ru/article/form-elements/form-navigation.svg" alt style="width: 40%">
+        <p>Пример:</p>
+        <code>
+            &ltform id="form"&gt<br>
+            &nbsp;&nbsp;&ltinput type="text" name="login"&gt<br>
+            &lt/form&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// form → element<br>
+            &nbsp;&nbsp;let login = form.login;<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;// element → form<br>
+            &nbsp;&nbsp;alert(login.form); // HTMLFormElement<br>
+            &lt/script&gt
+        </code>
+    </article>
+
+    <article>
+        <h2>Элементы формы</h2>
+        <p>Рассмотрим элементы управления, используемые в формах.</p>
+
+        <h3>input и textarea</h3>
+        <p>К их значению можно получить доступ через свойство <code>input.value</code> (строка) или
+        <code>input.checked</code> (булево значение) для чекбоксов.</p>
+        <p>Вот так:</p>
+        <code>
+            input.value = 'Новое значение';<br>
+            textarea.value = 'Новый текст';<br>
+            <br>
+            input.checked = true; // Для чекбоксов и переключателей
+        </code>
+
+        <article class="warning">
+            <h3>Используйте <code>textarea.value</code> вместо <code>textarea.innerHTML</code></h3>
+            <p>Обратим внимание: хоть элемент <code>&lttextarea&gt...&lt/textarea&gt</code> и хранит свое значение
+            как вложенный HTML, нам не следует использовать <code>textarea.innerHTML</code> для доступа к нему.</p>
+            <p>Там хранится только тот HTML, который был изначально на странице, а не текущее значение.</p>
+        </article>
+
+        <h3>select и option</h3>
+        <p>Элемент <code>&ltselect&gt</code> имеет 3 важных свойства:</p>
+        <ol>
+            <li>
+                <p><code>select.options</code> - коллекция из подэлементов <code>&ltoption&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>select.value</code> - значение выбранного в данный момент <code>&ltoption&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>select.selectedIndex</code> - номер выбранного <code>&ltoption&gt</code>.</p>
+            </li>
+        </ol>
+        <p>Они дают три разных способа установить значение в <code>&ltselect&gt</code>:</p>
+        <ol>
+            <li>
+                <p>Найти соответствующий элемент <code>&ltoption&gt</code> и установить в <code>option.selected</code>
+                значение <code>true</code>.</p>
+            </li>
+            <li>
+                <p>Установить в <code>select.value</code> значение нужного <code>&ltoption&gt</code>.</p>
+            </li>
+            <li>
+                <p>Установить в <code>select.selectedIndex</code> номер нужного <code>&ltoption&gt</code>.</p>
+            </li>
+        </ol>
+        <p>Первый способ наиболее понятный, но <code>(2)</code> и <code>(3)</code> являются более удобными при работе.</p>
+        <p>Вот эти способы на примере:</p>
+        <code>
+            &ltselect id="select"&gt<br>
+            &nbsp;&nbsp;&ltoption value="apple"&gtЯблоко&lt/option&gt<br>
+            &nbsp;&nbsp;&ltoption value="pear"&gtГруша&lt/option&gt<br>
+            &nbsp;&nbsp;&ltoption value="banana"&gtБанан&lt/option&gt<br>
+            &lt/select&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Все три строки делают одно и то же<br>
+            &nbsp;&nbsp;select.options[2].selected = true;<br>
+            &nbsp;&nbsp;select.value = 'banana'<br>
+            &nbsp;&nbsp;select.selectedIndex = 2;<br>
+            &lt/script&gt
+        </code>
+        <p>В отличие от большинства других элементов управления, <code>&ltselect&gt</code> позволяет нам выбрать несколько
+        вариантов одновременно, если у него стоит атрибут <code>multiple</code>. Эту возможность используют редко,
+        но в этом случае для работы со значениями необходимо использовать первый способ, то есть ставить или удалять
+        свойство <code>selected</code> у подэлементов <code>&ltoption&gt</code>.</p>
+        <p>Их коллекцию можно получить как <code>select.options</code>, например:</p>
+        <code>
+            &ltselect id="select" <span class="selectedCode">multiple</span>&gt<br>
+            &nbsp;&nbsp;&ltoption value="blues" selected&gtБлюз&lt/option&gt<br>
+            &nbsp;&nbsp;&ltoption value="rock" selected&gtРок&lt/option&gt<br>
+            &nbsp;&nbsp;&ltoption value="classic"&gtКлассика&lt/option&gt<br>
+            &lt/select&gt<br>
+            <br>
+            &ltscript&gt<br>
+            &nbsp;&nbsp;// Получаем все выбранные значения из select с multiple<br>
+            &nbsp;&nbsp;let selected = Array.from(select.options)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;.filter(option => option.selected)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;.map(option => option.value);<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;alert(selected); // blues,rock<br>
+            &lt/script&gt
+        </code>
+        <p>Полное описание элемента <code>&ltselect&gt</code> доступно в спецификации<br>
+        <a href="https://html.spec.whatwg.org/multipage/forms.html#the-select-element" target="_blank">https://html.spec.whatwg.org/multipage/forms.html#the-select-element</a>.</p>
+
+        <h3>new Option</h3>
+        <p>Элемент <code>&ltoption&gt</code> редко используется сам по себе, но и здесь есть кое-что интересное.</p>
+        <p>В <a href="https://html.spec.whatwg.org/multipage/forms.html#the-select-element" target="_blank">спецификации</a>
+        есть красивый короткий синтаксис для создания элемента <code>&ltoption&gt</code>:</p>
+        <code>option = new Option(text, value, defaultSelected, selected);</code>
+        <p>Параметры:</p>
+        <ul>
+            <li>
+                <p><code>text</code> - текст внутри <code>&ltoption&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>value</code> - значение.</p>
+            </li>
+            <li>
+                <p><code>defaultSelected</code> - если <code>true</code>, то ставится HTML-атрибут <code>selected</code>.</p>
+            </li>
+            <li>
+                <p><code>selected</code> - если <code>true</code>, то элемент <code>&ltoption&gt</code> будет выбранным.</p>
+            </li>
+        </ul>
+        <p>Тут может быть небольшая путаница с <code>defaultSelected</code> и <code>selected</code>. Все просто:
+        <code>defaultSelected</code> задает HTML-атрибут, его можно получить как <code>option.getAttribute('selected')</code>,
+        а <code>selected</code> - выбрано значение или нет, именно его важно поставить правильно. Впрочем, обычно
+        ставят оба этих значения в <code>true</code> или не ставят вовсе (т.е. <code>false</code>).</p>
+        <p>Пример:</p>
+        <code>
+            let option = new Option('Текст', 'value');<br>
+            // Создаст &ltoption value="value"&gtТекст&lt/option&gt
+        </code>
+        <p>Тот же элемент, но выбранный:</p>
+        <code>
+            let option = new Option('Текст', 'value', true, true);
+        </code>
+        <p>Элементы <code>&ltoption&gt</code> имеют свойства:</p>
+        <ul>
+            <li>
+                <p><code>option.selected</code> - выбрана ли опция.</p>
+            </li>
+            <li>
+                <p><code>option.index</code> - номер опции среди других в списке <code>&ltselect&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>option.value</code> - значение опции.</p>
+            </li>
+            <li>
+                <p><code>option.text</code> - содержимое опции (то, что видит посетитель).</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Ссылки</h2>
+        <ul>
+            <li>
+                <p>Спецификация: <a href="https://html.spec.whatwg.org/multipage/forms.html" target="_blank">https://html.spec.whatwg.org/multipage/forms.html</a>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Свойства для навигации по формам:</p>
+        <ul>
+            <li>
+                <p><code>document.forms</code></p>
+                <p>Форма доступна через <code>document.forms[name/index]</code>.</p>
+            </li>
+            <li>
+                <p><code>form.elements</code></p>
+                <p>Элементы формы доступны через <code>form.elements[name/index]</code>, или можно просто
+                использовать <code>form[name/index]</code>. Свойство <code>elements</code> также работает для
+                <code>&ltfieldset&gt</code>.</p>
+            </li>
+            <li>
+                <p><code>element.form</code></p>
+                <p>Элементы хранят ссылку на свою форму в свойстве <code>form</code>.</p>
+            </li>
+        </ul>
+        <p>Значения элементов формы доступны через <code>input.value</code>, <code>textarea.value</code>,
+        <code>select.value</code> и т.д. либо <code>input.checked</code> для чекбоксов и переключателей.</p>
+        <p>Для элемента <code>&ltselect&gt</code> мы также можем получить индекс выбранного пункта через
+        <code>select.selectedIndex</code>, либо используя коллекцию пунктов <code>select.options</code>.</p>
+    </article>
+</body>
+</html>

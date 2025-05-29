@@ -53,3 +53,9 @@ img {
     width: 80%;
     height: auto;
 }
+
+span.selectedCode {
+    display: inline-block;
+    border: 1px solid red;
+    background: lightgoldenrodyellow;
+}
