@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактируемый div</title>
+    <style>
+        div, textarea {
+            border: 1px solid black;
+            width: 30%;
+            height: 200px;
+            display: block;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+        }
+
+        ul {
+            line-height: 3px;
+        }
+
+        :focus {
+            outline: 2px solid blue;
+        }
+    </style>
+</head>
+<body>
+    <ul>
+        <li>
+            <p>Кликните на div ниже, чтобы отредактировать текст.</p>
+        </li>
+        <li>
+            <p>Нажатие на Enter или потеря фокуса с ввода сохраняет содержимое.</p>
+        </li>
+    </ul>
+    HTML-код разрешен.
+    <div>
+        Текст
+    </div>
+
+    <script>
+        let div = document.querySelector('div');
+        let textarea = document.createElement('textarea');
+
+        div.addEventListener('pointerdown', function() {
+            div.replaceWith(textarea);
+        });
+
+        function textareaBlurHandler(event) {
+            div.innerHTML = textarea.value;
+            textarea.replaceWith(div);
+        }
+
+        textarea.addEventListener('blur', textareaBlurHandler);
+        textarea.addEventListener('keydown', function(event) {
+            if (event.code === 'Enter') {
+                textarea.blur();
+            }
+        });
+    </script>
+</body>
+</html>
