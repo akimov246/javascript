@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Депозитный калькулятор</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+        }
+
+        input, select {
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .display {
+            display: flex;
+            justify-content: space-evenly;
+            margin-top: 10px;
+        }
+
+        #was, #will {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .graph {
+            width: 50px;
+        }
+
+        #was div.graph {
+            background: red;
+            position: relative;
+        }
+
+        #will div.graph {
+            background: green;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <p>Депозитный калькулятор</p>
+        <form>
+            <table>
+                <tbody>
+                <tr>
+                    <td>Первоначальный депозит</td>
+                    <td><input id="depositInput" type="number" value="10000" min="0"></td>
+                </tr>
+                <tr>
+                    <td>Срок вклада</td>
+                    <td><select id="termSelect">
+                        <option value="3">3 (минимум)</option>
+                        <option value="6">6 (полгода)</option>
+                        <option value="12" selected>12 (год)</option>
+                        <option value="18">18 (1.5 года)</option>
+                        <option value="24">24 (2 года)</option>
+                        <option value="30">30 (2.5 года)</option>
+                        <option value="36">36 (3 года)</option>
+                        <option value="60">60 (5 лет)</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <td>Годовая процентная ставка</td>
+                    <td><input id="interestInput" type="number" value="5" min="0"></td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+        <div class="display">
+            <div id="was">
+                <b>Было:</b>
+                <span></span>
+                <div class="graph"></div>
+            </div>
+            <div id="will">
+                <b>Станет:</b>
+                <span></span>
+                <div class="graph"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let depositInput = document.getElementById('depositInput');
+        let termSelect = document.getElementById('termSelect');
+        let interestInput = document.getElementById('interestInput');
+        let wasValue = document.querySelector('#was span');
+        let willValue = document.querySelector('#will span');
+        let wasGraph = document.getElementById('was').querySelector('.graph');
+        let willGraph = document.getElementById('will').querySelector('.graph');
+
+        function inputHandler() {
+            let initial = depositInput.value || 0;
+            let interest = interestInput.value || 0;
+            let term = termSelect.value;
+            let result = Math.round(initial * (1 + (interest / 100) / 12) ** term);
+            wasValue.innerHTML = Number(initial).toLocaleString('en-US');
+            willValue.innerHTML = Number(result).toLocaleString('en-US')
+            wasGraph.style.height = willGraph.offsetHeight / result * initial + 'px';
+            wasGraph.style.top = willGraph.offsetHeight - wasGraph.offsetHeight + 'px';
+        }
+
+        inputHandler();
+        depositInput.oninput = termSelect.onchange = interestInput.oninput = inputHandler;
+    </script>
+</body>
+</html>
