@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Отправка формы: событие и метод submit</title>
+    <link href="../../../style.css" rel="stylesheet">
+</head>
+<body>
+    <article>
+        <h2>Отправка формы: событие и метод submit</h2>
+        <p>При отправке формы срабатывает событие <code>submit</code>, оно обычно используется для проверки (валидации)
+        формы перед ее отправкой на сервер или для предотвращения отправки и обработки ее с помощью JavaScript.</p>
+        <p>Метод <code>form.submit()</code> позволяет инициировать отправку формы из JavaScript. Мы можем использовать
+        его для динамического создания и отправки наших собственных форм на сервер.</p>
+        <p>Давайте посмотрим на них подробнее.</p>
+    </article>
+
+    <article>
+        <h2>Событие: submit</h2>
+        <p>Есть два основных способа отправить форму:</p>
+        <ol>
+            <li>
+                <p>Первый - нажать кнопку <code>&ltinput type="submit"&gt</code> или <code>&ltinput type="image"&gt</code>.</p>
+            </li>
+            <li>
+                <p>Второй - нажать <kbd>Enter</kbd>, находясь на каком-нибудь поле.</p>
+            </li>
+        </ol>
+        <p>Оба действия сгенерируют событие <code>submit</code> на форме. Обработчик может проверить данные, и если
+        есть ошибки, показать их и вызвать <code>event.preventDefault()</code>, тогда форма не будет отправлена на сервер.</p>
+        <p>В примере ниже:</p>
+        <ol>
+            <li>
+                <p>Перейдите в текстовое поле и нажмите <kbd>Enter</kbd>.</p>
+            </li>
+            <li>
+                <p>Нажмите <code>&ltinput type="submit"&gt</code>.</p>
+            </li>
+        </ol>
+        <p>Оба действие показывают <code>alert</code> и форма не отправится благодаря <code>return false</code>:</p>
+        <code>
+            &ltform onsubmit="alert('submit!'); return false;"&gt<br>
+            &nbsp;&nbsp;Первый пример: нажмите Enter: &ltinput type="text" value="Текст"&gt&ltbr&gt<br>
+            &nbsp;&nbsp;Второй пример: нажмите на кнопку "Отправить": &ltinput type="submit" value="Отправить"&gt<br>
+            &lt/form&gt
+        </code>
+        <div style="margin: 5px; display: flex">
+            <form style="display: flex; flex-direction: column; align-items: stretch;" onsubmit="alert('submit'); return false;">
+                <label style="margin-bottom: 0.1rem;">Первый пример: нажмите Enter: <input type="text" placeholder="Текст"></label>
+                <label>Второй пример: нажмите на кнопку "Отправить": <button type="submit">Отправить</button></label>
+            </form>
+        </div>
+
+        <article class="note">
+            <h3>Взаимосвязь между <code>submit</code> и <code>click</code></h3>
+            <p>При отправке формы по нажатию <kbd>Enter</kbd> в текстовом поле, генерируется событие <code>click</code>
+            на кнопке <code>&ltinput type="submit"&gt</code>.</p>
+            <p>Это довольно забавно, учитывая что никакого клика не было.</p>
+            <p>Пример:</p>
+            <code>
+                &ltform onsubmit="alert('submit!'); return false;"&gt<br>
+                &nbsp;&nbsp;&ltinput type="text" size=30 value="Установите фокус здесь и нажмите Enter"&gt<br>
+                &nbsp;&nbsp;&ltinput type="submit" value="Отправить" onclick="alert('click')"&gt<br>
+                &lt/form&gt
+            </code>
+            <div style="margin: 0.5rem">
+                <form onsubmit="alert('submit'); return false;">
+                    <input type="text" size="35" placeholder="Установите фокус здесь и нажмите Enter">
+                    <button type="submit" onclick="alert('click')">Отправить</button>
+                </form>
+            </div>
+        </article>
+    </article>
+
+    <article>
+        <h2>Метод: submit</h2>
+        <p>Чтобы отправить форму на сервер вручную, мы можем вызвать метод <code>form.submit()</code>.</p>
+        <p>При этом событие <code>submit</code> не генерируется. Предполагается, что если программист вызывает метод
+        <code>form.submit()</code>, то он уже выполнил всю соответствующую обработку.</p>
+        <p>Иногда это используется для генерации формы и отправки ее вручную, например так:</p>
+        <code>
+            let form = document.createElement('form');<br>
+            form.action = 'https://google.com/search';<br>
+            form.method = 'get';<br>
+            form.innerHTML = '&ltinput name="q" value="test"&gt';<br>
+            <br>
+            // Перед отправкой формы, ее нужно вставить в документ<br>
+            document.body.append(form);<br>
+            <br>
+            form.submit();
+        </code>
+        <div style="margin: 0.5rem">
+            <button type="submit">Запустить пример выше</button>
+        </div>
+        <script>
+            let button = document.currentScript.previousElementSibling.firstElementChild;
+            button.addEventListener('pointerdown', function() {
+                let form = document.createElement('form');
+                form.action = 'https://google.com/search';
+                form.method = 'get';
+                form.innerHTML = '<input type="text" name="q" value="test">';
+                document.body.append(form);
+                form.submit();
+                form.remove();
+            });
+        </script>
+    </article>
+</body>
+</html>

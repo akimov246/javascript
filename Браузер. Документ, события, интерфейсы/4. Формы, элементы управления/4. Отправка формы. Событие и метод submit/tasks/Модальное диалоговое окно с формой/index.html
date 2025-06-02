@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Модальное диалоговое окно с формой</title>
+    <style>
+        body {
+            background: white;
+        }
+
+        #coverDiv {
+            position: absolute;
+            background: lightgoldenrodyellow;
+            opacity: 0.3;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        #prompt-form-container {
+            background: white;
+            position: fixed;
+            border: 1px solid black;
+            border-radius: 0.5rem;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #prompt-form {
+            padding: 0.5rem 0.5rem 0.5rem 6rem;
+            display: flex;
+            flex-direction: column;
+            background-image: url("https://en.js.cx/clipart/prompt.png");
+            background-repeat: no-repeat;
+            background-position: left 3% top 15%;
+            align-items: center;
+        }
+
+        #prompt-form * {
+            margin: 0.1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Кликните на кнопку ниже</h1>
+    <button>Кликните, чтобы увидеть форму</button>
+
+    <div id="prompt-form-container" hidden>
+        <form id="prompt-form">
+            <div id="prompt-message">Введите что-нибудь</div>
+            <input name="text" type="text">
+            <div>
+                <input name="ok" type="submit" value="OK">
+                <input type="button" name="cancel" value="Отмена">
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.querySelector('button').addEventListener('pointerdown', function() {
+            showPrompt('С табом не разобрался. По какой-то причине не хочет ставить focus() на элементах формы.', value => alert(`Вы ввели: ${value}`));
+        });
+
+        function showPrompt(html, callback) {
+            let promptFormContainer = document.getElementById('prompt-form-container');
+            let promptMessage = document.getElementById('prompt-message');
+            let promptForm = document.getElementById('prompt-form');
+            let buttonOk = promptForm.ok;
+            let buttonCancel = promptForm.cancel;
+
+            let coverDiv = document.createElement('div');
+            coverDiv.id = 'coverDiv';
+            document.body.insertAdjacentElement('afterbegin', coverDiv);
+
+            promptMessage.innerHTML = html;
+            promptFormContainer.hidden = false;
+
+            promptForm.text.value = '';
+            document.querySelector('input[name="text"]').focus();
+
+            promptForm.onsubmit = function(event) {
+                event.preventDefault();
+                let value = promptForm.text.value;
+                if (!value) return;
+                callback.call(this, value);
+                promptFormContainer.hidden = true;
+                coverDiv.remove();
+                promptForm.onsubmit = null;
+            };
+
+            buttonCancel.addEventListener('pointerdown', function() {
+                callback.call(this, null);
+                promptFormContainer.hidden = true;
+                coverDiv.remove();
+            }, {once: true});
+        }
+
+    </script>
+</body>
+</html>
