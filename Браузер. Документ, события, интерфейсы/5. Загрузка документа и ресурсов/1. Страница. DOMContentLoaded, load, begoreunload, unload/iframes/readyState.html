@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>readyState iframe</title>
+</head>
+<body>
+    <script>
+        let start = Date.now();
+
+        function log(text) {
+            console.log(`[${Date.now() - start}] ${text}`);
+        }
+
+        log('Начальный readyState:' + document.readyState);
+
+        document.addEventListener('readystatechange', () => log('readyState:' + document.readyState));
+        document.addEventListener('DOMContentLoaded', () => log('DOMContentLoaded'));
+
+        window.addEventListener('load', () => log('window onload'));
+    </script>
+
+    <iframe src="../index.html" onload="log('iframe loaded')"></iframe>
+    <img src="http://en.js.cx/clipart/train.gif" alt onload="log('image onload')">
+</body>
+</html>

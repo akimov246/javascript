@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>load iframe</title>
+</head>
+<body>
+    <script>
+        window.addEventListener('load', function() {
+            alert('Страница загружена');
+            let img = document.querySelector('img');
+            alert(`Размер изображения: ${img.offsetWidth}x${img.offsetHeight}`);
+        });
+    </script>
+
+    <img src="https://en.js.cx/clipart/train.gif?speed=1&cache=0" alt>
+</body>
+</html>

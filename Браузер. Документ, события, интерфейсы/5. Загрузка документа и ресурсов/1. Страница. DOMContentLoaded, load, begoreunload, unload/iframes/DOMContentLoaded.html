@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DOMContentLoaded iframe</title>
+</head>
+<body>
+    <script>
+        function ready() {
+            alert('DOM готов');
+            let img = document.querySelector('img');
+            alert(`Размер изображения: ${img.offsetWidth}x${img.offsetHeight}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', ready);
+    </script>
+    
+    <img src="https://en.js.cx/clipart/train.gif?speed=1&cache=0" alt>
+</body>
+</html>
