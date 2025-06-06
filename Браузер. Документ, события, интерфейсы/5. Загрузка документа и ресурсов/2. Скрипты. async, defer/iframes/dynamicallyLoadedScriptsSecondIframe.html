@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>dynamicallyLoadedScriptsSecondIframe</title>
+</head>
+<body>
+    <script>
+        let script = document.createElement('script');
+        script.src = 'https://javascript.info/article/script-async-defer/long.js';
+
+        script.async = false;
+
+        document.body.append(script);
+    </script>
+</body>
+</html>

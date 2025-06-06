@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>dynamicallyLoadedScriptsThirdIframe</title>
+</head>
+<body>
+    <script>
+        function loadScript(src) {
+            let script = document.createElement('script');
+            script.src = src;
+            script.async = false;
+            document.body.append(script);
+        }
+
+        loadScript('https://javascript.info/article/script-async-defer/long.js');
+        loadScript('https://javascript.info/article/script-async-defer/small.js')
+    </script>
+</body>
+</html>

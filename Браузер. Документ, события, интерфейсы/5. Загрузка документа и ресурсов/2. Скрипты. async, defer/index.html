@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Скрипты: async, defer</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <style>
+        iframe {
+            display: block;
+            width: 50vw;
+            height: 25vh;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Скрипты: async, defer</h2>
+        <p>В современных сайтах скрипты обычно «тяжелее», чем HTML: они весят больше, дольше обрабатываются.</p>
+        <p>Когда браузер загружает HTML и доходит до тега <code>&lt;script&gt;...&lt;/script&gt;</code>, он не может
+        продолжать строить DOM. Он должен сначала выполнить скрипт. То же самое происходит и с внешними скриптами
+        <code>&lt;script src="..."&gt;&lt;/script&gt;</code>: браузер должен подождать, пока загрузится скрипт,
+        выполнить его, и только затем обработать остальную страницу.</p>
+        <p>Это ведет к двум важным проблемам:</p>
+        <ol>
+            <li>
+                <p>Скрипты не видят DOM-элементы ниже себя, поэтому к ним нельзя добавить обработчики и т.д.</p>
+            </li>
+            <li>
+                <p>Если сверху страницы объемный скрипт, он «блокирует» страницу. Пользователи не видят содержимое
+                страницы, пока он не загрузится и не запустится:</p>
+            </li>
+        </ol>
+        <code>
+            &lt;p&gt;...Содержимое перед скриптом...&lt;/p&gt;<br>
+            <br>
+            &lt;script src="https://javascript.info/article/script-async-defer/long.js?speed=1"&gt;&lt;/script&gt;<br>
+            <br>
+            &lt;!-- Это не отобразится, пока скрипт не загрузится --&gt;<br>
+            &lt;p&gt;...Содержимое после скрипта...&lt;/p&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/firstIframe.html"></iframe>');
+            });
+        </script>
+        <p>Конечно, есть пути как обойти это. Например, мы можем поместить скрипт внизу страницы. Тогда он сможет
+        видеть элементы над ним и не будет препятствовать отображению содержимого страницы:</p>
+        <code>
+            &lt;body&gt;<br>
+            &nbsp;&nbsp;...Все содержимое над скриптом...<br>
+            &nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&lt;script src="https://javascript.info/article/script-async-defer/long.js?speed=1"&gt;&lt;/script&gt;<br>
+            &lt;/body&gt;
+        </code>
+        <p>Но это решение далеко от идеального. Например, браузер замечает скрипт (и может начать загружать его) только
+        после того, как он полностью загрузил HTML-документ. В случае с длинными HTML-страницами это может создать
+        заметную задержку.</p>
+        <p>Такие вещи незаметны людям, у кого очень быстрое соединение, но много кто в мире имеет медленное подключение
+        к интернету или использует не такой хороший мобильный интернет.</p>
+        <p>К счастью, есть два атрибута тега <code>&lt;script&gt;</code>, которые решают нашу проблему:
+        <code>defer</code> и <code>async</code>.</p>
+    </article>
+
+    <article>
+        <h2>defer</h2>
+        <p>Атрибут <code>defer</code> сообщает браузеру, что он должен продолжать обрабатывать страницу и загружать скрипт
+        в фоновом режиме, а затем запустить этот скрипт, когда DOM дерево будет полностью построено.</p>
+        <p>Вот тот же пример, что и выше, но с <code>defer</code>:</p>
+        <code>
+            &lt;p&gt;...Содержимое перед скриптом...&lt;/p&gt;<br>
+            <br>
+            &lt;script src="https://javascript.info/article/script-async-defer/long.js?speed=1"&gt;&lt;/script&gt;<br>
+            <br>
+            &lt;!-- Отображается сразу же --><br>
+            &lt;p&gt;...Содержимое после скрипта...&lt;/p&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/deferFirstIframe.html"></iframe>');
+            });
+        </script>
+        <ul>
+            <li>
+                <p>Скрипты с <code>defer</code> никогда не блокируют страницу.</p>
+            </li>
+            <li>
+                <p>Скрипты с <code>defer</code> всегда выполняются, когда DOM дерево готово, но до события
+                <code>DOMContentLoaded</code>.</p>
+            </li>
+        </ul>
+        <p>Следующий пример это показывает:</p>
+        <code>
+            &lt;p&gt;...Содержимое до скрипта...&lt;/p&gt;<br>
+            <br>
+            &lt;script&gt;<br>
+            &nbsp;&nbsp;document.addEventListener('DOMContentLoaded', () => alert('Дерево DOM готово после скрипта с defer!'));<br>
+            &lt;/script&gt;<br>
+            <br>
+            &lt;script src="https://javascript.info/article/script-async-defer/long.js?speed=1"&gt;&lt;/script&gt; // (*)<br>
+            <br>
+            &lt;p&gt;...Содержимое после скрипта...&lt;/p&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/deferSecondIframe.html"></iframe>');
+            });
+        </script>
+        <ol>
+            <li>
+                <p>Содержимое страницы отобразится мгновенно.</p>
+            </li>
+            <li>
+                <p>Событие <code>DOMContentLoaded</code> подождет отложенный скрипт. Оно будет сгенерировано, только
+                когда скрипт <code>(*)</code> будет загружен и выполнен.</p>
+            </li>
+        </ol>
+        <p><b>Отложенные с помощью <code>defer</code> скрипты сохраняют порядок относительно друг друга, как и
+        обычные скрипты.</b></p>
+        <p>Допустим, у нас есть два скрипта с <code>defer</code>: <code>small.js</code> и <code>long.js</code>:</p>
+        <code>
+            &lt;script defer src="https://javascript.info/article/script-async-defer/long.js"&gt;&lt;/script&gt;<br>
+            &lt;script defer src="https://javascript.info/article/script-async-defer/small.js"&gt;&lt;/script&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/deferThirdIframe.html"></iframe>');
+            });
+        </script>
+        <p>Браузеры сканируют страницу на предмет скриптов и загружают их параллельно в целях увеличения производительности.
+        Поэтому и в примере выше оба скрипта скачиваются параллельно. <code>small.js</code> скорее всего загрузится первым.</p>
+        <p>... Но <code>defer</code> не только говорит браузеру «не блокировать рендеринг», он также обеспечивает
+        правильную последовательность выполнения скриптов. Даже если <code>small.js</code> загрузится первым, он будет
+        ждать выполнения <code>long.js</code>.</p>
+        <p>Это важно в тех случаях, когда нам сначала нужно загрузить JavaScript-библиотеку, а затем скрипт,
+        который от нее зависит.</p>
+
+        <article class="note">
+            <h3>Атрибут <code>defer</code> предназначен только для внешних скриптов</h3>
+            <p>Атрибут <code>defer</code> будет проигнорирован, если в теге <code>&lt;script&gt;</code> нет <code>src</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>async</h2>
+        <p>Атрибут <code>async</code> означает, что скрипт абсолютно независим:</p>
+        <ul>
+            <li>
+                <p>Страница не ждет асинхронные скриптов, содержимое обрабатывается и отображается.</p>
+            </li>
+            <li>
+                <p>Событие <code>DOMContentLoaded</code> и асинхронные скрипты не ждут друг друга:</p>
+                <ul>
+                    <li>
+                        <p><code>DOMContentLoaded</code> может произойти как до асинхронного скрипта (если асинхронный
+                        скрипт завершит загрузку после того, как страница будет готова).</p>
+                    </li>
+                    <li>
+                        <p>... так и после асинхронного скрипта (если он короткий или уже содержится в HTTP-кэше).</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Остальные скрипты не ждут <code>async</code>, и скрипты с <code>async</code> не ждут другие скрипты.</p>
+            </li>
+        </ul>
+        <p>Так что если у нас есть несколько скриптов с <code>async</code>, они могут выполняться в любом порядке.
+        То, что первое загрузится - запустится в первую очередь:</p>
+        <code>
+            &lt;p&gt;...Содержимое перед скриптами...&lt;/p&gt;<br>
+            <br>
+            &lt;script&gt;<br>
+            &nbsp;&nbsp;document.addEventListener('DOMContentLoaded', () => alert('DOM готов!'));<br>
+            &lt;/script&gt;<br>
+            <br>
+            &lt;script async src="https://javascript.info/article/script-async-defer/long.js"&gt;&lt;/script&gt;<br>
+            &lt;script async src="https://javascript.info/article/script-async-defer/small.js"&gt;&lt;/script&gt;<br>
+            <br>
+            &lt;p&gt;...Содержимое после скриптов...&lt;/p&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/asyncIframe.html"></iframe>');
+            });
+        </script>
+        <ol>
+            <li>
+                <p>Содержимое страницы отображается сразу же: <code>async</code> его не блокирует.</p>
+            </li>
+            <li>
+                <p><code>DOMContentLoaded</code> может произойти как до, так и после <code>async</code>, никаких гарантий нет.</p>
+            </li>
+            <li>
+                <p>Асинхронные скрипты не ждут друг друга. Меньший скрипт <code>small.js</code> идет вторым, но скорее всего
+                загрузится раньше <code>long.js</code>, поэтому и запустится первым. То есть, скрипты выполняются в порядке
+                загрузки.</p>
+            </li>
+        </ol>
+        <p>Асинхронные скрипты очень полезны для добавления на страницу сторонник скриптов: счетчиков, рекламы и т.д.
+        Они не зависят от наших скриптов, и мы тоже не должны ждать их:</p>
+        <code>
+            &lt;!-- Типичное подключение скрипта Google Analytics --&gt;<br>
+            &lt;script async src="https://google-analytics.com/analytics.js"&gt;&lt;/script&gt;
+        </code>
+
+        <article class="note">
+            <h3>Атрибут <code>async</code> предназначен только для внешних скриптов</h3>
+            <p>Как и в случае с <code>defer</code>, атрибут <code>async</code> будет проигнорирован, если в теге
+            <code>&lt;script&gt;</code> нет <code>src</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Динамически загружаемые скрипты</h2>
+        <p>Мы можем также добавить скрипт и динамически, с помощью JavaScript:</p>
+        <code>
+            let script = document.createElement('script');<br>
+            script.src = '/article/script-async-defer/long.js';<br>
+            document.body.append(script); // (*)
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/dynamicallyLoadedScriptsFirstIframe.html"></iframe>');
+            });
+        </script>
+        <p>Скрипт начнет загружаться, как только он будет добавлен в документ <code>(*)</code>.</p>
+        <p><b>Динамически загружаемые скрипты по умолчанию ведут себя как <code>async</code>.</b></p>
+        <p>То есть:</p>
+        <ol>
+            <li>
+                <p>Они никого не ждут, и их никто не ждет.</p>
+            </li>
+            <li>
+                <p>Скрипт, который загружается первым - запускается первым (в порядке загрузки).</p>
+            </li>
+        </ol>
+        <p>Мы можем изменить относительный порядок скриптов с «первый загрузился - первый выполнился» на порядок,
+        в котором они идут в документе (как в обычных скриптах) с помощью явной установки свойства <code>async</code>
+        в <code>false</code>:</p>
+        <code>
+            let script = document.createElement('script');<br>
+            script.src = '/article/script-async-defer/long.js';<br>
+            <br>
+            script.async = false;<br>
+            <br>
+            document.body.append(script);
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/dynamicallyLoadedScriptsSecondIframe.html"></iframe>');
+            });
+        </script>
+        <p>Например, здесь мы добавляем два скрипта. Без <code>script.async=false</code> они запускались бы в порядке
+        загрузки (<code>small.js</code> скорее всего запустился бы раньше). Но с этим флагом порядок будет как в
+        документе:</p>
+        <code>
+            function loadScript(src) {<br>
+            &nbsp;&nbsp;let script = document.createElement('script');<br>
+            &nbsp;&nbsp;script.src = src;<br>
+            &nbsp;&nbsp;script.async = false;<br>
+            &nbsp;&nbsp;document.body.append(script);<br>
+            }<br>
+            <br>
+            // long.js запустится первым, так как async=false<br>
+            loadScript("/article/script-async-defer/long.js");<br>
+            loadScript("/article/script-async-defer/small.js");
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/dynamicallyLoadedScriptsThirdIframe.html"></iframe>');
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>У <code>async</code> и <code>defer</code> есть кое-что общее: они не блокируют отрисовку страницы.
+        Так что пользователь может посмотреть содержимое страницы и ознакомиться с ней сразу же.</p>
+        <p>Но есть и значимые различия:</p>
+        <table>
+            <thead>
+            <tr>
+                <th></th>
+                <th>Порядок</th>
+                <th><code>DOMContentLoaded</code></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>async</code></td>
+                <td><i>Порядок загрузки</i> (кто загрузится первым, тот и сработает).</td>
+                <td>Не имеет значения. Может загрузиться и выполниться до того, как страница полностью загрузится.
+                Такое случается, если скрипты маленькие или хранятся в кеше, а документ достаточно большой.</td>
+            </tr>
+            <tr>
+                <td><code>defer</code></td>
+                <td><i>Порядок документа</i> (как расположен в документе).</td>
+                <td>Выполняется после того, как документ загружен и обработан (ждет), непосредственно перед
+                <code>DOMContentLoaded</code>.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <article class="warning">
+            <h3>Страница без скриптов должна быть рабочей</h3>
+            <p>Пожалуйста, помните, что когда вы используете <code>defer</code>, страница видна до того, как скрипт
+            загрузится.</p>
+            <p>Пользователь может знакомиться с содержимым страницы, читать ее, но графические компоненты пока отключены.</p>
+            <p>Поэтому обязательно должна быть индикация загрузки, нерабочие кнопки - отключены с помощью CSS или другим
+            образом. Чтобы пользователь явно видел, что уже готово, а что пока нет.</p>
+        </article>
+
+        <p>На практике <code>defer</code> используется для скриптов, которым требуется доступ ко всему DOM и/или
+        важен их относительный порядок выполнения.</p>
+        <p>А <code>async</code> хорош для независимых скриптов, например, счетчиков и рекламы, относительный порядок
+        выполнения которых не играет роли.</p>
+    </article>
+</body>
+</html>
