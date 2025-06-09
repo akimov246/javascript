@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Загрузка ресурсов: onload и onerror</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <style>
+        iframe {
+            display: block;
+            width: 50vw;
+            height: 25vh;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Загрузка ресурсов: onload и onerror</h2>
+        <p>Браузер позволяет отслеживать загрузку сторонних ресурсов: скриптов, ифреймов, изображений и др.</p>
+        <p>Для этого существуют два события:</p>
+        <ul>
+            <li>
+                <p><code>load</code> - успешная загрузка.</p>
+            </li>
+            <li>
+                <p><code>error</code> - во время загрузки произошла ошибка.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Загрузка скриптов</h2>
+        <p>Допустим, нам нужно загрузить сторонний скрипт и вызвать функцию, которая объявлена в этом скрипте.</p>
+        <p>Мы можем загрузить этот скрипт динамически:</p>
+        <code>
+            let script = document.createElement('script');<br>
+            script.src = 'my.js';<br>
+            <br>
+            document.head.append(script);
+        </code>
+        <p>... Но как нам вызвать функцию, которая объявлена внутри того скрипта? Нам нужно подождать, пока скрипт
+        загрузится, и только потом мы можем ее вызвать.</p>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Для наших собственных скриптов мы можем использовать <a href="../../../Язык%20JavaScript/13.%20Модули">JavaScript-модули</a>,
+            но они не слишком широко распространены в сторонних библиотеках.</p>
+        </article>
+
+        <h3>script.onload</h3>
+        <p>Главный помощник - это событие <code>load</code>. Оно срабатывает после того, как скрипт был загружен
+        и выполнен.</p>
+        <p>Например:</p>
+        <code>
+            let script = document.createElement('script');<br>
+            <br>
+            // Мы можем загрузить любой скрипт с любого домена<br>
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js";<br>
+            document.head.append(script);<br>
+            <br>
+            script.onload = function() {<br>
+            &nbsp;&nbsp;// В скрипте создается вспомогательная переменная с именем "_"<br>
+            &nbsp;&nbsp;alert(_.VERSION); // Отображает версию библиотеки<br>
+            };
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="./iframes/onload.html"></iframe>');
+            });
+        </script>
+        <p>Таким образом, в обработчике <code>onload</code> мы можем использовать переменные, вызывать функции и т.д.,
+        которые предоставляет нам сторонний скрипт.</p>
+        <p>... А что если во время загрузки ошибка? Например, такого скрипта нет (ошибка 404), или сервер был
+        недоступен.</p>
+
+        <h3>script.onerror</h3>
+        <p>Ошибки, которые возникают во время загрузки скрипта, могут быть отслежены с помощью события <code>error</code>.</p>
+        <p>Например, давайте запросим скрипт, которого не существует:</p>
+        <code>
+            let script = document.createElement('script');<br>
+            script.src = 'https://example.com/404.js'; // Такого файла не существует<br>
+            document.head.append(script);<br>
+            <br>
+            script.onerror = function() {<br>
+            &nbsp;&nbsp;alert('Ошибка загрузки ' + this.src); // Ошибка загрузки https://example.com/404.js<br>
+            };
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="./iframes/onerror.html"></iframe>');
+            });
+        </script>
+        <p>Обратите внимание, что мы не можем получить описание HTTP-ошибки. Мы не знаем, были ли это ошибка 404 или
+        500, или какая-то другая. Знаем только, что во время загрузки произошла ошибка.</p>
+
+        <article class="warning">
+            <h3>Важно:</h3>
+            <p>Обработчики <code>onload</code>/<code>onerror</code> отслеживают только сам процесс загрузки.</p>
+            <p>Ошибки обработки и выполнения загруженного скрипта ими не отслеживаются. Чтобы «поймать» ошибки
+            в скрипте, нужно воспользоваться глобальным обработчиком <code>window.onerror</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Другие ресурсы</h2>
+        <p>События <code>load</code> и <code>error</code> также срабатывают и для других ресурсов, а вообще,
+        для любых ресурсов, у которых есть внешний <code>src</code>.</p>
+        <p>Например:</p>
+        <code>
+            let img = document.createElement('img');<br>
+            img.src = 'https://js.cx/clipart/train.gif'; // (*)<br>
+            <br>
+            img.onload = function() {<br>
+            &nbsp;&nbsp;alert(`Изображение загружено, размеры ${img.width}x${img.height}`);<br>
+            };<br>
+            <br>
+            img.onerror = function() {<br>
+            &nbsp;&nbsp;alert('Ошибка во время загрузки изображения');<br>
+            };
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="./iframes/otherResources.html"></iframe>');
+            });
+        </script>
+        <p>Однако, есть некоторые особенности:</p>
+        <ul>
+            <li>
+                <p>Большинство ресурсов начинают загружаться после их добавления в документ. За исключением тега <code>&lt;img&gt;</code>.
+                    Изображения начинают загружаться, когда получают <code>src</code> <code>(*)</code>.</p>
+            </li>
+            <li>
+                <p>Для <code>&lt;iframe&gt;</code> событие <code>load</code> срабатывает по окончании загрузки как
+                в случае успеха, так и в случае ошибки.</p>
+            </li>
+        </ul>
+        <p>Такое поведение сложилось по историческим причинам.</p>
+    </article>
+
+    <article>
+        <h2>Ошибка в скрипте с другого источника</h2>
+        <p>Есть правило: скрипты с одного сайта не могут получить доступ к содержимому другого сайта. Например,
+        скрипт с <code>https://facebook.com</code> не может прочитать почту пользователя на
+        <code>https://gmail.com</code>.</p>
+        <p>Или, если быть более точным, один источник (домен/порт/протокол) не может получить доступ к содержимому
+        с другого источника. Даже поддомен или просто другой порт будут считаться разными источниками, не имеющими
+        доступа друг к другу.</p>
+        <p>Это правило также касается ресурсов с других доменов.</p>
+        <p>Если мы используем скрипт с другого домена, и в нем имеется ошибка, мы не сможем узнать детали этой ошибки.</p>
+        <p>Для примера давайте возьмем мини-скрипт <code>error.js</code>, который состоит из одного единственного
+        вызова функции, которой не существует:</p>
+        <code>
+            // error.js<br>
+            noSuchFunction();
+        </code>
+        <p>Теперь загрузим этот скрипт с того же сайта, на котором он лежит:</p>
+        <code>
+            &lt;script&gt;<br>
+            &nbsp;&nbsp;window.onerror = function(message, url, line, col, errorObj) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${message}\n${url}, ${line}:${col}`);<br>
+            &nbsp;&nbsp;};<br>
+            &lt;/script&gt;<br>
+            &lt;script src="https://learn.javascript.ru/article/onload-onerror/crossorigin/error.js"&gt;&lt;/script&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/errorInScriptFromAnotherSourceFirst.html"></iframe>');
+            });
+        </script>
+        <p>Мы видим нормальный отчет об ошибке:</p>
+        <code>
+            Uncaught ReferenceError: noSuchFunction is not defined<br>
+            https://learn.javascript.ru/article/onload-onerror/crossorigin/error.js, 1:1
+        </code>
+        <p>А теперь загрузим этот же скрипт с другого домена:</p>
+        <code>
+            &lt;script&gt;<br>
+            &nbsp;&nbsp;window.onerror = function(message, url, line, col, errorObj) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${message}\n${url}, ${line}:${col}`);<br>
+            &nbsp;&nbsp;};<br>
+            &lt;/script&gt;<br>
+            &lt;script src="https://cors.javascript.info/article/onload-onerror/crossorigin/error.js"&gt;&lt;/script&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/errorInScriptFromAnotherSourceSecond.html"></iframe>');
+            });
+        </script>
+        <p>Отчет отличается:</p>
+        <code>
+            Script error.<br>
+            , 0:0
+        </code>
+        <p>Детали отчета могут варьироваться в зависимости от браузера, но основная идея остается низменной: любая
+        информация о внутреннем устройстве скрипта, включая стек ошибки, спрятана. Именно потому, что скрипт загружен
+        с другого домена.</p>
+        <p>Зачем нам могут быть нужны детали ошибки?</p>
+        <p>Существует много сервисов (и мы можем сделать наш собственный), которые обрабатывают глобальные
+        ошибки при помощи <code>window.onerror</code>, сохраняют отчет о них и предоставляют доступ к этому отчету
+        для анализа. Это здорово, потому что мы можем увидеть реальные ошибки, которые случились у наших пользователей.
+        Но если скрипт - с другого домена, то информации об ошибках в нем почти нет, как мы только что видели.</p>
+        <p>Похожая кросс-доменная политика (CORS) внедрена и в отношении других ресурсов.</p>
+        <p><b>Чтобы разрешить кросс-доменный доступ, нам нужно поставить тегу <code>&lt;script&gt;</code> атрибут
+        <code>crossorigin</code>, и, кроме того, удаленный сервер должен поставить специальные заголовки.</b></p>
+        <p>Существует три уровня кросс-доменного доступа:</p>
+        <ol>
+            <li>
+                <p><b>Атрибут <code>crossorigin</code> отсутствует</b> - доступ запрещен.</p>
+            </li>
+            <li>
+                <p><code>crossorigin="anonymous"</code> - доступ разрешен, если сервер отвечает с заголовком
+                <code>Access-Control-Allow-Origin</code> со значениями <code>*</code> или наш домен. Браузер
+                не отправляет авторизационную информацию и куки на удаленный сервер.</p>
+            </li>
+            <li>
+                <p><code>crossorigin="use-credentials"</code> - доступ разрешен, если сервер отвечает с заголовками
+                <code>Access-Control-Allow-Origin</code> со значением наш домен и <code>Access-Control-Allow-Credentials: true</code>.
+                Браузер отправляет авторизационную информацию и куки на удаленный сервер.</p>
+            </li>
+        </ol>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Почитать больше о кросс-доменных доступах вы можете в главе
+            <a href="https://learn.javascript.ru/fetch-crossorigin" target="_blank">Fetch: запросы на другие сайты</a>.
+            Там описан метод <code>fetch</code> для сетевых запросов, но политика там точно такая же.</p>
+            <p>Такое понятие как «куки» (cookies) не рассматриваются в текущей главе, но вы можете почитать о них в главе
+            <a href="https://learn.javascript.ru/cookie" target="_blank">Куки, document.cookie</a>.</p>
+        </article>
+
+        <p>В нашем случае атрибут <code>crossorigin</code> отсутствовал. Поэтому кросс-доменный доступ был запрещен.
+        Давайте добавим его.</p>
+        <p>Мы можем выбрать <code>"anonymous"</code> (куки не отправляются, требуется один серверный заголовок)
+        или <code>"use-credentials"</code> (куки отправляются, требуются два серверных заголовка) в качестве значения
+        атрибута.</p>
+        <p>Если куки нас не волнуют, тогда смело выбираем <code>"anonymous"</code>:</p>
+        <code>
+            &lt;script&gt;<br>
+            &nbsp;&nbsp;window.onerror = function(message, url, line, col, errorObj) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;alert(`${message}\n${url}, ${line}:${col}`);<br>
+            &nbsp;&nbsp;};<br>
+            &lt;/script&gt;<br>
+            &lt;script crossorigin="anonymous" src="https://cors.javascript.info/article/onload-onerror/crossorigin/error.js"&gt;&lt;/script&gt;
+        </code>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/crossorigin.html"></iframe>');
+            });
+        </script>
+        <p>Теперь при условии, что сервер предоставил заголовок <code>Access-Control-Allow-Origin</code>, все хорошо.
+        У нас есть полный отчет по ошибкам.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>изображения <code>&lt;img&gt;</code>, внешние стили, скрипты и другие ресурсы предоставляют события
+        <code>load</code> и <code>error</code> для отслеживания загрузки:</p>
+        <ul>
+            <li>
+                <p><code>load</code> срабатывает при успешной загрузке.</p>
+            </li>
+            <li>
+                <p><code>error</code> срабатывает при ошибке загрузки.</p>
+            </li>
+        </ul>
+        <p>Единственное исключение - это <code>&lt;iframe&gt;</code>: по историческим причинам срабатывает всегда
+        <code>load</code> вне зависимости от того, как завершилась загрузка, даже если страница не была найдена.</p>
+        <p>Событие <code>readystatechange</code> также работает для ресурсов, но используется редко, потому что
+        события <code>load/error</code> проще в использовании.</p>
+    </article>
+</body>
+</html>

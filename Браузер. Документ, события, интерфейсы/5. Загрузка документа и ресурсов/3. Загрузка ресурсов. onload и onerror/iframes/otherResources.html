@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>otherResources iframe</title>
+</head>
+<body>
+    <script>
+        let img = document.createElement('img');
+        img.src = 'https://js.cx/clipart/train.gif';
+
+        img.addEventListener('load', function() {
+            alert(`Изображение загружено, размеры ${img.width}x${img.height}`);
+        });
+
+        img.addEventListener('error', function() {
+            alert('Ошибка во время загрузки изображения');
+        });
+
+        document.body.append(img);
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>onload iframe</title>
+</head>
+<body>
+    <script>
+        let script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.3.0/lodash.js";
+        document.head.append(script);
+
+        script.addEventListener('load', function() {
+            alert(_.VERSION);
+        });
+    </script>
+</body>
+</html>

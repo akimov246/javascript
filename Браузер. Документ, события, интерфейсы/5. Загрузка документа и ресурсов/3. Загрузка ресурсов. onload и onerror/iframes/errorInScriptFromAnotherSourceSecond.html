@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>errorInScriptFromAnotherSourceSecond iframe</title>
+</head>
+<body>
+<script>
+    window.addEventListener('error', function(event) {
+        alert(`${event.message}\n${event.filename}, ${event.lineno}:${event.colno}`);
+    });
+</script>
+<script src="https://cors.javascript.info/article/onload-onerror/crossorigin/error.js"></script>
+</body>
+</html>

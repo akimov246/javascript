@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Загрузите изображения с колбэком</title>
+    <style>
+        img {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function preloadImages(sources, callback) {
+            let images = [];
+
+            let images_counter = 0;
+            sources.forEach(function(src) {
+                let img = document.createElement('img');
+                img.src = src;
+                img.onload = img.onerror = function() {
+                    console.log(`Изображение: ${src} загружено.`);
+                    images_counter++;
+                    images.push(img);
+                    if (images_counter === sources.length) {
+                        callback();
+                        for (let i=0; i < images.length; i++) {
+                            document.body.append(images[i]);
+                        }
+                    }
+                }
+            });
+        }
+
+        // ---------- тест ----------
+
+        let sources = [
+            "https://en.js.cx/images-load/1.jpg",
+            "https://en.js.cx/images-load/2.jpg",
+            "https://en.js.cx/images-load/3.jpg",
+            "https://sun9-57.userapi.com/impg/aaZHvsfuIbHKziaEUOAqfM-BxhTkOrh1Q0Hdhg/kMUYUttGxQg.jpg?size=453x602&quality=95&sign=091184c9c1e2f899f2ed1f4325968226&type=album",
+            "https://sun9-44.userapi.com/impg/Vcp9MqL6ME0cM_9xsgUKqwwGDW-yF-JvlVoSHQ/lUg_xjIG85s.jpg?size=1024x1024&quality=95&sign=8351101ddf497e4f3586691b518e8888&type=album",
+            "https://sun9-46.userapi.com/impg/hzqkz5uKgFXXhNwLWpt75RUuCU6GjMq3a9EWMA/Hy3u9yDW-K4.jpg?size=860x552&quality=96&sign=7293cfb4aa007bb56632dd7dd5b3cee8&type=album",
+        ];
+
+        // добавляем случайные символы к ссылкам, чтобы избежать кеширования
+        for (let i = 0; i < sources.length; i++) {
+            sources[i] += '?' + Math.random();
+        }
+
+        // для каждого изображения
+        // создадим другое изображение с аналогичным src и проверим, есть ли у нас его ширина
+        function testLoaded() {
+            let widthSum = 0;
+            for (let i = 0; i < sources.length; i++) {
+                let img = document.createElement('img');
+                img.src = sources[i];
+                widthSum += img.width;
+            }
+            alert(widthSum);
+        }
+
+        // каждое изображение в разрешении 100x100, итоговая сумма их ширин должна быть 300
+        preloadImages(sources, testLoaded);
+    </script>
+</body>
+</html>

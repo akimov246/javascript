@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>onerror iframe</title>
+</head>
+<body>
+    <script>
+        let script = document.createElement('script');
+        script.src = 'https://example.com/404.js';
+        document.head.append(script);
+
+        script.addEventListener('error', function() {
+            alert('Ошибка загрузки: ' + this.src);
+        });
+    </script>
+</body>
+</html>
