@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>syntax iframe</title>
+</head>
+<body>
+    <div contenteditable="">Отредактируй <b>меня</b>, пожалуйста</div>
+
+    <script>
+        let observer = new MutationObserver((mutationRecords) => {
+            console.log(mutationRecords);
+        });
+
+        observer.observe(document.querySelector('div'), {
+            childList: true,
+            subtree: true,
+            characterDataOldValue: true
+        });
+    </script>
+</body>
+</html>
