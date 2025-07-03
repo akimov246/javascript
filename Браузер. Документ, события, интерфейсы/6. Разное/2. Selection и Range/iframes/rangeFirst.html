@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>rangeFirst iframe</title>
+</head>
+<body>
+    <p>Example: <i>italic</i> and <b>bold</b></p>
+
+    <script>
+        let p = document.querySelector('p');
+        let range = new Range();
+
+        range.setStart(p, 0);
+        range.setEnd(p, 2);
+
+        alert(range);
+
+        document.getSelection().addRange(range);
+    </script>
+</body>
+</html>

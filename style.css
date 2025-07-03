@@ -7,7 +7,8 @@ article {
 
 code {
     font-family: Consolas, Lucida Console, Menlo, Monaco, monospace;
-    background-color: aliceblue;
+    background: aliceblue;
+    /*background-color: #f5f2f0;*/
 }
 
 article.note h2:first-child::before, article.note h3:first-child::before {
@@ -58,4 +59,19 @@ span.selectedCode {
     display: inline-block;
     border: 1px solid red;
     background: lightgoldenrodyellow;
+}
+
+iframe {
+    display: block;
+    width: 50vw;
+    height: 25vh;
+    margin-top: 0.5rem;
+}
+
+pre:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+pre {
+    transition: box-shadow .5s ease;
 }

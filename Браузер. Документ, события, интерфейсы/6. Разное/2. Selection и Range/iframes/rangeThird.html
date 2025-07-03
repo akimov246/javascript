@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>rangeThird iframe</title>
+</head>
+<body>
+    <p>Example: <i>italic</i> and <b>bold</b></p>
+
+    <script>
+        let p = document.querySelector('p');
+        let range = new Range();
+
+        range.setStart(p.firstChild, 2);
+        range.setEnd(p.querySelector('b').firstChild, 3);
+
+        window.getSelection().addRange(range);
+    </script>
+</body>
+</html>

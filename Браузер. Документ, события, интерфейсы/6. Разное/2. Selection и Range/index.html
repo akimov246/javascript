@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Selection и Range</title>
+    <link href="../../../style.css" rel="stylesheet">
+    <script defer src="../../../highlightElements.js"></script>
+    <style>
+        .structure p{
+            width: 20vw;
+            border-radius: 0.5rem;
+            padding-left: 0.5rem;
+            margin: 0.2rem;
+            border: 1px solid grey;
+        }
+
+        .structure p:hover {
+            filter: brightness(0.95);
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Selection и Range</h2>
+        <p>В этой главе мы рассмотрим выделение как в документе, так и в полях формы, таких как <code>&lt;input&gt;</code>.</p>
+        <p>JavaScript позволяет получать существующее выделение, выделять и снимать выделение как целиком, так и по частям,
+        убирать выделенную часть из документа, оборачивать ее в тег и так далее.</p>
+        <p>Вы можете получить готовые решения в секции «Итого» в конце статьи, но узнаете гораздо больше, если
+        прочитаете главу целиком. Используемые для выделения встроенные классы <code>Range</code> и
+        <code>Selection</code> просты для понимания, и после их изучения вам уже не понадобятся «готовые рецепты», чтобы сделать все,
+        что захотите.</p>
+    </article>
+
+    <article>
+        <h2>Range</h2>
+        <p>В основе выделения лежит <a href="https://dom.spec.whatwg.org/#ranges" target="_blank">Range</a> - диапазон.
+        Он представляет собой пару «граничных точек»: начало и конец диапазона.</p>
+        <p>Каждая точка представлена как родительский DOM-узел с относительным смещением от начала. Если этот
+        узел - DOM-элемент, то смещение - это номер дочернего элемента, а для текстового узла смещение - позиция в тексте.
+        Скоро будут примеры.</p>
+        <p>Давайте что-нибудь выделим.</p>
+        <p>Для начала мы создадим диапазон (конструктор не имеет параметров):</p>
+        <code class="language-javascript">
+            let range = new Range();
+        </code>
+        <p>Затем мы установим границы выделения, используя <code>range.setStart(node, offset)</code> и <code>range.setEnd(node, offset)</code>.</p>
+        <p>Например, рассмотрим этот фрагмент HTML-кода:</p>
+        <code class="language-html">
+            &lt;p id="p"&gt;Example: &lt;i&gt;italic&lt;/i&gt; and &lt;b&gt;bold&lt;/b&gt;&lt;/p&gt;
+        </code>
+        <p>Взглянем на его DOM-структуру, обратите внимание на текстовые узлы, они важны для нас:</p>
+        <ul class="structure">
+            <li>
+                <p style="background: rgb(206, 224, 244)">P</p>
+                <ul>
+                    <li>
+                        <p style="background: rgb(255, 222, 153)">#text Example:␣</p>
+                    </li>
+                    <li>
+                        <p style="background: rgb(206, 224, 244);">I</p>
+                        <ul>
+                            <li>
+                                <p style="background: rgb(255, 222, 153)">#text italic</p>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <p style="background: rgb(255, 222, 153)">#text ␣and␣</p>
+                    </li>
+                    <li>
+                        <p style="background: rgb(206, 224, 244)">B</p>
+                        <ul>
+                            <li>
+                                <p style="background: rgb(255, 222, 153)">#text bold</p>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Выделим <code>"Example: &lt;i&gt;italic&lt;/i&gt;"</code>. Это первые два дочерних узла тега <code>&lt;p&gt;</code>
+        (учитывая текстовые узлы):</p>
+        <img src="https://learn.javascript.ru/article/selection-range/range-example-p-0-1.svg" alt style="width: 40vw; display: block; margin-bottom: 0.5rem">
+<pre>
+<code class="language-html">&lt;p id="p"&gt;Example: &lt;i&gt;italic&lt;/i&gt; and &lt;b&gt;bold&lt;/b&gt;&lt;/p&gt;</code>
+
+<code class="language-html">&lt;script&gt;</code>
+    <code class="language-javascript">let range = new Range();
+
+    range.setStart(p, 0);
+    range.setEnd(p, 2);
+
+    // toString, вызванный у экземпляра Range, возвращает его содержимое в виде текста (без тегов)
+    alert(range); // Example: italic
+
+    // Применим этот диапазон к выделению документа (объясняется далее)
+    document.getSelection().addRange(range);</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="./iframes/rangeFirst.html"></iframe>');
+            });
+        </script>
+        <ul>
+            <li>
+                <p><code>range.setStart(p, 0)</code> - устанавливает начало диапазона на нулевом дочернем элементе
+                тега <code>&lt;p&gt;</code> (Это текстовый узел <code>"Example: "</code>).</p>
+            </li>
+            <li>
+                <p><code>range.setEnd(p, 2)</code> - расширяет диапазон до 2-го (но не включая его) дочернего элемента
+                тега <code>&lt;p&gt;</code> (это текстовый узел <code>" and "</code>, но так как конец не включен,
+                последний включенный узел - это тег <code>&lt;i&gt;</code>).</p>
+            </li>
+        </ul>
+        <p>Ниже представлен расширенный пример, в котором вы можете попробовать другие варианты:</p>
+<pre>
+<code class="language-html">&lt;p id="p"&gt;Example: &lt;i&gt;italic&lt;/i&gt; and &lt;b&gt;bold&lt;/b&gt;&lt;/p&gt;</code>
+
+<code class="language-html">From &lt;input id="start" type="number" value="1"&gt; - To &lt;input id="end" type="number" value="4"&gt;
+&lt;button id="button"&gt;Click to select&lt;/button&gt;</code>
+<code class="language-html">&lt;script&gt;</code>
+    <code class="language-javascript">button.onclick = () => {
+        let range = new Range();
+
+        range.setStart(p, start.value);
+        range.setEnd(p, end.value);
+
+        // Применим выделение (объясняется далее)
+        document.getSelection().removeAllRanges();
+        document.getSelection().addRange(range);
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="./iframes/rangeSecond.html"></iframe>');
+            });
+        </script>
+        <p>К примеру, выделение с <code>1</code> до <code>4</code> возвращает следующий диапазон
+        <code>&lt;i&gt;italic&lt;/i&gt; and &lt;b&gt;bold&lt;/b&gt;</code>.</p>
+        <img src="https://learn.javascript.ru/article/selection-range/range-example-p-1-3.svg" alt style="width: 40vw">
+        <p>Но не обязательно использовать один и тот же элемент в <code>setStart</code> и <code>setEnd</code>. Диапазон может
+        охватывать множество не связанных между собой элементов. Важно лишь, чтобы конец шел после начала.</p>
+
+        <h3>Выделение частей текстовых узлов</h3>
+        <p>Давайте выделим текст частично, как показано ниже:</p>
+        <img src="https://learn.javascript.ru/article/selection-range/range-example-p-2-b-3.svg" alt style="width: 40vw">
+        <p>Это также возможно, нужно просто установить начало и конец как относительное смещение в текстовых узлах.</p>
+        <p>Нам нужно создать диапазон, который:</p>
+        <ul>
+            <li>
+                <p>Начинается со второй позиции первого дочернего узла тега <code>&lt;p&gt;</code> (захватываем все,
+                кроме первых двух букв «Ex<b>ample</b>»).</p>
+            </li>
+            <li>
+                <p>Заканчивается на 3 позиции первого дочернего узла тега <code>&lt;p&gt;</code> (захватываем первые
+                три буквы «<b>bol</b>d», но не более):</p>
+            </li>
+        </ul>
+<pre>
+<code class="language-html">&lt;p id="p"&gt;Example: &lt;i&gt;italic&lt;/i&gt; and &lt;b&gt;bold&lt;/b&gt;&lt;/p&gt;</code>
+
+<code class="language-html">&lt;script&gt;</code>
+<code class="language-javascript">    let range = new Range();
+
+    range.setStart(p.firstChild, 2);
+    range.setEnd(p.querySelector('b').firstChild, 3);
+
+    alert(range); // ample: italic and bol
+
+    // Применим выделение к документу (объясняется далее)
+    window.getSelection().addRange(range);</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="./iframes/rangeThird.html"></iframe>');
+            });
+        </script>
+        <p>Объект диапазона Range имеет следующие свойства:</p>
+        <img src="https://learn.javascript.ru/article/selection-range/range-example-p-2-b-3-range.svg" alt style="width: 40vw">
+        <ul>
+            <li>
+                <p><code>startContainer</code>, <code>startOffset</code> - узел и начальное смещение.</p>
+                <ul>
+                    <li>
+                        <p>В примере выше: первый текстовый узел внутри тега <code>&lt;p&gt;</code> и <code>2</code>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>endContainer</code>, <code>endOffset</code> - узел и конечное смещение.</p>
+                <ul>
+                    <li>
+                        <p>В примере выше: первый текстовый узел внутри тега <code>&lt;b&gt;</code> и <code>3</code>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>collapsed</code> - boolean, <code>true</code>, если диапазон начинается и заканчивается на одном
+                и том же месте (следовательно, в диапазон ничего не входит).</p>
+                <ul>
+                    <li>
+                        <p>В примере выше: <code>false</code>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>commonAncestorContainer</code> - ближайший общий предок всех узлов в пределах диапазона.</p>
+                <ul>
+                    <li>
+                        <p>В примере выше: <code>&lt;p&gt;</code>.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
