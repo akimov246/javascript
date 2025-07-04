@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>selectionReceivingDemo iframe</title>
+</head>
+<body>
+    <p>Выдели меня: <i>курсив</i> и <b>жирный</b></p>
+
+    <p>Склонировано: <span id="cloned"></span></p>
+    <p>Как текст: <span id="astext"></span></p>
+
+    <script>
+        document.addEventListener('selectionchange', function() {
+            let selection = window.getSelection();
+
+            cloned.innerHTML = astext.innerHTML = '';
+
+            for (let i = 0; i < selection.rangeCount; i++) {
+                cloned.append(selection.getRangeAt(i).cloneContents());
+            }
+
+            astext.innerHTML = selection.toString();
+        });
+    </script>
+</body>
+</html>

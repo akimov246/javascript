@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>formSelectionFourthExample iframe</title>
+</head>
+<body>
+    <input id="input" style="width: 200px" value="Замените ЭТО в тексте">
+    <button id="button">Заменить ЭТО</button>
+
+    <script>
+        button.addEventListener('click', function() {
+            let target = 'ЭТО';
+
+            let pos = input.value.toLocaleLowerCase().indexOf(target.toLowerCase());
+
+            if (~pos) {
+                input.setRangeText(`*${target}*`, pos, pos + target.length, 'select');
+                input.focus();
+            }
+        });
+    </script>
+</body>
+</html>

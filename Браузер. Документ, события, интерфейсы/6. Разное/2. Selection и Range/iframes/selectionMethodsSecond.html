@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>selectionMethodsSecond iframe</title>
+</head>
+<body>
+    <p id="p">Выдели меня: <i>курсив</i> и <b>жирный</b></p>
+
+    <script>
+        let range = new Range();
+        range.selectNodeContents(p);
+
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>formSelectionFirstExample</title>
+</head>
+<body>
+    <textarea id="area" style="width: 80vw; height: 60px">Выделите что-нибудь в этом тексте, чтобы обновить значение ниже.
+    </textarea>
+    <div style="width: 80vw; display: flex; justify-content: center">
+        <label>От <input id="from" disabled></label><label>&nbsp;- До <input id="to" disabled></label>
+    </div>
+
+    <script>
+        area.addEventListener('select', function() {
+            from.value = area.selectionStart;
+            to.value = area.selectionEnd;
+        });
+    </script>
+</body>
+</html>

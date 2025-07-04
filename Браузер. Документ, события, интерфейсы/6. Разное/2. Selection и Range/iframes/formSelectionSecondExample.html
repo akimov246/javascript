@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>formSelectionSecondExample iframe</title>
+</head>
+<body>
+    <textarea id="area" style="width: 80vw; height: 60px">Переведите фокус на меня, курсор окажется на 10-й позиции</textarea>
+
+    <script>
+        area.addEventListener('focus', function() {
+            setTimeout(() => {
+                area.selectionStart = area.selectionEnd = 10;
+            });
+        });
+    </script>
+</body>
+</html>

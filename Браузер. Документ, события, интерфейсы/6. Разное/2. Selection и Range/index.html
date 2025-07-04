@@ -237,5 +237,792 @@
             </li>
         </ul>
     </article>
+
+    <article>
+        <h2>Методы Range</h2>
+        <p>Существует множество методов для манипулирования диапазонами.</p>
+        <p>Установить начало диапазона:</p>
+        <ul>
+            <li>
+                <p><code>setStart(node, offset)</code> установить начальную границу в позицию <code>offset</code> в
+                <code>node</code>.</p>
+            </li>
+            <li>
+                <p><code>setStartBefore(node)</code> установить начальную позицию прямо перед <code>node</code>.</p>
+            </li>
+            <li>
+                <p><code>setStartAfter(node)</code> установить начальную позицию прямо после <code>node</code>.</p>
+            </li>
+        </ul>
+        <p>Установить конец диапазона (похожи на предыдущие методы):</p>
+        <ul>
+            <li>
+                <p><code>setEnd(node, offset)</code> установить конечную границу в позицию <code>offset</code> в
+                <code>node</code>.</p>
+            </li>
+            <li>
+                <p><code>setEndBefore(node)</code> установить конечную границу прямо перед <code>node</code>.</p>
+            </li>
+            <li>
+                <p><code>setEndAfter(node)</code> установить конечную границу прямо после <code>node</code>.</p>
+            </li>
+        </ul>
+        <p><b>Как было показано, <code>node</code> может быть как текстовым узлом, так и элементом: для текстовых узлов
+        <code>offset</code> пропускает указанное количество символов, в то время как для элементов - указанное
+        количество дочерних узлов.</b></p>
+        <p>Другие:</p>
+        <ul>
+            <li>
+                <p><code>selectNode(node)</code> выделить <code>node</code> целиком.</p>
+            </li>
+            <li>
+                <p><code>selectNodeContents(node)</code> выделить все содержимое <code>node</code>.</p>
+            </li>
+            <li>
+                <p><code>collapse(toStart)</code> если указано <code>toStart=true</code>, установить конечную границу
+                в начало, иначе установить начальную границу в конец, схлопывая таким образом диапазон.</p>
+            </li>
+            <li>
+                <p><code>cloneRange()</code> создать новый диапазон с идентичными границами.</p>
+            </li>
+        </ul>
+        <p>Чтобы манипулировать содержимым в пределах диапазона:</p>
+        <ul>
+            <li>
+                <p><code>deleteContents()</code> - удалить содержимое диапазона из документа.</p>
+            </li>
+            <li>
+                <p><code>extractContents()</code> - удалить содержимое диапазона из документа и вернуть как
+                <a target="_blank" href="../../1.%20Документ/7.%20Изменение%20документа/index.html#documentFragment">DocumentFragment</a>.</p>
+            </li>
+            <li>
+                <p><code>cloneContents()</code> - склонировать содержимое диапазона и вернуть как
+                <a target="_blank" href="../../1.%20Документ/7.%20Изменение%20документа/index.html#documentFragment">DocumentFragment</a>.</p>
+            </li>
+            <li>
+                <p><code>insertNode(node)</code> - вставить <code>node</code> в документ в начале диапазона.</p>
+            </li>
+            <li>
+                <p><code>surroundContents(node)</code> - обернуть <code>node</code> вокруг содержимого диапазона.
+                Чтобы этот метод сработал, диапазон должен содержать как открывающие, так и закрывающие теги
+                для всех элементов внутри себя: не допускаются частичные диапазоны по типу <code>&lt;i&gt;abc</code>.</p>
+            </li>
+        </ul>
+        <p>Используя эти методы, мы можем делать с выделенными узлами что угодно.</p>
+        <p>Проверим описанные методы в действии:</p>
+<pre>
+Нажмите на кнопку, чтобы соответствующий метод отработал на выделении, или на "resetExample", чтобы восстановить выделение как было.
+
+<code class="language-html">&lt;p id="p"&gt;Example: &lt;i&gt;italic&lt;/i&gt; and &lt;b&gt;bold&lt;/b&gt;&lt;/p&gt;</code>
+
+<code class="language-html">&lt;p id="result"&gt;&lt;/p&gt;</code>
+<code class="language-html">&lt;script&gt;</code>
+    <code class="language-javascript">let range = new Range();
+
+    // Каждый описанный метод представлен здесь:
+    let methods = {
+        deleteContents() {
+            range.deleteContents();
+        },
+        extractContents() {
+            let content = range.extractContent();
+            result.innerHTML = '';
+            result.append('Извлечено: ', content);
+        },
+        cloneContents() {
+            let content = range.cloneContent();
+            result.innerHTML = '';
+            result.append('Клонировано: ', content);
+        },
+        insertNode() {
+            let newNode = document.createElement('u');
+            newNode.innerHTML = 'НОВЫЙ УЗЕЛ';
+            range.insertNode(newNode);
+        },
+        surroundContents() {
+            let newNode = document.createElement('u');
+            try {
+                range.surroundContents(newNode);
+            } catch(e) { alert(e) }
+        },
+        resetExample() {
+            p.innerHTML = 'Example: &lt;i&gt;italic&lt;/i&gt; and &lt;b&gt;bold&lt;/b&gt;';
+            result.innerHTML = '';
+
+            range.setStart(p.firstChild, 2);
+            range.setEnd(p.querySelector('b').firstChild, 3);
+
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+        }
+    };
+
+    for (let method in methods) {
+        document.write(`&lt;div&gt;&lt;button onclick="methods.${method}()"&gt;${method}&lt;/button&gt;&lt;/div&gt;`);
+    }
+
+    methods.resetExample();</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                '<iframe style="height: 35vh" src="iframes/rangeMethods.html"></iframe>');
+            });
+        </script>
+        <p>Также существуют методы сравнения диапазонов, но они редко используются. Когда они вам понадобятся,
+        вы можете прочитать о них в
+        <a target="_blank" href="https://dom.spec.whatwg.org/#interface-range">спецификации</a> или
+        <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/API/Range">справочнике MDN</a>.</p>
+    </article>
+
+    <article>
+        <h2>Selection</h2>
+        <p><code>Range</code> это общий объект для управления диапазонами выделения. Мы можем создавать и передавать
+        подобные объекты. Сами по себе они ничего визуально не выделяют.</p>
+        <p>Выделение в документе представлено объектом <code>Selection</code>, который может быть получен
+        как <code>window.getSelection()</code> или <code>document.getSelection()</code>.</p>
+        <p>Выделение может включать ноль или более диапазонов. По крайней мере, так утверждается в
+        <a target="_blank" href="https://www.w3.org/TR/selection-api/">Спецификации Selection API</a>. На практике
+        же выделить несколько диапазонов в документе можно только в Firefox, используя
+        <kbd>Ctrl+click</kbd> (<kbd>Cmd+click</kbd> для Mac).</p>
+        <p>Ниже представлен скриншот выделения с 3 диапазонами, сделанный в Firefox:</p>
+        <img src="https://learn.javascript.ru/article/selection-range/selection-firefox.svg" alt style="width: 40vw">
+        <p>Остальные браузеры поддерживают максимум 1 диапазон. Как мы увидим далее, некоторые методы <code>Selection</code>
+        подразумевают, что может быть несколько диапазонов, но, как было сказано ранее, во всех браузерах,
+        кроме Firefox, может быть не более одного диапазона.</p>
+    </article>
+
+    <article>
+        <h2>Свойства Selection</h2>
+        <p>Аналогично диапазону, выделение имеет начальную границу, именуемую «якорем», и конечную, называемую
+        «фокусом».</p>
+        <p>Основные свойства выделения:</p>
+        <ul>
+            <li>
+                <p><code>anchorNode</code> - узел, с которого начинается выделение.</p>
+            </li>
+            <li>
+                <p><code>anchorOffset</code> - смещение в <code>anchorNode</code>, где начинается выделение.</p>
+            </li>
+            <li>
+                <p><code>focusNode</code> - узел, на котором выделение заканчивается.</p>
+            </li>
+            <li>
+                <p><code>focusOffset</code> - смещение в <code>focusNode</code>, где выделение заканчивается.</p>
+            </li>
+            <li>
+                <p><code>isCollapsed</code> - <code>true</code>, если диапазон выделения пуст или не существует.</p>
+            </li>
+            <li>
+                <p><code>rangeCount</code> - количество диапазонов в выделении, максимум <code>1</code> во всех браузерах,
+                кроме Firefox.</p>
+            </li>
+        </ul>
+
+        <article class="note">
+            <h3>Конец выделения может быть в документе до его начала</h3>
+            <p>Существует несколько методов выделить содержимое, в зависимости от устройства пользователя: мышь,
+            горячие клавиши, нажатия пальцев и другие.</p>
+            <p>Некоторые из них, такие как мышь, позволяют создавать выделение в обоих направлениях: слева направо и
+            справа налево.</p>
+            <p>Если начало (якорь) выделения идет в документе перед концом (фокус), говорят, что такое выделение
+            «направлено вперед».</p>
+            <p>К примеру, если пользователь начинает выделение с помощью мыши в направлении от «Example» до
+            «italic»:</p>
+            <img src="https://learn.javascript.ru/article/selection-range/selection-direction-forward.svg" alt style="width: 40vw">
+            <p>Иначе, если выделение идеи от «italic» до «Example», выделение идет в «обратном» направлении, его фокус
+            будет перед якорем:</p>
+            <img src="https://learn.javascript.ru/article/selection-range/selection-direction-backward.svg" alt style="width: 40vw">
+            <p>Это отличается от объектов <code>Range</code>, которые всегда направлены вперед: начало диапазона не может
+            стоять после его конца.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>События при выделении</h2>
+        <p>Существуют события, позволяющие отслеживать выделение:</p>
+        <ul>
+            <li><p><code>elem.onselectstart</code> - когда с <code>elem</code> начинается выделение, например
+            пользователь начинает двигать мышкой с зажатой кнопкой.</p>
+                <ul>
+                    <li>
+                        <p><code>preventDefault()</code> отменяет начало выделения.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>document.onselectionchange</code> - когда выделение изменено.</p>
+                <ul>
+                    <li>
+                        <p>Заметьте: этот обработчик можно поставить только на <code>document</code>.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <h3>Демо отслеживания выделения</h3>
+        <p>Ниже представлено небольшое демо. В нем границы выделения выводятся динамически по мере того,
+        как оно меняется:</p>
+<pre>
+<code class="language-html">&lt;p id="p"&gt;Выдели меня: &lt;i&gt;курсив&lt;/i&gt; и &lt;b&gt;жирный&lt;/b&gt;&lt;/p&gt;</code>
+
+<code class="language-html">От &lt;input id="from" disabled&gt - До &lt;input id="to" disabled&gt;</code>
+<code class="language-html">&lt;script&gt;</code>
+    <code class="language-javascript">document.onselectionchange = function() {
+        let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
+
+        from.value = `${anchorNode && anchorNode.data}:${anchorOffset}`;
+        to.value = `${focusNode && focusNode.data}:${focusOffset}`;
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/selectionTrackingDemo.html"></iframe>');
+            });
+        </script>
+
+        <h3>Демо получения выделения</h3>
+        <p>Чтобы получить все выделение:</p>
+        <ul>
+            <li>
+                <p>Как текст: просто вызовите <code>window.getSelection().toString()</code>.</p>
+            </li>
+            <li>
+                <p>Как DOM-элементы: получите выделенные диапазоны и вызовите их метод <code>cloneContents()</code>
+                (только первый диапазон, если мы не поддерживаем мультивыделение в Firefox.</p>
+            </li>
+        </ul>
+        <p>Ниже представлено демо получения выделения как в виде текста, так и в виде DOM-узлов:</p>
+<pre>
+<code class="language-html">&lt;p id="p"&gt;Выдели меня: &lt;i&gt;курсив&lt;/i&gt; и &lt;b&gt;жирный&lt;/b&gt;&lt;/p&gt;</code>
+
+<code class="language-html">Склонировано: &lt;span id="cloned"&gt;&lt;/span&gt;
+&lt;br&gt;
+Как текст: &lt;span id="astext"&gt;&lt;/span&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">document.onselectionchange = function() {
+        let selection = document.getSelection();
+
+        cloned.innerHTML = astext.innerHTML = '';
+
+        //Клонируем DOM-элементы из диапазонов (здесь мы поддерживаем множественное выделение)
+        for (let i = 0; i < selection.rangeCount; i++) {
+            cloned.append(selection.getRangeAt(i).cloneContents());
+        }
+
+        // Получаем как текст
+        astext.innerHTML += selection;
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/selectionReceivingDemo.html"></iframe>');
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Методы Selection</h2>
+        <p>Методы Selection для добавления и удаления диапазонов:</p>
+        <ul>
+            <li>
+                <p><code>getRangeAt(i)</code> - взять i-ый диапазон, начиная с <code>0</code>. Во всех браузерах, кроме
+                Firefox, используется только <code>0</code>.</p>
+            </li>
+            <li>
+                <p><code>addRange(range)</code> - добавить <code>range</code> в выделение. Все браузеры, кроме Firefox,
+                проигнорируют этот вызов, если в выделении уже есть диапазон.</p>
+            </li>
+            <li>
+                <p><code>removeRange(range)</code> - удалить <code>range</code> из выделения.</p>
+            </li>
+            <li>
+                <p><code>removeAllRanges()</code> - удалить все диапазоны.</p>
+            </li>
+            <li>
+                <p><code>empty()</code> - сокращение для <code>removeAllRanges()</code>.</p>
+            </li>
+        </ul>
+        <p>Также существуют методы управления диапазонами выделения напрямую, без обращения к Range:</p>
+        <ul>
+            <li>
+                <p><code>collapse(node, offset)</code> - заменить выделенный диапазон новым, который начинается и заканчивается
+                на <code>node</code>, на позиции <code>offset</code>.</p>
+            </li>
+            <li>
+                <p><code>setPosition(node, offset)</code> - то же самое, что <code>collapse</code> (дублирующий метод-псевдоним).</p>
+            </li>
+            <li>
+                <p><code>collapseToStart()</code> - cхлопнуть (заменить на пустой диапазон) к началу выделения.</p>
+            </li>
+            <li>
+                <p><code>collapseToEnd()</code> - схлопнуть диапазон к концу выделения.</p>
+            </li>
+            <li>
+                <p><code>extend(node, offset)</code> - переместить фокус выделения к данному <code>node</code>,
+                с позиции <code>offset</code>.</p>
+            </li>
+            <li>
+                <p><code>setBaseAndExtend(anchorNode, anchorOffset, focusNode, focusOffset)</code> - заменить диапазон
+                выделения на заданное начало <code>anchorNode/anchorOffset</code> и конец <code>focusNode/focusOffset</code>.
+                Будет выделено все содержимое между этими границами.</p>
+            </li>
+            <li>
+                <p><code>selectAllChildren(node)</code> - выделить все дочерние узла данного узла <code>node</code>.</p>
+            </li>
+            <li>
+                <p><code>deleteFromDocument()</code> - удалить содержимое выделения из документа.</p>
+            </li>
+            <li>
+                <p><code>containsNode(node, allowPartialContainment = false)</code> - проверяет, содержит ли выделение
+                <code>node</code> (частично, если второй аргумент равен <code>true</code>).</p>
+            </li>
+        </ul>
+        <p>Так что для многих задач мы можем вызывать методы <code>Selection</code>, не обращаясь к связанному объекту
+        <code>Range</code>.</p>
+        <p>К примеру, выделение всего параграфа <code>&lt;p&gt;</code>:</p>
+<pre>
+<code class="language-html">&lt;p id="p"&gt;Выдели меня: &lt;i&gt;курсив&lt;/i&gt; и &lt;b&gt;жирный&lt;/b&gt;&lt;/p&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">// Выделить все содержимое от нулевого потомка тега &lt;p&gt; до последнего
+    window.getSelection().setBaseAndExtent(p, 0, p, p.childNodes.length);</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/selectionMethodsFirst.html"></iframe>');
+            });
+        </script>
+        <p>То же самое с помощью <code>Range</code>:</p>
+<pre>
+<code class="language-html">&lt;p id="p"&gt;Выдели меня: &lt;i&gt;курсив&lt;/i&gt; и &lt;b&gt;жирный&lt;/b&gt;&lt;/p&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">let range = new Range();
+    range.selectNodeContents(p);
+
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/selectionMethodsSecond.html"></iframe>');
+            });
+        </script>
+
+        <article class="note">
+            <h3>Чтобы что-то выделить, сначала снимите текущее выделение</h3>
+            <p>Если выделение уже существует, сначала снимите его, используя <code>removeAllRanges()</code>, и только
+            затем добавляйте новые диапазоны. В противном случае все браузеры, кроме Firefox, проигнорируют добавление.</p>
+            <p>Исключением являются некоторые методы выделения, которые заменяют существующее выделение,
+            например, <code>setBaseAndExtent</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Выделение в элементах форм</h2>
+        <p>Элементы форм, такие как <code>input</code> и <code>textarea</code>, предоставляют
+        <a target="_blank" href="https://html.spec.whatwg.org/#textFieldSelection">отдельное API для выделения</a>. Так
+        как значения полей представляют собой простой текст, а не HTML, и нам не нужны такие сложные объекты,
+        как <code>Range</code> и <code>Selection</code>.</p>
+        <p>Свойства:</p>
+        <ul>
+            <li>
+                <p><code>input.selectionStart</code> - позиция начала выделения (это свойство можно изменять).</p>
+            </li>
+            <li>
+                <p><code>input.selectionEnd</code> - позиция конца выделения (это свойство можно изменять).</p>
+            </li>
+            <li>
+                <p><code>input.selectionDirection</code> - направление выделения, одно из: «forward» (вперед),
+                «backward» (назад) или «none» (без направления, если, к примеру, выделено с помощью
+                двойного клика мыши).</p>
+            </li>
+        </ul>
+        <p>События:</p>
+        <ul>
+            <li>
+                <p><code>input.onselect</code> - срабатывает, когда выделение завершено.</p>
+            </li>
+        </ul>
+        <p>Методы:</p>
+        <ul>
+            <li>
+                <p><code>input.select()</code> - выделяем все содержимое <code>input</code> (может быть
+                <code>textarea</code> вместо <code>input</code>).</p>
+            </li>
+            <li>
+                <p><code>input.setSelectionRange(start, end, [direction])</code> - изменить выделение, чтобы начиналось
+                с позиции <code>start</code>, и заканчивалось <code>end</code>, в данном направлении
+                <code>direction</code> (необязательный параметр).</p>
+            </li>
+            <li>
+                <p><code>input.setRangeText(replacement, [start], [end], [selectionMode])</code> - заменяет выделенный
+                текст в диапазоне новым.</p>
+                <p>Если аргументы <code>start</code> и <code>end</code> указаны, то они задают начало и конец диапазона,
+                иначе используется текущее выделение.</p>
+                <p>Последний аргумент <code>selectionMode</code> определяет, как будет вести себя выделение после замены
+                текста. Возможные значения:</p>
+                <ul>
+                    <li>
+                        <p><code>"select"</code> - только что вставленный текст будет выделен.</p>
+                    </li>
+                    <li>
+                        <p><code>"start"</code> - диапазон выделения схлопнется прямо перед вставленным текстом
+                        (так что курсор окажется непосредственно перед ним).</p>
+                    </li>
+                    <li>
+                        <p><code>"end"</code> - диапазон выделения схлопнется прямо после вставленного текста
+                        (курсор окажется сразу после него).</p>
+                    </li>
+                    <li>
+                        <p><code>"preserve"</code> - пытается сохранить выделение. Значение по умолчанию.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Давайте посмотрим на этим методы в действии.</p>
+
+        <h3>Пример: отслеживание выделения</h3>
+        <p>К примеру, этот код использует событие <code>onselect</code>, чтобы отслеживать выделение:</p>
+<pre>
+<code class="language-html">&lt;textarea id="area" style="width: 80%; height: 60px"&gt;
+Выделите что-нибудь в этом тексте, чтобы обновить значение ниже.
+&lt;/textarea&gt;
+&lt;br&gt;
+От &lt;input id="from" disabled&gt; - До &lt;input id="to" disabled&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">area.onselect = function() {
+        from.value = area.selectionStart;
+        to.value = area.selectionEnd;
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/formSelectionFirstExample.html"></iframe>');
+            });
+        </script>
+        <p>Заметьте:</p>
+        <ul>
+            <li>
+                <p><code>onselect</code> срабатывает при выделении чего-либо, но не при снятии выделения.</p>
+            </li>
+            <li>
+                <p>Событие <code>document.onselectionchange</code> не должно срабатывать при выделении внутри элемента
+                формы в соответствии со <a target="_blank" href="https://w3c.github.io/selection-api/#dfn-selectionchange">спецификацией</a>,
+                так как оно не является выделением элементов в <code>document</code>. Хотя некоторые браузеры генерируют это событие,
+                полагаться на это не стоит.</p>
+            </li>
+        </ul>
+
+        <h3>Пример: изменение позиции курсора</h3>
+        <p>Мы можем изменять <code>selectionStart</code> и <code>selectionEnd</code>, устанавливая выделение.</p>
+        <p>Важный граничный случай - когда <code>selectionStart</code> и <code>selectionEnd</code> равны друг другу.
+        В этом случае они указывают на позицию курсора. Иными словами, когда ничего не выбрано, выделение схлопнуто
+        на позиции курсора.</p>
+        <p>Таким образом, задавая <code>selectionStart</code> и <code>selectionEnd</code> одно и то же значение,
+        мы можем передвигать курсор.</p>
+        <p>Например:</p>
+<pre>
+<code class="language-html">&lt;textarea id="area" style="width: 80%; height: 60px"&gt;
+Переведите фокус на меня, курсор окажется на 10-й позиции
+&lt;/textarea&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">area.onfocus = function() {
+        // Нулевая задержка setTimeout нужна, чтобы это сработало после получения фокуса элементом формы
+        setTimeout(() => {
+            // Мы можем задать любое выделение
+            // Если начало и конец совпадают, курсор устанавливается на этом месте
+            area.selectionStart = area.selectionEnd = 10;
+        });
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/formSelectionSecondExample.html"></iframe>');
+            });
+        </script>
+
+        <h3>Пример: изменение выделения</h3>
+        <p>Чтобы изменять содержимое выделения, мы можем использовать метод <code>input.setRangeText</code>.
+        Конечно, мы можем читать <code>selectionStart/End</code> и, зная позиции выделения, изменять соответствующую
+        подстроку в <code>value</code>, но <code>setRangeText</code> намного мощнее и, зачастую, удобнее.</p>
+        <p>Это довольно сложный метод. В простейшем случае он принимает один аргумент, заменяет содержание
+        выделенной области и снимает выделение.</p>
+        <p>В этом примере выделенный текст будет обернут в <code>*...*</code>:</p>
+<pre>
+<code class="language-html">&lt;input id="input" style="width: 200px" value="Select here and click the button"&gt;
+&lt;button id="button"&gt;Обернуть выделение звездочками *...*&lt;/button&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">button.onclick = () => {
+        if (input.selectionStart === input.selectionEnd) {
+            return; // Ничего не выделено
+        }
+
+        let selected = input.value.slice(input.selectionStart, input.selectionEnd);
+        input.setRangeText(`*${selected}*`);
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/formSelectionThirdExample.html"></iframe>');
+            });
+        </script>
+        <p>Передавая больше параметров, мы можем устанавливать <code>start</code> и <code>end</code>.</p>
+        <p>В этом примере мы найдем <code>"ЭТО"</code> в поле ввода, заменим его и оставим замененный текст выделенным:</p>
+<pre>
+<code class="language-html">&lt;input id="input" style="width: 200px" value="Замените ЭТО в тексте"&gt;
+&lt;button id="button"&gt;Заменить ЭТО&lt;/button&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">button.onclick = () => {
+        let pos = input.value.indexOf('ЭТО');
+        if (pos >= 0) {
+            input.setRangeText('*ЭТО*', pos, pos + 3, 'select');
+            input.focus(); // Ставим фокус, чтобы выделение было видно
+        }
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/formSelectionFourthExample.html"></iframe>');
+            });
+        </script>
+
+        <h3>Пример: вставка на месте курсора</h3>
+        <p>Если ничего не выделено, или мы указали одинаковые <code>start</code> и <code>end</code> в методе
+        <code>setRangeText</code>, то текст просто вставляется, и ничего не удаляется.</p>
+        <p>Мы также можем вставить что-нибудь на текущей позиции курсора, используя <code>setRangeText</code>.</p>
+        <p>Кнопку в примере вставляет <code>"ПРИВЕТ"</code> на месте курсора и устанавливает его после вставленного
+        текста. Если какой-то текст был выделен, он будет заменен (мы можем узнать о наличии выделения, проверив
+        <code>selectionStart != selectionEnd</code> и, если выделение есть, сделать что-то еще):</p>
+<pre>
+<code class="language-html">&lt;input id="input" style="width: 200px" value="Текст Текст Текст Текст Текст"&gt;
+&lt;button id="button"&gt;Вставить "ПРИВЕТ" на месте курсора&lt;/button&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">button.onclick = () => {
+        input.setRangeText('ПРИВЕТ', input.selectionStart, input.selectionEnd, 'end');
+        input.focus();
+    };</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                    '<iframe src="iframes/formSelectionFifthExample.html"></iframe>');
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Сделать что-то невыделяемым</h2>
+        <p>Существует три способа сделать что-то невыделяемым:</p>
+        <ol>
+            <li>
+                <p>Используйте CSS-свойство <code>user-select: none</code>.</p>
+<pre>
+<code class="language-html">&lt;style&gt;
+    #elem {
+        user-select: none;
+    }
+&lt;/style&gt;
+
+&lt;div&gt;Можно выделить &lt;div id="elem"&gt;Нельзя выделить&lt;/div&gt; Можно выделить&lt;/div&gt;</code>
+</pre>
+                <div style="margin: 0.5rem">
+                    <button>Запустить пример</button>
+                </div>
+                <script>
+                    document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                        if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                            this.parentElement.lastElementChild.remove();
+                        }
+                        this.parentElement.insertAdjacentHTML('beforeend',
+                            '<iframe src="iframes/makeSomethingUnselectableFirst.html"></iframe>');
+                    });
+                </script>
+                <p>Это свойство не позволяет начать выделение с <code>elem</code>, но пользователь может начать
+                выделять с другого места и включить <code>elem</code>.</p>
+                <p>После этого <code>elem</code> станет частью <code>window.getSelection()</code>, так что на самом
+                деле выделение произойдет, но его содержимое обычно игнорируется при копировании и вставке.</p>
+            </li>
+            <li>
+                <p>Предотвратить действие по умолчанию в событии <code>onselectstart</code> или <code>mousedown</code>.</p>
+<pre>
+<code class="language-html">&lt;div&gt;Можно выделить &lt;div id="elem"&gt;Нельзя выделить&lt;/div&gt; Можно выделить&lt;/div&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">elem.onselectstart = () => false;</code>
+<code class="language-html">&lt;/script&gt;</code>
+</pre>
+                <div style="margin: 0.5rem">
+                    <button>Запустить пример</button>
+                </div>
+                <script>
+                    document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                        if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                            this.parentElement.lastElementChild.remove();
+                        }
+                        this.parentElement.insertAdjacentHTML('beforeend',
+                            '<iframe src="iframes/makeSomethingUnselectableSecond.html"></iframe>');
+                    });
+                </script>
+                <p>Этот способ также не дает начать выделение с <code>elem</code>, но пользователь может начать
+                с другого элемента, а затем расширить выделение до <code>elem</code>.</p>
+                <p>Это удобно, когда есть другой обработчик события на том действии, которое запускает выделение
+                (скажем, <code>mousedown</code>). Так что мы отключаем выделение, чтобы избежать конфликта.</p>
+                <p>А содержимое <code>elem</code> при этом может быть скопировано.</p>
+            </li>
+            <li>
+                <p>Мы также можем очистить выделение после срабатывания с помощью
+                <code>window.getSelection().removeAllRanges()</code>. Этот способ используется редко, так как он
+                вызывает нежелательное мерцание при появлении и исчезновении выделения.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Ссылки</h2>
+        <ul>
+            <li>
+                <p><a target="_blank" href="https://dom.spec.whatwg.org/#ranges">Спецификация DOM: Range</a></p>
+            </li>
+            <li>
+                <p><a target="_blank" href="https://www.w3.org/TR/selection-api/#dom-globaleventhandlers-onselectstart">Selection API</a></p>
+            </li>
+            <li>
+                <p><a target="_blank" href="https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#textFieldSelection">Спецификация HTML: API для выделения в элементах управления текстом</a></p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Мы подробно рассмотрели два разных API для выделения:</p>
+        <ol>
+            <li>
+                <p>Для документа: объекты <code>Selection</code> и <code>Range</code>.</p>
+            </li>
+            <li>
+                <p>Для <code>input</code>, <code>textarea</code>: дополнительные методы и свойства.</p>
+            </li>
+        </ol>
+        <p>Второе API очень простое, так как работает с текстом.</p>
+        <p>Самые используемые готовые решения:</p>
+        <ol>
+            <li>
+                <p>Получить выделение:</p>
+<pre>
+<code class="language-javascript">let selection = window.getSelection();
+
+let cloned = /* элемент, в который мы хотим скопировать выделенные узлы */;
+
+// Затем применяем методы Range к selection.getRangeAt(0)
+// или, как здесь, ко всем диапазонам, чтобы поддерживать множественное выделение
+for (let i = 0; i < selection.rangeCount; i++) {
+    cloned.append(selection.getRangeAt(i).cloneContents());
+}</code>
+</pre>
+            </li>
+            <li>
+                <p>Установить выделение:</p>
+<pre>
+<code class="language-javascript">let selection = window.getSelection();
+
+// Напрямую
+selection.setBaseAndExtent(anchorNode, anchorOffset, focusNode, focusOffset);
+
+// Или можно создать диапазон range и:
+selection.removeAllRanges();
+selection.addRange(range);</code>
+</pre>
+            </li>
+        </ol>
+        <p>И пару слов о курсоре. Позиция курсора в редактируемых элементах, таких как <code>&lt;textarex&gt;</code>,
+        всегда находится в начале или конце выделения.</p>
+        <p>Мы можем использовать это, как для того, чтобы получить позицию курсора, так и чтобы переместить его,
+        установив <code>elem.selectionStart</code> и <code>elem.selectionEnd</code>.</p>
+    </article>
 </body>
 </html>

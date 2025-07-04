@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>makeSomethingUnselectableSecond iframe</title>
+</head>
+<body>
+    <div>Можно выделить <div id="elem">Нельзя выделить</div> Можно выделить</div>
+
+    <script>
+        elem.addEventListener('selectstart', function(event) {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>

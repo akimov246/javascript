@@ -297,7 +297,7 @@
         </code>
     </article>
 
-    <article>
+    <article id="documentFragment">
         <h2>DocumentFragment</h2>
         <p><code>DocumentFragment</code> является специальным DOM-узлом, который служит оберткой для передачи
         списков узлов.</p>
@@ -309,17 +309,17 @@
             &ltul id="ul"&gt&lt/ul&gt<br>
             <br>
             &ltscript&gt<br>
-            function getListContent() {<br>
-            &nbsp;&nbsp;let fragment = new DocumentFragment();<br>
-            &nbsp;&nbsp;<br>
-            &nbsp;&nbsp;for (let i = 1; i <= 3; i++) {<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;let li = document.createElement('li');<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;li.append(i);
-            &nbsp;&nbsp;&nbsp;&nbsp;fragment.append(li);<br>
+            &nbsp;&nbsp;function getListContent() {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;let fragment = new DocumentFragment();<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;for (let i = 1; i <= 3; i++) {<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;let li = document.createElement('li');<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;li.append(i);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fragment.append(li);<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;return fragment;<br>
             &nbsp;&nbsp;}<br>
-            &nbsp;&nbsp;<br>
-            &nbsp;&nbsp;return fragment;<br>
-            }<br>
             <br>
             ul.append(getListContent()); // (*)<br>
             &lt/script&gt

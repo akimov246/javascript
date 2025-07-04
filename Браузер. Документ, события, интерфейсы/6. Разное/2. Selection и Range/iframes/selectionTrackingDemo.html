@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>selectionTrackingDemo iframe</title>
+</head>
+<body>
+    <p>Выдели меня: <i>курсив</i> и <b>жирный</b></p>
+    <label>От <input id="from" type="text" disabled></label><label> - До <input id="to" type="text" disabled></label>
+    <script>
+        document.addEventListener('selectionchange', function() {
+            let {anchorNode, anchorOffset, focusNode, focusOffset} = window.getSelection();
+
+            from.value = `${anchorNode && anchorNode.data}:${anchorOffset}`;
+            to.value = `${focusNode && focusNode.data}:${focusOffset}`;
+        });
+    </script>
+</body>
+</html>

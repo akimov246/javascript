@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>formSelectionThirdExample iframe</title>
+</head>
+<body>
+    <input id="input" style="width: 250px" value="Select here and click the button">
+    <button id="button">Обернуть выделение звездочками *...*</button>
+
+    <script>
+        button.addEventListener('pointerdown', function() {
+            if (input.selectionStart === input.selectionEnd) {
+                return;
+            }
+
+            let selected = input.value.slice(input.selectionStart, input.selectionEnd);
+            input.setRangeText(`*${selected}*`);
+        });
+    </script>
+</body>
+</html>
