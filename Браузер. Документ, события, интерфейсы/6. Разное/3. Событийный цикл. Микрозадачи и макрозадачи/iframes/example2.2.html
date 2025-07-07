@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>example2.2 iframe</title>
+</head>
+<body>
+    <div id="progress"></div>
+
+    <script>
+        let i = 0;
+        progress.innerHTML = i;
+
+        function count() {
+            progress.innerHTML = ++i;
+
+            if (i < 146) {
+                setTimeout(count);
+            } else {
+                progress.innerHTML += '<br>Владимир Путин - молодец!<br><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_%D0%9F%D1%83%D1%82%D0%B8%D0%BD_%2808-03-2024%29_%28cropped%29_%28higher_res%29.jpg/960px-%D0%92%D0%BB%D0%B0%D0%B4%D0%B8%D0%BC%D0%B8%D1%80_%D0%9F%D1%83%D1%82%D0%B8%D0%BD_%2808-03-2024%29_%28cropped%29_%28higher_res%29.jpg" alt style="height: 70vh">'
+            }
+        }
+
+        count();
+    </script>
+</body>
+</html>

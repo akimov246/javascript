@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>example3.2 iframe</title>
+</head>
+<body>
+    <div id="progress"></div>
+
+    <script>
+        let i = 0;
+
+        function count() {
+            progress.innerHTML = ++i;
+
+            if (i < 1e6) {
+                queueMicrotask(count);
+            }
+        }
+
+        count();
+    </script>
+</body>
+</html>
