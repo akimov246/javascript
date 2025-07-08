@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Открытие окон и методы window</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Открытие окон и методы window</h2>
+        <p>Всплывающее окно («попап» - от англ. Popup window) - один из древнейших способов показать пользователю
+        еще один документ.</p>
+        <p>Достаточно запустить:</p>
+<pre><code class="language-javascript">window.open('https://javascript.info');</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.querySelector('button').addEventListener('pointerdown', function() {
+                window.open('https://javascript.info');
+            });
+        </script>
+        <p>... И откроется новое окно с указанным URL. Большинство современных браузеров по умолчанию будут открывать
+        новую вкладку вместо отдельного окна.</p>
+        <p>Попапы существуют с доисторических времен. Они были придуманы для отображения нового контента поверх
+        открытого главного окна. Но с тех пор появились другие способы сделать это: JavaScript может загрузить
+        содержимое вызовом <a target="_blank" href="https://learn.javascript.ru/fetch">fetch</a> и показать его
+        в тут же созданном <code>&lt;div&gt;</code>, так что попапы используются не каждый день.</p>
+        <p>Кроме того, попапы не очень хороши для мобильных устройств, которые не умеют показывать несколько окон
+        одновременно.</p>
+        <p>Однако, для некоторых задач попапы еще используются, например для OAuth-авторизации (вход через
+        Google/Facebook/...), так как:</p>
+        <ol>
+            <li>
+                <p>Попап - это отдельное окно со своим JavaScript-окружением. Так что открытие попапа со стороннего,
+                не доверенного сайта вполне безопасно.</p>
+            </li>
+            <li>
+                <p>Открыть попап очень просто.</p>
+            </li>
+            <li>
+                <p>Попам может производить навигацию (менять URL) и отсылать сообщения в основное окно.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Блокировка попапов</h2>
+        <p>В прошлом злонамеренные сайты завалили посетителей всплывающими окнами. Такие страницы могли открывать
+        сотни попапов с рекламой. Поэтому теперь большинство браузеров пытаются заблокировать всплывающие окна,
+        чтобы защитить пользователя.</p>
+        <p><b>Всплывающее окно блокируется в том случае, если вызов window.open произошел не в результате действия
+        посетителя (например, события <code>onclick</code>).</b></p>
+        <p>Например:</p>
+<pre><code class="language-javascript">// Попап заблокирован
+window.open('https://javascript.info');
+
+// Попап будет показан
+button.onclick = () => {
+    window.open('https://javascript.info');
+};</code></pre>
+        <p>Таким образом браузеры могут защитить пользователя от появления нежелательных попапов, при этом не
+        отключая попапы полностью.</p>
+    </article>
+
+    <article>
+        <h2>Полный синтаксис window.open</h2>
+        <p>Синтаксис открытия нового окна: <code>window.open(url, name, params)</code>:</p>
+        <ul>
+            <li>
+                <p><b>url</b> - URL для загрузки в новом окне.</p>
+            </li>
+            <li>
+                <p><b>name</b> - Имя нового окна. У каждого окна есть свойство <code>window.name</code>, в котором
+                можно задавать, какое окно использовать для попапа. Таким образом, если уже существует окно с заданным
+                именем - указанный в параметрах URL откроется в нем, в противном случае откроется новое окно.</p>
+            </li>
+            <li>
+                <p><b>params</b> - Строка параметров для нового окна. Содержит настройки, разделенные запятыми. Важно
+                помнить, что в данной строке не должно быть пробелов. Например, <code>width=200,height=100</code>.</p>
+            </li>
+        </ul>
+        <p>Параметры в строке <code>params</code>:</p>
+        <ul>
+            <li>
+                <p>Позиция окна:</p>
+                <ul>
+                    <li>
+                        <p><code>left/top</code> (числа) - координаты верхнего левого угла нового окна на экране.
+                        Существует ограничение: новое окно не может быть позиционировано вне видимости области экрана.</p>
+                    </li>
+                    <li>
+                        <p><code>width/height</code> (числа) - ширина и высота нового окна. Существуют ограничения на
+                        минимальную высоту и ширину, которые делают невозможным создание невидимого окна.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Панели окна:</p>
+                <ul>
+                    <li>
+                        <p><code>menubar</code> (yes/no) - позволяет отобразить или скрыть меню браузера в новом окне.</p>
+                    </li>
+                    <li>
+                        <p><code>toolbar</code> (yes/no) - позволяет отобразить или скрыть панель навигации браузера
+                        (кнопки вперед, назад, перезагрузки страницы) нового окна.</p>
+                    </li>
+                    <li>
+                        <p><code>location</code> (yes/no) - позволяет отобразить или скрыть адресную строку нового окна.
+                        Firefox и IE не позволяют скрывать эту панель по умолчанию.</p>
+                    </li>
+                    <li>
+                        <p><code>status</code> (yes/no) - позволяет отобразить или скрыть строку состояния. Как и с адресной
+                        строкой, большинство браузеров будут принудительно показывать ее.</p>
+                    </li>
+                    <li>
+                        <p><code>resizable</code> (yes/no) - позволяет отключить возможность изменения размера нового
+                        окна. Не рекомендуется.</p>
+                    </li>
+                    <li>
+                        <p><code>scrollbar</code> (yes/no) - позволяет отключить полосы прокрутки для нового окна.
+                        Не рекомендуется.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Помимо этого существует некоторое количество кроссбраузерных значений, которые обычно не используются.
+        Найти примеры таких свойств можно <a target="_blank" href="https://developer.mozilla.org/en/DOM/window.open">по ссылке</a>.</p>
+    </article>
+
+    <article>
+        <h2>Пример: минималистичное окно</h2>
+        <p>Давайте откроем окно с минимальным набором настроек, просто, чтобы посмотреть, какие из них браузер
+        позволит отключить:</p>
+<pre><code class="language-javascript">let params = `scrollbar=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=0,height=0,left=-1000,top=-1000`;
+
+window.open('/', 'test', params);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                let params = `scrollbar=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=0,height=0,left=-1000,top=-1000`;
+
+                window.open('https://google.com', 'test', params);
+            });
+        </script>
+        <p>В этом примере большинство настроек заблокированы и само окно находится за пределами видимой области экрана.
+        Посмотрим, что получилось в результате. Большинство браузеров «исправит» странные значения - как, например,
+        нулевые <code>width/height</code> и отрицательные <code>left/top</code>. Например, Chrome установит высоту
+        и ширину такого окна равной высоте и ширине экрана, так что попап будет занимать весь экран.</p>
+        <p>Давайте исправим значения и зададим нормальные координаты (<code>left</code> и <code>top</code>) и значения
+        размеров окна (<code>width</code> и <code>height</code>):</p>
+<pre><code class="language-javascript">let params = `scrollbar=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=600,height=300,left=100,top=100`;
+
+window.open('/', 'test', params);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                let params = `scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no,width=600,height=300,left=100,top=100`;
+
+                window.open('https://google.com', 'test', params);
+            });
+        </script>
+        <p>Большинство браузеров выведет окно с заданными нами настройками.</p>
+        <p>Правила для опущенных параметров:</p>
+        <ul>
+            <li>
+                <p>Если третий аргумент при вызове <code>open</code> отсутствует или он пустой, будут использованы настройки
+                окна по умолчанию.</p>
+            </li>
+            <li>
+                <p>Если строка параметров передана, но некоторые параметры yes/no пропущены, то считается, что указано
+                <code>no</code>, так что соответствующие возможности будут отключены, если на это нет ограничений
+                со стороны браузера. Поэтому при задании параметров, убедитесь, что вы явно указали все необходимые
+                yes.</p>
+            </li>
+            <li>
+                <p>Если координаты <code>left/top</code> не заданы, браузер попытается открыть новое окно рядом с предыдущим
+                открытым окном.</p>
+            </li>
+            <li>
+                <p>Если не заданы размеры окна <code>width/height</code>, браузер откроет новое окно с теми же размерами,
+                что и предыдущее открытое окно.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Доступ к попапу из основного окна</h2>
+        <p>Вызов <code>open</code> возвращает ссылку на новое окно. Эта ссылка может быть использована для управления
+        свойствами окна, например, изменения положения и др.</p>
+        <p>Например, здесь мы генерируем содержимое попапа из JavaScript:</p>
+<pre><code class="language-javascript">let newWin = window.open('about:blank', 'hello', 'width=200,height=200');
+
+newWin.document.write('Hello, world!');</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                let newWin = window.open('about:blank', 'hello', 'width=200,height=200');
+
+                newWin.document.write('Hello world');
+            });
+        </script>
+        <p>А здесь содержимое окна модифицируется после загрузки:</p>
+<pre><code class="language-javascript">let newWindow = window.open('/', 'example', 'width=300,height=300');
+newWindow.focus();
+
+alert(newWindow.location.href); // (*) about:blank, загрузка еще не началась
+
+newWindow.onload = function() {
+    let html = `&lt;div style="font-size: 30px"&gt;Добро пожаловать!&lt;/div&gt;`;
+    newWindow.document.body.insertAdjacentHTML('afterbegin', html);
+};</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                let newWindow = window.open('./index.html', 'example', 'width=300,height=300');
+                newWindow.focus();
+
+                alert(newWindow.location.href);
+
+                newWindow.addEventListener('load', function() {
+                    let html = `<div style="font-size: 30px">Добро пожаловать!</div>`;
+                    newWindow.document.body.insertAdjacentHTML('afterbegin', html);
+                });
+            });
+        </script>
+        <p>Обратите внимание: сразу после <code>window.open</code> новое окно еще не загружено. Это демонстрируется
+        в строке <code>(*)</code>. Так что нужно ждать <code>onload</code>, чтобы его изменить. Или же поставить обработчик
+        <code>DOMContentLoaded</code> на <code>newWindow.document</code>.</p>
+
+        <article class="warning">
+            <h3>Политика одного источника</h3>
+            <p>Окна имеют свободный доступ к содержимому друг друга только если они с одного источника (у них совпадает
+            домен, протокол и порт (protocol://domain:port)).</p>
+            <p>Иначе, например, если основное окно с <code>site.com</code>, а попап с <code>gmail.com</code>, это
+            невозможно по соображениям пользовательской безопасности. Детали см. в главе
+            <a target="_blank" href="https://learn.javascript.ru/cross-window-communication">Общение между окнами</a>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Доступ к открывшему окну из попапа</h2>
+        <p>Попап также может обратиться к открывшему его окну по ссылке <code>window.opener</code>. Она равна
+        <code>null</code> для всех окон, кроме попапов.</p>
+        <p>Если вы запустите код ниже, то он заменит содержимое открывшего (текущего) окна на «Тест»:</p>
+<pre><code class="language-javascript">let newWin = window.open('about:blank', 'hello', 'width=200,height=200');
+
+newWin.document.write('&lt;script&gt;window.opener.document.body.innerHTML = "ТЕСТ";&lt;\/script&gt;');</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                let newWin = window.open('about:blank', 'test', 'width=200,height=200,left=100,top=100');
+
+                newWin.document.write('<script>window.opener.document.body.innerHTML = "ТЕСТ";<\/script>');
+
+                setTimeout(() => {
+                    newWin.close();
+                }, 3000);
+            });
+        </script>
+        <p>Так что связь между окнами двусторонняя: главное окно и попап имеют ссылки друг на друга.</p>
+    </article>
+
+    <article>
+        <h2>Закрытие попапа</h2>
+        <p>Чтобы закрыть окно: <code>win.close()</code>.</p>
+        <p>Для проверки, закрыто ли окно: <code>win.closed</code>.</p>
+        <p>Технически метод <code>close()</code> доступен для любого окна, но <code>window.close()</code> будет
+        игнорироваться большинством браузеров, если <code>window</code> не было создано с помощью
+        <code>window.open()</code>. Так что он сработает только для попапов.</p>
+        <p>Если окно закрыто, то его свойство <code>closed</code> имеет значение <code>true</code>. Таким образом
+        можно легко проверить, закрыт ли попап (или главное окно) или все еще открыт. Пользователь может закрыть его
+        в любой момент, и наш код должен учитывать эту возможность.</p>
+        <p>Этот код откроет и затем закроет окно:</p>
+<pre><code class="language-javascript">let newWindow = window.open('/', 'example', 'width=300,height=300');
+
+newWindow.onload = function() {
+    newWindow.close();
+    alert(newWindow.closed); // true
+};</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                let newWindow = window.open('./index.html', 'example', 'width=300,height=300');
+
+                newWindow.addEventListener('load', function() {
+                    newWindow.close();
+                    alert(newWindow.closed);
+                });
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Прокрутка и изменение размеров</h2>
+
+    </article>
+</body>
+</html>
