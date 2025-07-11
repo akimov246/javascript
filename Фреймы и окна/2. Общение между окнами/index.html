@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Общение между окнами</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        nav {
+            background: rgb(247, 244, 243);
+            border: 3px solid rgb(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        div.tabs {
+            border: rgb(247, 244, 243) 3px solid;
+            border-radius: 5px;
+        }
+
+        div.content {
+            height: 30vh;
+            overflow: auto;
+        }
+
+        div.content div.tab-content {
+            display: none;
+        }
+
+        div.content div.tab-content.active {
+            display: block;
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        nav button.active {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Общение между окнами</h2>
+        <p>Политика «Одинакового источника» (Same origin) ограничивает доступ окон и фреймов друг к другу.</p>
+        <p>Идея заключается в том, что если у пользователя открыто две страницы: <code>john-smith.com</code> и
+        <code>gmail.com</code>, то у скрипта со страницы <code>john-smith.com</code> не будет возможности
+        прочитать письма из <code>gmail.com</code>. Таким образом, задача политики «Одинакового источника» -
+        защитить данные пользователя от возможной кражи.</p>
+    </article>
+
+    <article>
+        <h2>Политика «Одинакового источника»</h2>
+        <p>Два URL имеют «одинаковый источник» в том случае, если они имеют совпадающие протокол, домен и порт.</p>
+        <p>Эти URL имеют одинаковый источник:</p>
+        <ul>
+            <li>
+                <p><code>http://site.com</code></p>
+            </li>
+            <li>
+                <p><code>http://site.com/</code></p>
+            </li>
+            <li>
+                <p><code>http://site.com/my/page.html</code></p>
+            </li>
+        </ul>
+        <p>А эти - разные источники:</p>
+        <ul>
+            <li>
+                <p><code>http://www.site.com</code> (другой домен: <code>www.</code> важен)</p>
+            </li>
+            <li>
+                <p><code>http://site.org</code> (другой домен: <code>.org</code> важен)</p>
+            </li>
+            <li>
+                <p><code>https://site.com</code> (другой протокол: <code>https</code>)</p>
+            </li>
+            <li>
+                <p><code>http://site.com:8080</code> (другой порт: <code>8080</code>)</p>
+            </li>
+        </ul>
+        <p>Политика «Одинакового источника» говорит, что:</p>
+        <ul>
+            <li>
+                <p>Если у нас есть ссылка на другой объект <code>window</code>, например, на всплывающее окно, созданное
+                с помощью <code>window.open</code> или на <code>window</code> из <code>&lt;iframe&gt;</code> и у каждого
+                окна тот же источник, то к нему будет полный доступ.</p>
+            </li>
+            <li>
+                <p>В противном случае, если у него другой источник, мы не сможем обращаться к его переменным,
+                объекту <code>document</code> и так далее. Единственное исключение - объект <code>location</code>:
+                его можно изменять (таким образом перенаправляя пользователя). Но нельзя читать <code>location</code>
+                (нельзя узнать, где находится пользователь, чтобы не было никаких утечек информации).</p>
+            </li>
+        </ul>
+
+        <h3>Доступ к содержимому ифрейма</h3>
+        <p>Внутри <code>&lt;iframe&gt;</code> находится по сути отдельное окно с собственными объектами <code>document</code>
+        и <code>window</code>.</p>
+        <p>Мы можем обращаться к ним, используя свойства:</p>
+        <ul>
+            <li>
+                <p><code>iframe.contentWindow</code> - ссылка на объект <code>window</code> внутри <code>&lt;iframe&gt;</code>.</p>
+            </li>
+            <li>
+                <p><code>iframe.contentDocument</code> - ссылка на объект <code>document</code> внутри <code>&lt;iframe&gt;</code>,
+                короткая запись для <code>iframe.contentWindow.document</code>.</p>
+            </li>
+        </ul>
+        <p>Когда мы обращаемся к встроенному в ифрейм окну, браузер проверяет, имеет ли фрейм тот же источник. Если это
+        не так, тогда доступ будет запрещен (разрешена лишь запись в <code>location</code>, это исключение).</p>
+        <p>Для примера давайте попробуем чтение и запись в ифрейм с другим источником:</p>
+<pre><code class="language-html">&lt;iframe src="https://example.com" id="iframe"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">iframe.onload = function() {
+        // Можно получить ссылку на внутренний window
+        let iframeWindow = iframe.contentWindow; // OK
+
+        // ... Но при попытке получить доступ к document страницы
+        let doc = iframe.contentDocument; // ... Получим null
+
+        // Также мы не можем прочитать URL страницы в ифрейме
+        try {
+            // Нельзя читать из объекта Location
+            let href = iframe.contentWindow.location.href; // Ошибка
+        } catch(e) {
+            alert(e); // SecurityError
+        }
+
+        // ... Но можно писать в него (и загрузить что-то другое в ифрейм)!
+        iframe.contentWindow.location.href = '/'; // OK
+
+        iframe.onload = null; // Уберем обработчик, чтобы не срабатывал после изменения location
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="https://example.com"></iframe>');
+                let iframe = this.parentElement.querySelector('iframe');
+                iframe.onload = function() {
+                    let iframeWindow = iframe.contentWindow;
+
+                    let doc = iframe.contentDocument;
+
+                    try {
+                        let href = iframe.contentWindow.location.href;
+                    } catch(e) {
+                        alert(e);
+                        iframe.contentWindow.location.href = 'index.html';
+                        iframe.onload = null;
+                    }
+                };
+            });
+        </script>
+        <p>Код выше выведет ошибку или <code>null</code> для любых операций, кроме:</p>
+        <ul>
+            <li>
+                <p>Получения ссылки на внутренний объект <code>window</code> из <code>iframe.contentWindow</code>.</p>
+            </li>
+            <li>
+                <p>Изменения <code>location</code>.</p>
+            </li>
+        </ul>
+        <p>С другой стороны, если у фрейма тот же источник, то с ним можно делать все что угодно:</p>
+<pre><code class="language-html">&lt;!-- ифрейм с того же сайта --&gt;
+&lt;iframe src="/" id="iframe"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">iframe.onload = function() {
+        // Делаем с ним что угодно
+        iframe.contentDocument.body.prepend('Привет, мир!');
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="index.html"></iframe>');
+                let iframe = this.parentElement.querySelector('iframe');
+
+                iframe.onload = function() {
+                    setTimeout(() => iframe.contentDocument.body.insertAdjacentHTML('afterbegin' ,'<span style="font-size: 30px">Привет, мир!</span>'), 1000);
+                }
+            });
+        </script>
+
+        <article class="note">
+            <h3><code>iframe.onload</code> и <code>iframe.contentWindow.onload</code></h3>
+            <p>Событие <code>iframe.onload</code> - по сути то же, что и <code>iframe.contentWindow.onload</code>.
+            Оно сработает, когда встроенное окно полностью загрузится со всеми ресурсами.</p>
+            <p>... Но <code>iframe.onload</code> всегда доступно извне ифрейма, в то время как доступ к
+            <code>iframe.contentWindow.onload</code> разрешен только из окна с тем же источником.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Окна на поддоменах: document.domain</h2>
+        <p>По определению, если у двух URL разный домен, то у них разный источник.</p>
+        <p>Но если в окнах открыты страницы с поддоменов одного домена 2-го уровня, например <code>john.site.com</code>,
+        <code>peter.site.com</code> и <code>site.com</code> (так что их общий домен <code>site.com</code>), то
+        можно заставить браузер игнорировать это отличие. Так что браузер сможет считать их пришедшими с одного источника
+        при проверке возможности доступа друг к другу.</p>
+        <p>Для этого в каждом таком окне нужно запустить:</p>
+<pre><code class="language-javascript">document.domain = 'site.com';</code></pre>
+        <p>После этого они смогут взаимодействовать без ограничений. Еще раз заметим, что это доступно только для страниц
+        с одинаковым доменом второго уровня.</p>
+
+        <h3>Ифрейм: подождите документ</h3>
+        <p>Когда ифрейм - с того же источника, мы имеем доступ к документу в нем. Но есть подвох. Не связанный с
+        кросс-доменными особенностями, но достаточно важный, чтобы о нем знать.</p>
+        <p>Когда ифрейм создан, в нем сразу есть документ. Но этот документ - другой, не тот, который в него будет
+        загружен!</p>
+        <p>Так что если мы тут же сделаем что-то с этим документом, то наши изменения, скорее всего, пропадут.</p>
+        <p>Вот, взгляните:</p>
+<pre><code class="language-html">&lt;iframe src="/" id="iframe"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">let oldDoc = iframe.contentDocument;
+    iframe.onload = function() {
+        let newDoc = iframe.contentDocument;
+        // Загруженный document - не тот, который был в iframe при создании изначально!
+        alert(oldDoc === newDoc); // false
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="index.html"></iframe>');
+                let iframe = this.parentElement.querySelector('iframe');
+
+                let oldDoc = iframe.contentDocument;
+                iframe.onload = function() {
+                    let newDoc = iframe.contentDocument;
+                    alert(oldDoc === newDoc);
+                };
+            });
+        </script>
+        <p>Нам не следует работать с документом еще не загруженного ифрейма, так как это не тот документ. Если мы
+        поставим на него обработчик событий - они будут проигнорированы.</p>
+        <p>Как поймать момент, когда появится правильный документ?</p>
+        <p>Правильный документ точно будет доступен, когда сработает <code>iframe.onload</code>. Но он срабатывает
+        только тогда, когда загрузится весь ифрейм со всеми его ресурсами.</p>
+        <p>Можно проверять через <code>setInterval</code>:</p>
+<pre><code class="language-html">&lt;iframe src="/" id="iframe"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">let oldDoc = iframe.contentDocument;
+
+    // Каждый 100мс проверяем, не изменился ли документ
+    let timer = setInterval(() => {
+        let newDoc = iframe.contentDocument;
+        if (oldDoc === newDoc) return;
+
+        alert('New document is here!');
+
+        clearInterval(timer); // Отключим setInterval, он нам больше не нужен
+    }, 100);</code>
+&lt;/script&gt;</pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="index.html"></iframe>');
+                let iframe = this.parentElement.querySelector('iframe');
+
+                let oldDoc = iframe.contentDocument;
+
+                let timer = setInterval(() => {
+                    let newDoc = iframe.contentDocument;
+                    if (newDoc === oldDoc) return;
+
+                    alert('New document is here!');
+
+                    clearInterval(timer);
+                }, 100);
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Коллекция window.frames</h2>
+        <p>Другой способ получить объект <code>window</code> из <code>&lt;iframe&gt;</code> - забрать его из именованной
+        коллекции <code>window.frames</code>:</p>
+        <ul>
+            <li>
+                <p>По номеру: <code>window.frames[0]</code> - объект <code>window</code> для первого фрейма в документе.</p>
+            </li>
+            <li>
+                <p>По имени: <code>window.frames.iframeName</code> - объект <code>window</code> для фрейма со свойством
+                <code>name="iframeName"</code>.</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+<pre><code class="language-html">&lt;iframe src="/" name="win" id="iframe"&gt;&lt;/iframe&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">alert(iframe.contentWindow === frames[0]); // true
+    alert(iframe.contentWindow === frames.win); // true</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="index.html" name="win"></iframe>');
+                let iframe = this.parentElement.querySelector('iframe');
+
+                alert(iframe.contentWindow === window.frames[0]);
+                alert(iframe.contentWindow === window.frames.win);
+            });
+        </script>
+        <p>Ифрейм может иметь другие ифреймы внутри. Таким образом, объекты <code>window</code> создают иерархию.</p>
+        <p>Навигация по ним выглядит так:</p>
+        <ul>
+            <li>
+                <p><code>window.frames</code> - коллекция «дочерних» <code>window</code> (для вложенных фреймов).</p>
+            </li>
+            <li>
+                <p><code>window.parent</code> - ссылка на «родительский» (внешний) <code>window</code>.</p>
+            </li>
+            <li>
+                <p><code>window.top</code> - ссылка на самого верхнего родителя.</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+<pre><code class="language-javascript">window.frames[0].parent === window; // true</code></pre>
+        <p>Можно использовать свойство <code>top</code>, чтобы проверять, открыт ли текущий документ внутри фрейма
+        или нет:</p>
+<pre><code class="language-javascript">if (window === window.top) {
+    alert('Скрипт находится в самом верхнем объекте window, не во фрейме.');
+} else {
+    alert('Скрипт запущен во фрейме!');
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (window === window.top) {
+                    alert('Скрипт находится в самом верхнем объекте window, не во фрейме.');
+                } else {
+                    alert('Скрипт запущен во фрейме!');
+                }
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Атрибут ифрейма sandbox</h2>
+        <p>Атрибут <code>sandbox</code> позволяет наложить ограничения на действия внутри <code>&lt;iframe&gt;</code>,
+        чтобы предотвратить выполнение ненадежного кода. Атрибут помещает ифрейм в «песочницу», отмечая его как
+        имеющий другой источник и/или накладывая на него дополнительные ограничения.</p>
+        <p>Существует список «по умолчанию» ограничений, которые накладываются на <code>&lt;iframe sandbox src="..."&gt;</code>.
+        Их можно уменьшить, если указать в атрибуте список исключений (специальными ключевыми словами), которые
+        не нужно применять, например: <code>&lt;iframe sandbox="allow-forms allow-popups"&gt;</code>.</p>
+        <p>Другими словами, если у атрибута <code>"sandbox"</code> нет значения, то браузер применяет максимум ограничений,
+        но через пробел можно указать те из них, которые мы не хотим применять.</p>
+        <p>Вот список ограничений:</p>
+        <ul>
+            <li>
+                <p><code>allow-same-origin</code> - <code>"sandbox"</code> принудительно устанавливает «другой источник»
+                для ифрейма. Другими словами, он заставляет браузер воспринимать <code>iframe</code>, как пришедший
+                из другого источника, даже если <code>src</code> содержит тот же сайт. Со всеми сопутствующими
+                ограничениями для скриптов. Эта опция отключает это ограничение.</p>
+            </li>
+            <li>
+                <p><code>allow-top-navigation</code> - позволяет ифрейму менять <code>parent.location</code>.</p>
+            </li>
+            <li>
+                <p><code>allow-forms</code> - позволяет отправлять формы из ифрейма.</p>
+            </li>
+            <li>
+                <p><code>allow-scripts</code> - позволяет запускать скрипты из ифрейма.</p>
+            </li>
+            <li>
+                <p><code>allow-popups</code> - позволяет открывать всплывающие окна из ифрейма с помощью <code>window.open</code>.</p>
+            </li>
+        </ul>
+        <p>Больше опций можно найти в <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/HTML/Element/iframe">справочнике</a>.</p>
+        <p>Пример ниже демонстрирует ифрейм, помещенный в песочницу со стандартным набором ограничений:
+        <code>&lt;iframe sandbox src="..."&gt;</code>. На странице содержится JavaScript и форма.</p>
+        <p>Обратите внимание, что ничего не работает. Таким образом, набор ограничений по умолчанию очень строгий:</p>
+        <div class="tabs">
+            <nav>
+                <button data-tab="tab1" class="active">Результат</button>
+                <button data-tab="tab2" >index.html</button>
+                <button data-tab="tab3" >sandboxed.html</button>
+            </nav>
+            <div class="content">
+                <div id="tab1" class="tab-content active">
+                    <iframe src="iframes/sandbox/index.html"></iframe>
+                </div>
+                <div id="tab2" class="tab-content">
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;div&gt;Ифрейм ниже имеет атрибут &lt;code&gt;sandbox&lt;/code&gt;.&lt;/dib&gt;
+
+    &lt;iframe sandbox src="sandboxed.html"&gt;&lt;/iframe&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+                <div id="tab3" class="tab-content">
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;button onclick="alert(123)"&gt;Нажмите для запуска скрипта (не сработает)&lt;/button&gt;
+
+    &lt;form action="https://google.com"&gt;
+        &lt;input type="text"&gt;
+        &lt;input type="submit" value="Отправить (не сработает)"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+        <script>
+            let div = document.currentScript.previousElementSibling;
+            let buttons = div.querySelectorAll('button');
+            let contents = div.querySelectorAll('div.tab-content');
+
+            for (let button of buttons) {
+                button.addEventListener('click', () => {
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    contents.forEach(content => content.classList.remove('active'));
+
+                    button.classList.add('active');
+                    document.getElementById(button.dataset.tab).classList.add('active');
+                });
+            }
+        </script>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Атрибут <code>"sandbox"</code> создан только для того, чтобы добавлять ограничения. Он не может
+            удалять их. В частности, он не может ослабить ограничения, накладываемые браузером на ифрейм,
+            приходящий с другого источника.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Обмен сообщениями между окнами</h2>
+        <p>Интерфейс <code>postMessage</code> позволяет окнам общаться между собой независимо от их происхождения.</p>
+        <p>Это способ обойти политику «Одинакового источника». Он позволяет обмениваться информацией, скажем
+        <code>john-smith.com</code> и <code>gmail.com</code>, но только в том случае, если оба сайта согласны
+        и вызывают соответствующие JavaScript-функции. Это делает общение безопасным для пользователя.</p>
+        <p>Интерфейс имеет две части.</p>
+
+        <h3>postMessage</h3>
+        <p>Окно, которое хочет отправить сообщение, должно вызвать метод <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/API/Window/postMessage">postMessage</a>
+        окна получателя. Другими словами, если мы хотим отправить сообщение в окно <code>win</code>, тогда нам следует
+        вызвать <code>win.postMessage(data, targetOrigin)</code>.</p>
+        <p>Аргументы:</p>
+        <ul>
+            <li>
+                <p><code>data</code> - данные для отправки. Может быть любым объектом, данные клонируются с использованием
+                «алгоритма структурированного клонирования». IE поддерживает только строки, поэтому мы должны
+                использовать <code>JSON.stringify</code> на сложных объектах, чтобы поддержать этот браузер.</p>
+            </li>
+            <li>
+                <p><code>targetOrigin</code> - определяет источник для окна-получателя, только окно с данного источника
+                имеет право получить сообщение.</p>
+            </li>
+        </ul>
+        <p>Указание <code>targetOrigin</code> является мерой безопасности. Как мы помним, если окно (получатель)
+        происходит из другого источника, мы из окна-отправителя не можем прочитать его <code>location</code>.
+        Таким образом, мы не можем быть уверены, какой сайт открыт в заданном окне прямо сейчас: пользователь мог
+        перейти куда-то, окно-отправитель не может этого знать.</p>
+        <p>Если указать <code>targetOrigin</code>, то мы можем быть уверены, что окно получит данные только в том случае,
+        если в нем правильный сайт. Особенно это важно, если данные конфиденциальные.</p>
+        <p>Например, здесь <code>win</code> получит сообщения только в том случае, если в нем открыт документ из
+        источника <code>http://example.com</code>:</p>
+<pre><code class="language-html">&lt;iframe src="http://example.com" name="example"&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">let win = window.frames.example;
+
+    win.postMessage('message', 'http://example.com');</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <p>Если мы не хотим проверять, то в <code>targetOrigin</code> можно указать <code>*</code>.</p>
+<pre><code class="language-html">&lt;iframe src="http://example.com" name="example"&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">let win = window.frames.example;
+
+    win.postMessage('message', '*');</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+
+        <h3>Событие message</h3>
+        <p>Чтобы получать сообщения, окно-получатель должно иметь обработчик события <code>message</code>.
+        Оно срабатывает, когда был вызван метод <code>postMessage</code> (и проверка <code>targetOrigin</code>
+        пройдена успешно).</p>
+        <p>Объект события имеет специфичные свойства:</p>
+        <ul>
+            <li>
+                <p><code>data</code> - данные из <code>postMessage</code>.</p>
+            </li>
+            <li>
+                <p><code>origin</code> - источник отправителя, например, <code>https://javascript.info</code>.</p>
+            </li>
+            <li>
+                <p><code>source</code> - ссылка на окно-отправитель. Можно сразу отправить что-то в ответ,
+                вызвав <code>source.postMessage(...)</code>.</p>
+            </li>
+        </ul>
+        <p>Чтобы добавить обработчик, следует использовать метод <code>addEventListener</code>, короткий синтаксис
+        <code>window.onmessage</code> не работает.</p>
+        <p>Вот пример:</p>
+<pre><code class="language-javascript">window.addEventListener('message', function(event) {
+    if (event.origin !== 'https://javascript.info') {
+        // Что-то пришло с неизвестного домена. Давайте проигнорируем это
+        return;
+    }
+
+    alert('receive: ' + event.data);
+});</code></pre>
+        <p>Полный пример:</p>
+        <fieldset>
+            <legend>index.html</legend>
+            <pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;mete charset="UTF-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;form id="form"&gt;
+        &lt;input type="text" placeholder="Введите сообщение" name="message"&gt;
+        &lt;input type="submit" value="Нажмите для отправки"&gt;
+    &lt;/form&gt;
+
+    &lt;iframe src="iframe.html" id="iframe" style="display:block; height: 60px"&gt;&lt;/iframe&gt;
+
+    &lt;script&gt;</code>
+        <code class="language-javascript">form.onsubmit = function() {
+            iframe.contentWindow.postMessage(this.message.value, '*');
+            return false;
+        };</code>
+    <code class="language-html">&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+        </fieldset>
+
+<fieldset>
+    <legend>iframe.html</legend>
+<pre><code class="language-html">&lt;!doctype html&gt;
+&lt;html&gt;
+    &lt;meta charset="UTF-8"&gt;
+&lt;/html&gt;
+
+&lt;body&gt;
+    Получение ифрейма.
+    &lt;script&gt;</code>
+        <code class="language-javascript">window.addEventListener('message', function(event) {
+            alert(`Получено ${event.data} из ${event.origin}`);
+        });</code>
+    <code class="language-html">&lt;/script&gt;
+&lt;/body&gt;
+&lt;html&gt;</code></pre>
+</fieldset>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('pointerdown', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                this.parentElement.insertAdjacentHTML('beforeend',
+                '<iframe src="iframes/message/index.html"></iframe>');
+            });
+        </script>
+
+        <article class="note">
+            <h3>Без задержек</h3>
+            <p>Между <code>postMessage</code> и событием <code>message</code> не существует задержки. Событие происходит
+            синхронно, быстрее, чем <code>setTimeout(..., 0)</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Чтобы вызвать метод или получить содержимое из другого окна, нам, во-первых, необходимо иметь ссылку на него.</p>
+        <p>Для всплывающих окон (попапов) доступны ссылки в обе стороны:</p>
+        <ul>
+            <li>
+                <p>При открытии окна: <code>window.open</code> открывает новое окно и возвращает ссылку на него.</p>
+            </li>
+            <li>
+                <p>Изнутри открытого окна: <code>window.opener</code> - ссылка на открывающее окно.</p>
+            </li>
+        </ul>
+        <p>Для ифреймов мы можем иметь доступ к родителям/потомкам, используя:</p>
+        <ul>
+            <li>
+                <p><code>window.frames</code> - коллекция объектов <code>window</code> вложенных ифреймов.</p>
+            </li>
+            <li>
+                <p><code>window.parent</code>, <code>window.top</code> - это ссылки на родительское окно и окно
+                самого верхнего уровня.</p>
+            </li>
+            <li>
+                <p><code>iframe.contentWindow</code> - это объект <code>window</code> внутри тега <code>&lt;iframe&gt;</code>.</p>
+            </li>
+        </ul>
+        <p>Если окна имеют одинаковый источник (протокол, домен, порт), то они могут делать друг с другом все что угодно.</p>
+        <p>В противном случае возможны только следующие действия:</p>
+        <ul>
+            <li>
+                <p>Изменение свойства <code>location</code> другого окна (доступ только на запись).</p>
+            </li>
+            <li>
+                <p>Отправить туда сообщение.</p>
+            </li>
+        </ul>
+        <p>Исключения:</p>
+        <ul>
+            <li>
+                <p>Окна, которые имеют общий домен второго уровня: <code>a.site.com</code> и <code>b.site.com</code>.
+                Установка свойства <code>document.domain = 'site.com'</code> в обоих окнах переведет их в состояние
+                «Одинакового источника».</p>
+            </li>
+            <li>
+                <p>Если у фрейма установлен атрибут <code>sandbox</code>, это принудительно приведет окна в состояние
+                «разных источников», если не установить в атрибут значение <code>allow-same-origin</code>. Это можно
+                использовать для запуска ненадежного кода в ифрейме с того же сайта.</p>
+            </li>
+        </ul>
+        <p>Метод <code>postMessage</code> позволяет общаться двум окнам с любыми источниками:</p>
+        <ol>
+            <li>
+                <p>Отправитель вызывает <code>targetWin.postMessage(data, targetOrigin)</code>.</p>
+            </li>
+            <li>
+                <p>Если <code>targetOrigin</code> не <code>'*'</code>, тогда браузер проверяет, имеет ли
+                <code>targetWin</code> источник <code>targetOrigin</code>.</p>
+            </li>
+            <li>
+                <p>Если это так, тогда <code>targetWin</code> вызывает событие <code>message</code>
+                со специальными свойствами:</p>
+                <ul>
+                    <li>
+                        <p><code>origin</code> - источник окна-отправителя (например, <code>https://my.site.com</code>).</p>
+                    </li>
+                    <li>
+                        <p><code>source</code> - ссылка на окно-отправитель.</p>
+                    </li>
+                    <li>
+                        <p><code>data</code> - данные, может быть объектом везде, кроме IE (в IE только строки).</p>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>В окне-получателе следует добавить обработчик для этого события с помощью метода <code>addEventListener</code>.</p>
+    </article>
+</body>
+</html>

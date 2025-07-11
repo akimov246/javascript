@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iframe.html</title>
+</head>
+<body>
+    <div>Получение ифрейма.</div>
+
+    <script>
+        window.addEventListener('message', function(event) {
+            //alert(`Получено ${event.data} из ${event.origin}`);
+            document.querySelector('div').innerHTML = `Получено ${event.data} из ${event.origin}`;
+        });
+    </script>
+</body>
+</html>
