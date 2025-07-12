@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iframe.html</title>
+    <style>
+        #protector {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <p>Этот текст всегда виден.</p>
+    <p>Но если страница была открыта внутри фрейма, div поверх нее предотвратит любые действия.</p>
+    <button onclick="alert(1)" style="width: 10vw">Кликни</button>
+
+    <div id="protector">
+        <a href="iframe.html" target="_blank">Перейти к сайту</a>
+    </div>
+
+    <script>
+        if (window.top === window) {
+            document.getElementById('protector').remove();
+        }
+    </script>
+</body>
+</html>

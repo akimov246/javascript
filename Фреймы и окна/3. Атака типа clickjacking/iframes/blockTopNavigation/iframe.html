@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iframe.html</title>
+</head>
+<body>
+<pre>Замена top.location на javascript.info "взломана".
+top.location не изменился.</pre>
+
+    <script>
+        if (window.top !== window) {
+            top.location.href = 'https://javascript.info';
+        }
+    </script>
+</body>
+</html>

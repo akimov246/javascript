@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Атака типа clickjacking</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Атака типа clickjacking</h2>
+        <p>Атака типа clickjacking (англ. «захват клика») позволяет вредоносной странице кликнуть по сайту-жертве
+        от имени посетителя.</p>
+        <p>Многие сайты были взломаны подобным способом, включая Twitter, Facebook, Paypal и другие. Все они, конечно же,
+        сейчас защищены.</p>
+    </article>
+
+    <article>
+        <h2>Идея</h2>
+        <p>Идея этой атаки очень проста.</p>
+        <p>Вот так clickjacking-атака была проведена на Facebook:</p>
+        <ol>
+            <li>
+                <p>Посетителя заманивают на вредоносную страницу (неважно как).</p>
+            </li>
+            <li>
+                <p>На странице есть ссылка, которая выглядит безобидно (например, «разбогатей прямо сейчас» или
+                «Нажми здесь, это очень смешно»).</p>
+            </li>
+            <li>
+                <p>Поверх этой ссылки вредоносная страница размещает прозрачный <code>&lt;iframe&gt;</code> с <code>src</code>
+                с сайте facebook.com таким образом, что кнопка «like» находится прямо над этой ссылкой. Обычно это делается
+                с помощью <code>z-index</code> в CSS.</p>
+            </li>
+            <li>
+                <p>При попытке клика на эту ссылку посетитель на самом деле нажимает на кнопку.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Демонстрация</h2>
+        <p>Вот как выглядит вредоносная страница. Для наглядности <code>&lt;iframe&gt;</code> полупрозрачный (на реальных
+        вредоносных сайтах он полностью прозрачен):</p>
+        <fieldset>
+            <legend>facebook.html</legend>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;body style="margin:10px; padding:10px"&gt;
+    &lt;input type="button" onclick="alert('Вы нажали Like на сайте facebook.html')" value="I LIKE IT !"&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+        </fieldset>
+        <fieldset>
+            <legend>index.html</legend>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;style&gt;
+        iframe {
+            width: 400px;
+            height: 100px;
+            position: absolute;
+            top: 5px;
+            left: -14px;
+            opacity: 0.5;
+            z-index: 1;
+        }
+    &lt;/style&gt;
+
+    &lt;div&gt;Нажми, чтобы разбогатеть&lt;/div&gt;
+
+    &lt;!-- URL с сайта-жертвы --&gt;
+    &lt;iframe src="facebook.html"&gt;&lt;/iframe&gt;
+
+    &lt;button&gt;Нажмите сюда!&lt;/button&gt;
+
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+        </fieldset>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="iframes/demonstration/index.html"></iframe>')
+            });
+        </script>
+        <p>Здесь у нас есть полупрозрачный <code>&lt;iframe src="facebook.html"&gt;</code>, и в примере мы видим его
+        висящим поверх кнопки. Клик на кнопку фактически кликает на ифрейм, но этого не видно пользователю, потому что
+        ифрейм прозрачный.</p>
+        <p>В результате, если пользователь авторизован на сайте Facebook, то он добавляет «лайк». В Twitter это будет
+        кнопка «читать» и т.п.</p>
+        <p>Все, что нам необходимо для атаки - это расположить <code>&lt;iframe&gt;</code> на вредоносной странице так,
+        чтобы кнопка находилась прямо над ссылкой. Так что пользователь, кликающий по ссылке, на самом деле будет
+        наживать на кнопку в <code>&lt;iframe&gt;</code>. Обычно это можно сделать с помощью CSS-позиционирования.</p>
+
+        <article class="note">
+            <h3>Clickjacking-атака для кликов мыши, а не для клавиатуры</h3>
+            <p>Эта атака срабатывает только на действия мыши (или аналогичные, вроде нажатия пальцем на мобильном устройстве).</p>
+            <p>Клавиатурный ввод гораздо сложнее перенаправить. Технически, если у нас есть текстовое поле для взлома,
+            мы можем расположить ифрейм таким образом, чтобы текстовые поля перекрывали друг друга. Тогда посетитель
+            при попытке сфокусироваться на текстовом поле, которое он видит на странице, фактически будет фокусироваться
+            на текстовом поле внутри ифрейма.</p>
+            <p>Но есть одна проблема. Все, что посетитель печатает, будет скрыто, потому что ифрейм не виден.</p>
+            <p>Обычно люди перестают печатать, когда не видят на экране новых символов.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Пример слабой защиты</h2>
+        <p>Самым старым вариантом защиты является код JavaScript, запрещающий открытие страницы во фрейме
+        (это называют «framebusting»).</p>
+        <p>Выглядит он вот так:</p>
+<pre><code class="language-javascript">if (window.top !== window) {
+    top.location.href = window.location.href;
+}</code></pre>
+        <p>В этом случае, если окно обнаруживает, что оно открыто во фрейме, оно автоматически располагает себя
+        сверху.</p>
+        <p>Этот метод не является надежной защитой, поскольку появилось множество способов его обойти. Рассмотрим
+        некоторые из них.</p>
+
+        <h3>Блокировка top-навигации</h3>
+        <p>Мы можем заблокировать переход, вызванный сменой <code>top.location</code> в обработчике события
+        <code>beforeunload</code>.</p>
+        <p>Внешняя страница (принадлежащая хакеру) устанавливает обработчик на это событие, отменяющий его,
+        например, такой:</p>
+<pre><code class="language-javascript">window.onbeforeunload = function() {
+    return false;
+}</code></pre>
+        <p>Когда iframe пытается изменить <code>top.location</code>, посетитель увидит сообщение с вопросом
+        действительно ли он хочет покинуть эту страницу. В большинстве случае посетитель ответит отрицательно,
+        поскольку он не знает об ифрейме: все, что он видит - это верхнюю страницу, которую нет причин покидать.
+        Поэтому <code>top.location</code> не изменится!</p>
+        <p>В действии:</p>
+        <fieldset>
+            <legend>iframe.html</legend>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;div&gt;Замена top.location на javascript.info&lt;/div&gt;
+
+    &lt;script&gt;
+        top.location = 'https://javascript.info';
+    &lt;/script&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+        </fieldset>
+        <fieldset>
+            <legend>index.html</legend>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+
+    &lt;script&gt;
+        function attack() {
+            window.onbeforeunload = function() {
+                window.onbeforeunload = null;
+                return false;
+            };
+
+            document.body.insertAdjacentHTML('beforeend', '&lt;iframe src="iframe.html"&gt;');
+        }
+    &lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;p&gt;После клика на кнопку пользователь получает "странный" вопрос о том, хочет ли он покинуть данную страницу.&lt;/p&gt;
+    &lt;p&gt;Скорее всего, он ответит "нет", и защита ифрейма будет взломана.&lt;/p&gt;
+
+    &lt;button onclick="attack()"&gt;Добавить "защищенный" ифрейм&lt;/button&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+        </fieldset>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="iframes/blockTopNavigation/index.html"></iframe>')
+            });
+        </script>
+
+        <h3>Атрибут «sandbox»</h3>
+        <p>Одним из действий, которые можно ограничить атрибутом <code>sandbox</code>, является навигация.
+        Соответственно ифрейм внутри sandbox не изменит <code>top.location</code>.</p>
+        <p>Поэтому мы можем добавить ифрейм с <code>sandbox="allow-scripts allow-forms"</code>. Это снимет
+        некоторые ограничения, разрешая при этом использование скриптов и форм. Но мы опускаем
+        <code>allow-top-navigation</code>, чтобы изменение <code>top.location</code> было запрещено.</p>
+        <p>Вот код этого примера:</p>
+<pre><code class="language-html">&lt;iframe sandbox="allow-scripts allow-forms" src="facebook.html"&gt;&lt;/iframe&gt;</code></pre>
+        <p>Есть и другие способы обойти эту простую защиту.</p>
+    </article>
+
+    <article>
+        <h2>Заголовок X-Frame-Options</h2>
+        <p>Заголовок <code>X-Frame-Options</code> со стороны сервера может разрешать или запрещать отображение
+        страницы внутри фрейма.</p>
+        <p>Это должен быть именно HTTP-заголовок: браузер проигнорирует его, если найдет в HTML-теге <code>&lt;meta&gt;</code>.
+        Поэтому при <code>&lt;meta http-equiv="X-Frame-Options"...&gt;</code> ничего не произойдет.</p>
+        <p>Заголовок может иметь 3 значения:</p>
+        <ul>
+            <li>
+                <p><code>DENY</code> - никогда не показывать страницу внутри фрейма.</p>
+            </li>
+            <li>
+                <p><code>SAMEORIGIN</code> - разрешить открытие станицы внутри фрейма только в том случае,
+                если родительский документ имеет тот же источник.</p>
+            </li>
+            <li>
+                <p><code>ALLOW-FROM domain</code> - разрешить открытие страницы внутри фрейма только в том случае,
+                если родительский документ на указанном в заголовке домене.</p>
+            </li>
+        </ul>
+        <p>Например, x.com (бывший twitter) использует <code>X-Frame-Options: DENY</code>.</p>
+        <p>Вот результат:</p>
+<pre><code class="language-html">&lt;iframe src="https://x.com"&gt;&lt;/iframe&gt;</code></pre>
+        <iframe src="https://x.com"></iframe>
+        <p>В зависимости от того, какой браузер вы используете, <code>iframe</code> выше либо будет пустым,
+        либо оповестит вас о том, что его невозможно отобразить.</p>
+    </article>
+
+    <article>
+        <h2>Отображение с ограниченными возможностями</h2>
+        <p>У заголовка <code>X-Frame-Options</code> есть побочный эффект. Другие сайты не смогут отобразить нашу страницу
+        во фрейме, даже если у них будут на то веские причины.</p>
+        <p>Так что есть и другие решения... Например, мы можем «накрыть» страницу блоком <code>&lt;div&gt;</code>
+        со стилями <code>height: 100%; width: 100%</code>, чтобы он перехватывал все клики. Этот <code>&lt;div&gt;</code>
+        будем убирать, если <code>window === window.top</code> или если мы поймем, что защита нам не нужна.</p>
+        <p>Демонстрация:</p>
+        <fieldset>
+            <legend>iframe.html</legend>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+
+    &lt;style&gt;
+        #protector {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 99999999;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;div id="protector"&gt;
+        &lt;a href="/" target="_blank"&gt;Перейти к сайту&lt;/a&gt;
+    &lt;/div&gt;
+
+    &lt;script&gt;</code>
+        <code class="language-javascript">if (window.top.document.domain === document.domain) {
+            protector.remove();
+        }</code>
+    <code class="language-html">&lt;/script&gt;
+
+    Этот текст всегда виден.
+
+    Но если страница была открыта внутри документа, принадлежащего другому домену, div поверх нее предотвратит любые действия.
+
+    &lt;button onclick="alert(1)"&gt;В данном случае клик не сработает&lt;/button&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+        </fieldset>
+        <fieldset>
+            <legend>index.html</legend>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;iframe src="iframe.html"&gt;&lt;/iframe&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;</code></pre>
+        </fieldset>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                if (this.parentElement.lastElementChild.tagName === 'IFRAME') {
+                    this.parentElement.lastElementChild.remove();
+                }
+
+                this.parentElement.insertAdjacentHTML('beforeend', '<iframe src="iframes/protector/iframe.html"></iframe>')
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Атрибут cookie: samesite</h2>
+        <p>Атрибут <code>samesite</code> также может помочь избежать clickjacking-атаки.</p>
+        <p>Файл куки с таким атрибутом отправляется на сайт только в том случае, если он открыт напрямую, не через
+        фрейм или каким-либо другим способом. Подробно об этом - в главе <a target="_blank" href="https://learn.javascript.ru/cookie#samesite">Куки, document.cookie</a>.</p>
+        <p>Если сайт, такой как Facebook, при установке авторизующего куки ставит атрибут <code>samesite</code>:</p>
+<pre><code>Set-Cookie: authorization=secret; samesite</code></pre>
+        <p>... Тогда такие куки не будут отправляться, когда Facebook будет открыт в ифрейме с другого сайта. Так что
+        атака не удастся.</p>
+        <p>Атрибут <code>samesite</code> не играет никакой роли, если куки не используются. Так что другие веб-сайты
+        смогут отображать публичные, не требующие авторизации, страницы в ифрейме.</p>
+        <p>Однако, это дает возможность в некоторых ситуациях осуществлять clickjacking-атаку, например, на сайт для
+        анонимных опросов, который предотвращает повторное голосование пользователя путем проверки IP-адреса.
+        Он останется уязвимым к атаке, потому что не аутентифицирует пользователей с помощью куки.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Атака clickjacking - это способ хитростью «заставить» пользователей кликнуть на сайте-жертве, без понимания,
+        что происходит. Она опасна, если по клику могут быть произведены важные действия.</p>
+        <p>Хакер может разместить ссылку на свою вредоносную страницу в сообщении или найти другие способы,
+        как заманить пользователей. Вариантов множество.</p>
+        <p>С одной стороны - эта атака «неглубокая», ведь хакер перехватывает только один клик. Но с другой стороны,
+        если хакер знает, что после этого клика появятся другие элементы управления, то он может хитростью заставить
+        пользователя кликнуть на них.</p>
+        <p>Этот вид атак довольно опасен, ведь при разработке интерфейсов мы не предполагаем, что хакер может
+        кликнуть от имени пользователя. Поэтому уязвимости могут быть обнаружены в совершенно неожиданных местах.</p>
+        <ul>
+            <li>
+                <p>Для защиты от этой атаки рекомендуется использовать <code>X-Frame-Options: SAMEORIGIN</code>
+                на страницах или даже целиком на сайтах, которые не предназначены для просмотра во фрейме.</p>
+            </li>
+            <li>
+                <p>Или, если мы хотим разрешить отображение страницы во фрейме и при этом оставаться в безопасности,
+                то можно использовать перекрывающий блок <code>&lt;div&gt;</code>.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>

