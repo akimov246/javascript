@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TextDecoder и TextEncoder</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>TextDecoder и TextEncoder</h2>
+        <p>Что если бинарные данные фактически являются строкой? Например, мы получили файл с текстовыми данными.</p>
+        <p>Встроенный объект <a target="_blank" href="https://encoding.spec.whatwg.org/#interface-textdecoder">TextDecoder</a>
+        позволяет декодировать данные из бинарного буфера в обычную строку.</p>
+        <p>Для этого прежде всего нам нужно создать сам декодер:</p>
+<pre><code class="language-javascript">let decoder = new TextDecoder([label], [options]);</code></pre>
+        <ul>
+            <li>
+                <p><code>label</code> - тип кодировки, <code>utf-8</code> используется по умолчанию, но также поддерживается
+                <code>big5</code>, <code>windows-1251</code> и многие другие.</p>
+            </li>
+            <li>
+                <p><code>options</code> - объект с дополнительным настройками:</p>
+                <ul>
+                    <li>
+                        <p><code>fatal</code> - boolean, если значение <code>true</code>, тогда генерируется ошибка
+                        для невалидных (не декодируемых) символов, в ином случае (по умолчанию) они заменяются символом
+                        <code>\uFFFD</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>ignoreBOM</code> - boolean, если значение <code>true</code>, тогда игнорируется BOM
+                        (дополнительный признак, определяющий порядок следования байтов), что необходимо крайне редко.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>... И после использовать его метод <code>decode</code>:</p>
+<pre><code class="language-javascript">let str = decoder.decode([input], [options]);</code></pre>
+        <ul>
+            <li>
+                <p><code>input</code> - бинарный буфер (<code>BufferSource</code>) для декодирования.</p>
+            </li>
+            <li>
+                <p><code>options</code> - объект с дополнительными настройками:</p>
+                <ul>
+                    <li>
+                        <p><code>stream</code> - <code>true</code> для декодирования потока данных, при этом
+                        <code>decoder</code> вызывается вновь и вновь для каждого следующего фрагмента данных.
+                        В этом случае многобайтовый символ может иногда быть разделен и попасть в разные фрагменты данных.
+                        Эта опция указывают <code>TextDecoder</code> запомнить символ, на котором остановился процесс,
+                        и декодировать его со следующим фрагментом.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Например:</p>
+<pre><code class="language-javascript">let uint8Array = new Uint8Array([72, 101, 108, 108, 111]);
+
+alert(new TextDecoder().decode(uint8Array)); // Hello</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let uint8Array = new Uint8Array([72, 101, 108, 108, 111]);
+                alert(new TextDecoder().decode(uint8Array));
+            });
+        </script>
+<pre><code class="language-javascript">let uint8Array = new Uint8Array([228, 189, 160, 229, 165, 189]);
+
+alert(new TextDecoder().decode(uint8Array); // 你好</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let uint8Array = new Uint8Array([228, 189, 160, 229, 165, 189]);
+                alert(new TextDecoder().decode(uint8Array));
+            });
+        </script>
+        <p>Мы можем декодировать часть бинарного массива, создав подмассив:</p>
+<pre><code class="language-javascript">let uint8Array = new Uint8Array([0, 72, 101, 108, 108, 111, 0]);
+
+// Возьмем строку из середины массива
+// Также обратите внимание, что это создает только новое представление без копирования самого массива
+// Изменения в содержимом созданного массива повлияют на исходный массив и наоборот
+let binaryString = uint8Array.subarray(1, -1);
+
+alert(new TextDecoder().decode(binaryString)); // Hello</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let uint8Array = new Uint8Array([0, 72, 101, 108, 108, 111, 0]);
+                let binaryString = uint8Array.subarray(1, -1);
+                alert(new TextDecoder().decode(binaryString));
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>TextEncoder</h2>
+        <p><a target="_blank" href="https://encoding.spec.whatwg.org/#interface-textencoder">TextEncoder</a> поступает
+        наоборот - кодирует строку в бинарный массив.</p>
+        <p>Имеет следующий синтаксис:</p>
+<pre><code class="language-javascript">let encoder = new TextEncoder();</code></pre>
+        <p>Поддерживается только кодировка «utf-8».</p>
+        <p>Кодировщик имеет следующий два метода:</p>
+        <ul>
+            <li>
+                <p><code>encoder(str)</code> - возвращает бинарный массив <code>Uint8Array</code>, содержащий закодированную
+                строку.</p>
+            </li>
+            <li>
+                <p><code>encodeInto(str, destination)</code> - кодирует строку <code>str</code> и помещает ее в
+                <code>destination</code>, который должен быть экземпляром <code>Uint8Array</code>.</p>
+            </li>
+        </ul>
+<pre><code class="language-javascript">let encoder = new TextEncoder();
+
+let uint8Array = encoder.encode('Hello');
+alert(uint8Array); // 72,101,108,108,111</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let encoder = new TextEncoder();
+                let uint8Array = encoder.encode('Akimov Leonid');
+                alert(uint8Array);
+            });
+        </script>
+    </article>
+</body>
+</html>
