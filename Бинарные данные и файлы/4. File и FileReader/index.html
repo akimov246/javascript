@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File и FileReader</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .log::before {
+            content: '>';
+            color: red;
+            position: absolute;
+            left: -1rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>File и FileReader</h2>
+        <p>Объект <a target="_blank" href="https://www.w3.org/TR/FileAPI/#dfn-file">File</a> наследуется от объекта
+        <code>Blob</code> и обладает возможностями по взаимодействию с файловой системой.</p>
+        <p>Есть два способа его получить.</p>
+        <p>Во-первых, есть конструктор, похожий на <code>Blob</code>:</p>
+<pre><code class="language-javascript">new File(fileParts, fileName, [options]);</code></pre>
+        <ul>
+            <li>
+                <p><code>fileParts</code> - массив значений <code>Blob</code>/<code>BufferSource</code>/строки.</p>
+            </li>
+            <li>
+                <p><code>fileName</code> - имя файла, строка.</p>
+            </li>
+            <li>
+                <p><code>options</code> - необязательный объект со свойством:</p>
+                <ul>
+                    <li>
+                        <p><code>lastModified</code> - дата последнего изменения в формате timestamp (целое число).</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Во-вторых, чаще всего мы получаем файл из <code>&lt;input type="file"&gt;</code> или через перетаскивание
+        с помощью мыши, или из других интерфейсов браузера. В этом случае файл получает эту информацию из ОС.</p>
+        <p>Так как <code>File</code> наследует от <code>Blob</code>, у объектов <code>File</code> есть те же свойства
+        плюс:</p>
+        <ul>
+            <li>
+                <p><code>name</code> - имя файла.</p>
+            </li>
+            <li>
+                <p><code>lastModified</code> - timestamp для даты последнего изменения.</p>
+            </li>
+        </ul>
+        <p>В этом примере мы получаем объект <code>File</code> из <code>&lt;input type="file"&gt;</code>:</p>
+<pre><code class="language-html">&lt;input type="file" onchange="showFile(this)"&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">function showFile(input) {
+        let file = input.files[0];
+
+        alert(`File name: ${file.name}`); // Например, my.png
+        alert(`Last modified: ${file.lastModified}`); // Например, 1552830408824
+    }</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                if (this.parentElement.lastElementChild.tagName !== 'BUTTON') {
+                    this.parentElement.lastElementChild.remove();
+                }
+                let input = document.createElement('input');
+                input.style.display = 'block';
+                input.style.marginTop = '0.5rem';
+                input.type = 'file';
+                input.addEventListener('change', () => showFile(input));
+                this.parentElement.append(input);
+
+                function showFile(input) {
+                    let file = input.files[0];
+
+                    alert(`File name: ${file.name}`);
+                    alert(`Last modified: ${file.lastModified}`);
+                }
+            });
+        </script>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Через <code>&lt;input&gt;</code> можно выбрать несколько файлов, поэтому <code>input.files</code> -
+            псевдомассив выбранных файлов. Здесь у нас только один файл, поэтому мы просто берем <code>input.files[0]</code>.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>FileReader</h2>
+        <p><a target="_blank" href="https://www.w3.org/TR/FileAPI/#dfn-filereader">FileReader</a> объект, цель которого
+        читать данные из <code>Blob</code> (и, следовательно, из <code>File</code> тоже).</p>
+        <p>Данные передаются при помощи событий, так как чтение с диска может занять время.</p>
+        <p>Конструктор:</p>
+<pre><code class="language-javascript">let reader = new FileReader();</code></pre>
+        <p>Основные методы:</p>
+        <ul>
+            <li>
+                <p><code>readAsArrayBuffer(blob)</code> - считать данные как <code>ArrayBuffer</code>.</p>
+            </li>
+            <li>
+                <p><code>readAsText(blob, [encoding])</code> - считать данные как строку (кодировка по умолчанию: <code>UTF-8</code>).</p>
+            </li>
+            <li>
+                <p><code>readAsDataURL(blob)</code> - считать данные как <code>base64</code>-кодированный URL.</p>
+            </li>
+            <li>
+                <p><code>abort()</code> - отменить операцию.</p>
+            </li>
+        </ul>
+        <p>Выбор метода для чтения зависит от того, какой формат мы предпочитаем, как мы хотим далее использовать данные.</p>
+        <ul>
+            <li>
+                <p><code>readAsArrayBuffer</code> - для бинарных файлов, для низкоуровневой побайтовой работы с
+                бинарными данными. Для высокоуровневых операций у <code>File</code> есть свои методы,
+                унаследованные от <code>Blob</code>, например, <code>slice</code>, мы можем вызывать их напрямую.</p>
+            </li>
+            <li>
+                <p><code>readAsText</code> - для текстовых файлов, когда мы хотим получить строку.</p>
+            </li>
+            <li>
+                <p><code>readAsDataURL</code> - когда мы хотим использовать данные в <code>src</code> для
+                <code>img</code> или другого тега. Есть альтернатива - можно не читать файл, а вызвать
+                <code>URL.createObjectURL(file)</code>, детали в главе
+                <a target="_blank" href="../3.%20Blob/index.html">Blob</a>.</p>
+            </li>
+        </ul>
+        <p>В процессе чтения происходят следующий события:</p>
+        <ul>
+            <li>
+                <p><code>loadstart</code> - чтение начато.</p>
+            </li>
+            <li>
+                <p><code>progress</code> - срабатывает во время чтения данных.</p>
+            </li>
+            <li>
+                <p><code>load</code> - нет ошибок, чтение окончено.</p>
+            </li>
+            <li>
+                <p><code>abort</code> - вызван <code>abort()</code>.</p>
+            </li>
+            <li>
+                <p><code>error</code> - произошла ошибка.</p>
+            </li>
+            <li>
+                <p><code>loadend</code> - чтение завершено (успешно или нет).</p>
+            </li>
+        </ul>
+        <p>Когда чтение закончено, мы сможем получить доступ к его результату следующим образом:</p>
+        <ul>
+            <li>
+                <p><code>reader.result</code> - результат чтения (если оно успешно).</p>
+            </li>
+            <li>
+                <p><code>reader.error</code> - объект ошибки (при неудаче).</p>
+            </li>
+        </ul>
+        <p>Вот пример чтения файла:</p>
+<pre><code class="language-html">&lt;input type="file" onchange="readFile(this)"&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">function readFile(input) {
+        let file = input.files[0];
+
+        let reader = new FileReader();
+
+        reader.readAsText(file);
+
+        reader.onload = function() {
+            console.log(reader.result);
+        };
+
+        reader.onerror = function() {
+            console.log(reader.error);
+        };
+    }</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            let div = document.currentScript.previousElementSibling;
+            div.firstElementChild.addEventListener('click', function() {
+                if (div.children.length > 1) {
+                    while (div.children.length > 1) {
+                        div.lastElementChild.remove();
+                    }
+                }
+                let input = document.createElement('input');
+                input.type = 'file';
+                input.style.display = 'block';
+                input.style.marginTop = '0.5rem';
+                input.addEventListener('change', function(event) {
+                    let file = event.target.files[0];
+
+                    (async function() {
+                        let log = document.createElement('span');
+                        log.style.position = 'relative';
+                        log.style.display = 'block';
+                        log.classList.add('log');
+                        log.innerHTML = `<span style="color: red">Error</span> type: ${file.type}: ${file.name}`;
+                        if (file.type.includes('text')) {
+                            log.innerHTML = await file.text();
+                        }
+                        exampleConsole.append(log);
+                    })();
+                });
+
+                let exampleConsole = document.createElement('pre');
+                exampleConsole.style.minHeight = '5rem';
+                exampleConsole.style.border = '2px solid rgb(245, 242, 240)';
+                exampleConsole.style.marginTop = '0.5rem';
+                exampleConsole.style.padding = '0.5rem 1.5rem';
+
+                div.append(input);
+                div.append(exampleConsole);
+            });
+        </script>
+
+        <article class="note">
+            <h3><code>FileReader</code> для <code>Blob</code></h3>
+            <p>Как упоминалось в главе <a target="_blank" href="../3.%20Blob/index.html">Blob</a>, <code>FileReader</code>
+            работает для любых объектов <code>Blob</code>, а не только для файлов.</p>
+            <p>Поэтому мы можем использовать его для преобразования <code>Blob</code> в другой формат:</p>
+            <ul>
+                <li>
+                    <p><code>readAsArrayBuffer(blob)</code> - в <code>ArrayBuffer</code>.</p>
+                </li>
+                <li>
+                    <p><code>readAsText(blob, [encoding])</code> - в строку (альтернатива <code>TextDecoder</code>).</p>
+                </li>
+                <li>
+                    <p><code>readAsDataURL(blob)</code> - в формат <code>base64</code>-кодированного URL.</p>
+                </li>
+            </ul>
+        </article>
+
+        <article class="note">
+            <h3>Для Web Worker также доступен <code>FileReaderSync</code></h3>
+            <p>Для веб-воркеров доступен синхронный вариант <code>FileReader</code>, именуемый
+            <a target="_blank" href="https://www.w3.org/TR/FileAPI/#FileReaderSync">FileReaderSync</a>.</p>
+            <p>Его методы считывания <code>read*</code> не генерируют события, а возвращают результат,
+            как это делают обычные функции.</p>
+            <p>Но это только внутри веб-воркера, поскольку задержки в синхронных вызовах, которые возможны
+            при чтении из файла, в веб-воркерах менее важны. Они не влияют на страницу.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p><code>File</code> объекты наследуют от <code>Blob</code>.</p>
+        <p>Помимо методов и свойств <code>Blob</code>, объекты <code>File</code> также имеют свойства
+        <code>name</code> и <code>lastModified</code> плюс внутреннюю возможность чтения из файловой системы.
+        Обычно мы получаем объекты <code>File</code> из пользовательского ввода, например, через <code>&lt;input&gt;</code>
+        или перетаскиванием с помощью мыши, в событии <code>dragend</code>.</p>
+        <p>Объекты <code>FileReader</code> могут читать из <code>File</code> или <code>Blob</code> в одном из трех
+        форматов:</p>
+        <ul>
+            <li>
+                <p>Строка (<code>readAsText</code>).</p>
+            </li>
+            <li>
+                <p><code>ArrayBuffer</code> (<code>readAsArrayBuffer</code>).</p>
+            </li>
+            <li>
+                <p>URL в формате base64 (<code>readAsDataURL</code>).</p>
+            </li>
+        </ul>
+        <p>Однако, во многих случаях нам не нужно читать содержимое файла. Как и в случае с <code>Blob</code>,
+        мы можем создать короткий URL с помощью <code>URL.createObjectURL(file)</code> и использовать его
+        в теге <code>&lt;a&gt;</code> или <code>&lt;img&gt;</code>. Таким образом, файл может быть загружен или
+        показан в виде изображения, как часть <code>canvas</code> и т.д.</p>
+        <p>А если мы собираемся отправить <code>File</code> по сети, то это также легко, поскольку в сетевые методы,
+        такие как <code>XMLHttpRequest</code> или <code>fetch</code>, встроена возможность отсылки <code>File</code>.</p>
+    </article>
+</body>
+</html>
