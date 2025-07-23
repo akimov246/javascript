@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .log::before {
+            content: '>';
+            color: red;
+            position: absolute;
+            left: -1rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Fetch</h2>
+        <p>JavaScript может отправлять сетевые запросы на сервер и подгружать новую информацию по мере необходимости.</p>
+        <p>Например, мы можем использовать сетевой запрос, чтобы:</p>
+        <ul>
+            <li>
+                <p>Отправить заказ.</p>
+            </li>
+            <li>
+                <p>Загрузить информацию о пользователе.</p>
+            </li>
+            <li>
+                <p>Запросить последнее обновление сервера.</p>
+            </li>
+            <li>
+                <p>... И т.п.</p>
+            </li>
+        </ul>
+        <p>Для сетевых запросов из JavaScript есть широко известный термин «AJAX» (аббревиатура от
+        <b>A</b>synchronous <b>J</b>avaScript <b>A</b>nd <b>X</b>ML). XML мы использовать не обязаны, просто термин старый,
+        поэтому в нем есть это слово. Возможно, вы его уже где-то слышали.</p>
+        <p>Есть несколько способов делать сетевые запросы и получать информацию с сервера.</p>
+        <p>Метод <code>fetch()</code> - современный и очень мощный, поэтому начнем с него. Он не поддерживается
+        старыми, но поддерживается всеми современными браузерами.</p>
+        <p>Базовый синтаксис:</p>
+<pre><code class="language-javascript">let promise = fetch(url, [options]);</code></pre>
+        <ul>
+            <li>
+                <p><code>url</code> - URL для отправки запроса.</p>
+            </li>
+            <li>
+                <p><code>options</code> - дополнительные параметры: метод, заголовки и так далее.</p>
+            </li>
+        </ul>
+        <p>Без <code>options</code> это простой GET-запрос, скачивающий содержимое по адресу <code>url</code>.</p>
+        <p>Браузер сразу же начинает запрос и возвращает промис, который внешний код использует для получения результата.</p>
+        <p>Процесс получения ответа обычно происходит в два этапа.</p>
+        <p><b>Во-первых, <code>promise</code> выполняется с объектом встроенного класса
+        <a target="_blank" href="https://fetch.spec.whatwg.org/#response-class">Response</a> в качестве результата,
+        как только сервер пришлет заголовки ответа.</b></p>
+        <p>На этом этапе мы можем проверить статус HTTP-запроса и определить, выполнился ли он успешно, а также
+        посмотреть заголовки, но пока без тела ответа.</p>
+        <p>Промис завершается с ошибкой, если <code>fetch</code> не смог выполнить HTTP-запрос, например при ошибке
+        сети или если нет такого сайта. HTTP-статусы 404 и 500 не являются ошибкой.</p>
+        <p>Мы можем увидеть HTTP-статус в свойствах ответа:</p>
+        <ul>
+            <li>
+                <p><code>status</code> - код статуса HTTP-запроса, например 200.</p>
+            </li>
+            <li>
+                <p><code>ok</code> - логическое значение: будет <code>true</code>, если код HTTP-статуса в диапазоне 200-299.</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+<pre><code class="language-javascript">let response = await fetch(url);
+
+if (response.ok) { // Если HTTP-статус в диапазоне 200-299
+    // Получаем тело ответа
+    let json = response.json();
+} else {
+    alert('Ошибка HTTP: ' + response.status);
+}</code></pre>
+        <p><b>Во-вторых, для получения тела ответа нам нужно использовать дополнительный вызов метода.</b></p>
+        <p><code>Response</code> предоставляет несколько методов, основанных на промисах, для доступа к телу ответа
+        в различных форматах:</p>
+        <ul>
+            <li>
+                <p><code>response.text()</code> - читает ответ и возвращает как обычный текст.</p>
+            </li>
+            <li>
+                <p><code>response.json()</code> - декодирует ответ в формате JSON.</p>
+            </li>
+            <li>
+                <p><code>response.formData()</code> - возвращает ответ как объект <code>FormData</code>.</p>
+            </li>
+            <li>
+                <p><code>response.blob()</code> - возвращает объект как <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/3.%20Blob/index.html">Blob</a> (бинарные данные с типом).</p>
+            </li>
+            <li>
+                <p><code>response.arrayBuffer()</code> - возвращает ответ как
+                <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/1.%20ArrayBuffer,%20бинарные%20массивы/index.html">ArrayBuffer</a>
+                (низкоуровневое представление бинарных данных).</p>
+            </li>
+            <li>
+                <p>Помимо этого, <code>response.body</code> - это объект <a target="_blank" href="https://streams.spec.whatwg.org/#rs-class">ReadableStream</a>,
+                с помощью которого можно считывать тело запроса по частям.</p>
+            </li>
+        </ul>
+        <p>Например, получим JSON-объект с последними коммитами из репозитория на GitHub:</p>
+<pre><code class="language-javascript">let url = 'https://api.github.com/repos/akimov246/javascript/commits';
+let response = await fetch(url);
+
+let commits = await response.json(); // Читаем ответ в формате JSON
+
+alert(commits[0].author.login);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                (async function() {
+                    let url = 'https://api.github.com/repos/akimov246/javascript/commits';
+                    let promise = await fetch(url);
+
+                    let commits = await promise.json();
+
+                    alert(commits[0].author.login);
+                })();
+            });
+        </script>
+        <p>То же самое без <code>await</code>, с использованием промисов:</p>
+<pre><code class="language-javascript">fetch('https://api.github.com/repos/akimov246/javascript/commits')
+    .then(response => response.json())
+    .then(commits => alert(commits[0].author.login));</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                fetch('https://api.github.com/repos/akimov246/javascript/commits')
+                    .then(promise => promise.json())
+                    .then(commits => alert(commits[0].author.login));
+            });
+        </script>
+        <p>Для получения ответа в виде текста используем <code>await response.text()</code> вместо <code>json()</code>:</p>
+<pre><code class="language-javascript">let response = await fetch('https://api.github.com/repos/akimov246/javascript/commits');
+
+let text = await response.text(); // Прочитать тело ответа как текст
+
+alert(text.slice(0, 80) + '...');</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                (async function () {
+                    let response = await fetch('https://api.github.com/repos/akimov246/javascript/commits');
+
+                    let text = await response.text();
+
+                    alert(text.slice(0, 80) + '...');
+                })();
+            });
+        </script>
+        <p>В качестве примера работы с бинарными данными, давайте запросим и выведем на экран логотип
+        <a target="_blank" href="https://fetch.spec.whatwg.org/">спецификации «fetch»</a>
+        (см. главу <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/3.%20Blob/index.html">Blob</a>,
+        чтобы узнать про операции с <code>Blob</code>):</p>
+<pre><code class="language-javascript">let response = await fetch('/article/fetch/logo-fetch.svg');
+
+let blob = await response.blob(); // Скачиваем как Blob-объект
+
+// Создаем &lt;img&gt;
+let img = document.createElement('img');
+img.style = 'position:fixed;top:10px;left:10px;width:100px';
+document.body.append(img);
+
+// Выводим на экран
+img.src = URL.createObjectURL(blob);
+
+setTimeout(() => { // Прячем через три секунды
+    img.remove();
+    URL.revokeObjectURL(img.src);
+}, 3000);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                (async function () {
+                    let response = await fetch('https://resources.whatwg.org/logo-fetch.svg');
+
+                    let blob = await response.blob();
+
+                    let img = document.createElement('img');
+                    img.style.position = 'fixed';
+                    img.style.left = '50%';
+                    img.style.top = '50%';
+                    img.style.width = '50vw';
+                    img.style.height = '50vh';
+                    img.style.transform = 'translate(-50%, -50%)';
+                    img.src = URL.createObjectURL(blob);
+                    document.body.append(img);
+
+                    setTimeout(() => {
+                        img.remove();
+                        URL.revokeObjectURL(img.src);
+                    }, 3000);
+                })();
+            });
+        </script>
+
+        <article class="warning">
+            <h3>Важно:</h3>
+            <p>Мы можем выбрать только один метод чтения ответа.</p>
+            <p>Если мы уже получили ответ с <code>response.text()</code>, тогда <code>response.json()</code>
+            не сработает, так как данные уже были обработаны.</p>
+<pre><code class="language-javascript">let text = await response.text(); // Тело ответа обработано
+let parsed = await response.json(); // Ошибка (данные уже были обработаны)</code></pre>
+        </article>
+    </article>
+
+    <article>
+        <h2>Заголовки ответа</h2>
+        <p>Заголовки ответа хранятся в похожем на <code>Map</code> объекте <code>response.headers</code>.</p>
+        <p>Это не совсем <code>Map</code>, но мы можем использовать такие же методы, как с <code>Map</code>,
+        чтобы получить заголовок по его имени или перебрать заголовки в цикле:</p>
+<pre><code class="language-javascript">let response = await fetch('https://api.github.com/repos/akimov246/javascript/commits');
+
+// Получить один заголовок
+alert(response.headers.get('Content-type')); // application/json; charset=utf-8
+
+// Перебрать все заголовки
+for (let [key, value] of response.headers) {
+    alert(`${key} = ${value}`);
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            let div = document.currentScript.previousElementSibling;
+            div.firstElementChild.addEventListener('click', function() {
+                if (div.children.length > 1) {
+                    while (div.children.length > 1) {
+                        div.lastElementChild.remove();
+                    }
+                }
+                (async function() {
+                    let response = await fetch(`https://api.github.com/repos/akimov246/javascript/commits?nocache=${Date.now()}`);
+                    for (let [key, value] of response.headers) {
+                        let log = document.createElement('span');
+                        log.style.position = 'relative';
+                        log.style.display = 'block';
+                        log.classList.add('log');
+                        log.innerHTML = `${key} = ${value}`;
+                        exampleConsole.append(log);
+                    }
+                })();
+
+                let exampleConsole = document.createElement('pre');
+                exampleConsole.style.minHeight = '5rem';
+                exampleConsole.style.border = '2px solid rgb(245, 242, 240)';
+                exampleConsole.style.marginTop = '0.5rem';
+                exampleConsole.style.padding = '0.5rem 1.5rem';
+
+                div.append(exampleConsole);
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Заголовки запроса</h2>
+        <p>Для установки заголовка запроса в <code>fetch</code> мы можем использовать опцию <code>headers</code>.
+        Она содержит объект с исходящими заголовками, например:</p>
+<pre><code class="language-javascript">let response = fetch(protectedUrl, {
+    headers: {
+        Authentication: 'secret'
+    }
+});</code></pre>
+        <p>Есть список <a target="_blank" href="https://fetch.spec.whatwg.org/#forbidden-header-name">запрещенных HTTP-заголовков</a>,
+        которые мы не можем установить:</p>
+        <ul>
+            <li>
+                <p><code>Accept-Charset</code>, <code>Accept-Encoding</code></p>
+            </li>
+            <li>
+                <p><code>Access-Control-Request-Headers</code></p>
+            </li>
+            <li>
+                <p><code>Access-Control-Request-Method</code></p>
+            </li>
+            <li>
+                <p><code>Connection</code></p>
+            </li>
+            <li>
+                <p><code>Content-Length</code></p>
+            </li>
+            <li>
+                <p><code>Cookie</code>, <code>Cookie2</code></p>
+            </li>
+            <li>
+                <p><code>Date</code></p>
+            </li>
+            <li>
+                <p><code>DNT</code></p>
+            </li>
+            <li>
+                <p><code>Expect</code></p>
+            </li>
+            <li>
+                <p><code>Host</code></p>
+            </li>
+            <li>
+                <p><code>Keep-Alive</code></p>
+            </li>
+            <li>
+                <p><code>Origin</code></p>
+            </li>
+            <li>
+                <p><code>Referer</code></p>
+            </li>
+            <li>
+                <p><code>TE</code></p>
+            </li>
+            <li>
+                <p><code>Trailer</code></p>
+            </li>
+            <li>
+                <p><code>Transfer-Encoding</code></p>
+            </li>
+            <li>
+                <p><code>Upgrade</code></p>
+            </li>
+            <li>
+                <p><code>Via</code></p>
+            </li>
+            <li>
+                <p><code>Proxy-*</code></p>
+            </li>
+            <li>
+                <p><code>Sec-*</code></p>
+            </li>
+        </ul>
+        <p>Эти заголовки обеспечивают достоверность данных и корректную работу протокола HTTP, поэтому они контролируются
+        исключительно браузером.</p>
+    </article>
+
+    <article>
+        <h2>POST-запросы</h2>
+        <p>Для отправки <code>POST-запроса</code> или запроса с другим методом, нам необходимо использовать
+        <code>fetch</code> параметры:</p>
+        <ul>
+            <li>
+                <p><code>method</code> - HTTP метод, например <code>POST</code>.</p>
+            </li>
+            <li>
+                <p><code>body</code> - тело запроса, одно из списка:</p>
+                <ul>
+                    <li>
+                        <p>Строка (например, в формате JSON).</p>
+                    </li>
+                    <li>
+                        <p>Объект <code>FormData</code> для отправки данных как <code>form/multipart</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>Blob</code>/<code>BufferSource</code> для отправки бинарных данных.</p>
+                    </li>
+                    <li>
+                        <p><a target="_blank" href="https://learn.javascript.ru/url">URLSearchParams</a> для отправки
+                        данных в кодировке <code>x-www-form-urlencoded</code>, используется редко.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Чаще всего используется JSON.</p>
+        <p>Например, этот код отправляет объект <code>user</code> как JSON:</p>
+<pre><code class="language-javascript">let user = {
+    name: 'John',
+    surname: 'Smith'
+}
+
+let response = await fetch('/post/user', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json;charset=utf-8'
+    },
+    body: JSON.stringify(user)
+});
+
+let result = await response.json();
+alert(result.message);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let user = {
+                    name: 'John',
+                    surname: 'Smith'
+                };
+
+                (async function() {
+                    try {
+                        let response = await fetch('http://localhost:3000/post/user', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json;charset=utf-8'
+                            },
+                            body: JSON.stringify(user)
+                        });
+
+                        if (!response.ok) {
+                            alert(response.status);
+                            return;
+                        }
+
+                        let result = await response.json();
+                        alert(result.message);
+                    } catch {
+                        alert('Выполните команду "node server.js"');
+                    }
+                })();
+            });
+        </script>
+        <p>Заметим, что так как тело запроса <code>body</code> - строка, то заголовок <code>Content-Type</code>
+        по умолчанию будет <code>text/plain;charset=utf-8</code>.</p>
+        <p>Но, так как мы посылаем JSON, то используем параметр <code>headers</code> для отправки вместо этого
+        <code>application/json</code>, правильный <code>Content-Type</code> для JSON.</p>
+    </article>
+
+    <article>
+        <h2>Отправка изображения</h2>
+        <p>Мы можем отправить бинарные данные при помощи <code>fetch</code>, используя объекты <code>Blob</code>
+        или <code>BufferSource</code>.</p>
+        <p>В этом примере есть элемент <code>&lt;canvas&gt;, на котором мы можем рисовать движением мыши.
+        При нажатии на кнопку «Отправить» изображение отправляется на сервер:</code></p>
+<pre><code class="language-html">&lt;canvas id="canvasElem" width="100px" height="80px" style="border: 1px solid black"&gt;&lt;/canvas&gt;
+
+&lt;input type="button" value="Отправить" onclick="submit()"&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">canvasElem.onmousemove = function(e) {
+        let ctx = canvasElem.getContext('2d');
+        ctx.lineTo(e.clientX, e.clientY);
+        ctx.stroke();
+    };
+
+    async function submit() {
+        let blob = await new Promise(resolve => canvasElem.toBlob(resolve, 'image/png'));
+        let response = await fetch('/post/image', {
+            method: 'POST',
+            body: blob
+        });
+
+        // Сервер ответит подтверждением и размером изображения
+        let result = await response.json();
+        alert(result.message);
+    }</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let div = this.parentElement;
+                while (div.children.length > 1) {
+                    div.lastElementChild.remove();
+                }
+                let canvas = document.createElement('canvas');
+                canvas.style.marginTop = '0.5rem';
+                canvas.width = window.innerWidth / 2;
+                canvas.height = window.innerHeight / 2;
+                canvas.style.display = 'block';
+                canvas.style.border = '3px solid rgb(245, 242, 240)';
+                canvas.style.borderRadius = '0.5rem';
+                let context = canvas.getContext('2d');
+                div.append(canvas);
+
+                let isDrawing = false;
+
+                canvas.onpointerdown = function() {
+                    isDrawing = true;
+                    context.beginPath();
+                };
+
+                canvas.onpointermove = function(event) {
+                    if (!isDrawing) return;
+                    context.lineTo(event.offsetX, event.offsetY);
+                    context.stroke();
+                };
+
+                canvas.onpointerup = canvas.onpointerleave = function() {
+                    isDrawing = false;
+                };
+
+                canvas.addEventListener('pointerdown', function() {
+
+                });
+
+                let button = document.createElement('button');
+                button.innerHTML = 'Отправить';
+                button.style.marginTop = '0.5rem';
+                div.append(button);
+
+                button.addEventListener('click', async function() {
+                    let blob = await new Promise(resolve => canvas.toBlob(resolve, 'img/png'));
+                    let response = await fetch('http://localhost:3000/post/image', {
+                        method: 'POST',
+                        body: blob
+                    });
+
+                    let result = await response.blob();
+
+                    let img = document.createElement('img');
+                    img.style.position = 'fixed';
+                    img.style.left = '50%';
+                    img.style.top = '50%';
+                    img.style.width = '50vw';
+                    img.style.height = '50vh';
+                    img.style.transform = 'translate(-50%, -50%)';
+                    img.src = URL.createObjectURL(result);
+                    document.body.append(img);
+
+                    setTimeout(() => {
+                        img.remove();
+                        URL.revokeObjectURL(img.src);
+                    }, 3000);
+                });
+            });
+        </script>
+        <p>Заметим, что здесь нам не нужно вручную устанавливать заголовок <code>Content-Type</code>, потому что
+        объект <code>Blob</code> имеет встроенный (<code>image/png</code>, заданный в <code>toBlob</code>).
+        При отправке объектов <code>Blob</code>, он автоматически становится значением <code>Content-Type</code>.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Типичный запрос с помощью <code>fetch</code> состоит из двух операторов <code>await</code>:</p>
+<pre><code class="language-javascript">let response = await fetch(url, options); // Завершается с заголовками ответа
+let result = await response.json(); // Читать тело ответа в формате JSON</code></pre>
+        <p>Или без <code>await</code>:</p>
+<pre><code class="language-javascript">fetch(url, options)
+    .then(response => response.json())
+    .then(result => /* Обрабатываем результат */);</code></pre>
+        <p>Примеры ответа:</p>
+        <ul>
+            <li>
+                <p><code>response.status</code> - HTTP-код ответа.</p>
+            </li>
+            <li>
+                <p><code>response.ok</code> - <code>true</code>, если статус ответа в диапазоне от 200-299.</p>
+            </li>
+            <li>
+                <p><code>response.headers</code> - похожий на <code>Map</code> объект с HTTP-заголовками.</p>
+            </li>
+        </ul>
+        <p>Методы для получения тела ответа:</p>
+        <ul>
+            <li>
+                <p><code>response.text()</code> - возвращает ответ как обычный текст.</p>
+            </li>
+            <li>
+                <p><code>response.json()</code> - декодирует ответ в формате JSON.</p>
+            </li>
+            <li>
+                <p><code>response.formData()</code> - возвращает ответ как объект FormData (кодировка form/multipart, см.
+                следующую главу).</p>
+            </li>
+            <li>
+                <p><code>response.blob()</code> - возвращает объект
+                как <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/3.%20Blob/index.html">Blob</a>
+                (бинарные данные с типом).</p>
+            </li>
+            <li>
+                <p><code>response.arrayBuffer()</code> - возвращает ответ как
+                <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/1.%20ArrayBuffer,%20бинарные%20массивы/index.html">ArrayBuffer</a>
+                (низкоуровневые бинарные данные).</p>
+            </li>
+        </ul>
+        <p>Опции <code>fetch</code>, которые мы изучили на данный момент:</p>
+        <ul>
+            <li>
+                <p><code>method</code> - HTTP-метод.</p>
+            </li>
+            <li>
+                <p><code>headers</code> - объект с запрашиваемыми заголовками (не все заголовки разрешены).</p>
+            </li>
+            <li>
+                <p><code>body</code> - данные для отправки (тело запроса) в виде текста, <code>FormData</code>,
+                <code>BufferSource</code>, <code>Blob</code> или <code>UrlSearchParams</code>.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
