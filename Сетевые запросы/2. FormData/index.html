@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FormData</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>FormData</h2>
+        <p>В этой главе речь пойдет об отправке HTML-форм: с файлами и без, с дополнительными полями и так далее.
+        Объекты <a target="_blank" href="https://xhr.spec.whatwg.org/#interface-formdata">FormData</a> помогут нам с этим.
+        Как вы, наверняка, догадались по его названию, это объект, представляющий данные HTML формы.</p>
+        <p>Конструктор:</p>
+<pre><code class="language-javascript">let formData = new FormData([form]);</code></pre>
+        <p>Если передать в конструктор элемент HTML-формы <code>form</code>, то создаваемый объект автоматически
+        прочитает из нее поля.</p>
+        <p>Его особенность заключается в том, что методы для работы с сетью, например <code>fetch</code>, позволяют указать
+        объект <code>FormData</code> в свойстве тела запроса <code>body</code>.</p>
+        <p>Он будет соответствующим образом закодирован и отправлен с заголовком <code>Content-Type: multipart/form-data</code>.</p>
+        <p>То есть, для сервера это выглядит как обычная отправка формы.</p>
+    </article>
+
+    <article>
+        <h2>Отправка простой формы</h2>
+        <p>Давайте сначала отправим простую форму.</p>
+        <p>Как вы видите, код очень компактный:</p>
+<pre><code class="language-html">&lt;form id="formElem"&gt;
+    &lt;input type="text" name="name" value="John"&gt;
+    &lt;input type="text" name="surname" value="Smith"&gt;
+    &lt;input type="submit"&gt;
+&lt;/form&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">formElem.onsubmit = async function(event) {
+        event.preventDefault();
+
+        let response = await fetch('/post/user', {
+            method: 'POST',
+            body: new FormData(formElem)
+        });
+
+        let result = await response.json();
+
+        alert(result.message);
+    };</code>
+<code class="language-html">&lt;/html&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let div = this.parentElement;
+                while (div.children.length > 1) {
+                    div.lastElementChild.remove();
+                }
+                let form = document.createElement('form');
+                form.style.marginTop = '0.5rem';
+                form.style.display = 'flex';
+                form.style.gap = '0.1rem';
+                let nameInput = document.createElement('input')
+                nameInput.type = 'text';
+                nameInput.name = 'name';
+                nameInput.value = 'John';
+                let surnameInput = document.createElement('input');
+                surnameInput.type = 'text';
+                surnameInput.name = 'surname';
+                surnameInput.value = 'Smith';
+                let submitButton = document.createElement('button');
+                submitButton.type = 'submit';
+                submitButton.innerHTML = 'Отправить';
+
+                div.append(form);
+                form.append(nameInput);
+                form.append(surnameInput);
+                form.append(submitButton);
+
+                form.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+
+                    let response = await fetch('http://localhost:3000/post/user', {
+                        method: 'POST',
+                        body: new FormData(form) // Content-Type: multipart/form-data
+                    });
+
+                    let result = await response.json();
+                    alert(result.message);
+                });
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Методы объекта FormData</h2>
+        <p>С помощью указанных ниже методов мы можем изменять поля в объекте <code>FormData</code>:</p>
+        <ul>
+            <li>
+                <p><code>formData.append(name, value)</code> - добавляет к объекту поле с именем <code>name</code>
+                и значением <code>value</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.append(name, blob, fileName)</code> - добавляет поле, как будто в форме имеется
+                элемент <code>&lt;input type="file"&gt;</code>, третий аргумент <code>fileName</code> устанавливает
+                имя файла (не имя поля формы), как будто это имя из файловой системы пользователя.</p>
+            </li>
+            <li>
+                <p><code>formData.delete(name)</code> - удаляет поле с заданным именем <code>name</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.get(name)</code> - получает значение поля с именем <code>name</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.has(name)</code> - если существует поле с именем <code>name</code>, то возвращает
+                <code>true</code>, иначе <code>false</code>.</p>
+            </li>
+        </ul>
+        <p>Технически форма может иметь много полей с одним и тем же именем <code>name</code>, поэтому несколько
+        вызовов <code>append</code> добавят несколько полей с одинаковыми именами.</p>
+        <p>Еще существует метод <code>.set</code>, его синтаксис такой же, как у <code>append</code>. Разница в том,
+        что <code>.set</code> удаляет все уже имеющиеся поля с именем <code>name</code> и только затем добавляет
+        новое. То есть этот метод гарантирует, что будет существовать только одно поле с именем <code>name</code>,
+        в остальном он аналогичен <code>.append</code>:</p>
+        <ul>
+            <li>
+                <p><code>formData.set(name, value)</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.set(name, blob, fileName)</code>.</p>
+            </li>
+        </ul>
+        <p>Поля объекта <code>FormData</code> можно перебирать, используя цикл <code>for...of</code>:</p>
+<pre><code class="language-javascript">let formData = new FormData();
+formData.append('key1', 'value1');
+formData.append('key2', 'value2');
+
+// Список пар ключ/значение
+for (let [key, value] of formData) {
+    alert(`${key}=${value}`); // key1=value1, потом key2=value2
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let formData = new FormData();
+                formData.append('key1', 'value1');
+                formData.append('key2', 'value2');
+
+                for (let [key, value] of formData) {
+                    alert(`${key}=${value}`);
+                }
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Отправка формы с файлом</h2>
+        <p>Объекты <code>FormData</code> всегда отсылаются с заголовком <code>Content-Type: multipart/form-data</code>,
+        этот способ кодировки позволяет отсылать файлы. Таким образом, поля <code>&lt;input type="file"&gt;</code>
+        тоже отправляются, как это и происходит в случае обычной формы.</p>
+        <p>Пример такой формы:</p>
+<pre><code class="language-html">&lt;form id="formElem"&gt;
+    &lt;input type="text" name="firstName" value="John"&gt;
+    Картинка: &lt;input type="file" name="picture" accept="image/*"&gt;
+    &lt;input type="submit"&gt;
+&lt;/form&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">formElem.onsubmit = async function(event) {
+        event.preventDefault();
+
+        let response = await fetch('/post/user-avatar', {
+            method: 'POST',
+            body: new FormData(formElem)
+        });
+
+        let result = await response.json();
+
+        alert(result.message);
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem;">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let div = this.parentElement;
+                if (div.children.length > 1) {
+                    div.lastElementChild.remove();
+                }
+
+                let form = document.createElement('form');
+                form.style.display = 'flex';
+                form.style.gap = '0.2rem';
+                form.style.marginTop = '0.5rem';
+                let nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.name = 'name';
+                nameInput.value = 'John';
+                let pictureInput = document.createElement('input');
+                pictureInput.id = 'pictureInput';
+                pictureInput.type = 'file';
+                pictureInput.name = 'picture';
+                pictureInput.accept = 'image/*';
+                pictureInput.textContent = 'Выберите картинку';
+                let label = document.createElement('label');
+                label.for = 'pictureInput';
+                label.innerHTML = 'Картинка:';
+                let submitButton = document.createElement('button');
+                submitButton.type = 'submit';
+                submitButton.innerHTML = 'Отправить';
+
+                div.append(form);
+                form.append(nameInput);
+                form.append(label);
+                form.append(pictureInput);
+                form.append(submitButton);
+
+                form.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+
+                    let response = await fetch('http://localhost:3000/post/avatar', {
+                        method: 'POST',
+                        body: new FormData(form)
+                    });
+
+                    let result = await response.json();
+                    let avatar = new Uint8Array(result.picture.array.split(',').map(value => Number(value)));
+                    let avatarBlob = new Blob([avatar], {type: 'image/png'});
+                    let img = document.createElement('img');
+                    img.src = URL.createObjectURL(avatarBlob);
+                    img.style.position = 'fixed';
+                    img.style.left = '50%';
+                    img.style.top = '50%';
+                    img.style.width = '25%';
+                    img.style.transform = 'translate(-50%, -50%)';
+                    img.style.display = 'block';
+                    alert(result.name);
+                    document.body.append(img);
+                    setTimeout(() => {
+                        img.remove();
+                        URL.revokeObjectURL(img.src);
+                    }, 3000);
+                });
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Объекты <a target="_blank" href="https://xhr.spec.whatwg.org/#interface-formdata">FormData</a> используются,
+        чтобы взять данные из HTML-формы и отправить их с помощью <code>fetch</code> или другого метода для
+        работы с сетью.</p>
+        <p>Мы можем создать такой объект уже с данными, передав в конструктор HTML-форму - <code>new FormData(form)</code>,
+        или же можно создать объект вообще без формы и затем добавить к нему поля с помощью методов:</p>
+        <ul>
+            <li>
+                <p><code>formData.append(name, value)</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.append(name, blob, fileName)</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.set(name, value)</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.set(name, blob, fileName)</code>.</p>
+            </li>
+        </ul>
+        <p>Отметим две особенности:</p>
+        <ol>
+            <li>
+                <p>Метод <code>set</code> удалит предыдущие поля с таким же именем, а <code>append</code> - нет.
+                В этом их единственное отличие.</p>
+            </li>
+            <li>
+                <p>Чтобы послать файл, нужно использовать синтаксис с тремя аргументами, в качестве третьего
+                как раз указывается имя файла, которое обычно, при <code>&lt;input type="file"&gt;</code>,
+                берется из файловой системы.</p>
+            </li>
+        </ol>
+        <p>Другие методы:</p>
+        <ul>
+            <li>
+                <p><code>formData.delete(name)</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.get(name)</code>.</p>
+            </li>
+            <li>
+                <p><code>formData.has(name)</code>.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
