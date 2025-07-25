@@ -248,6 +248,113 @@ for (let [key, value] of formData) {
     </article>
 
     <article>
+        <h2>Отправка формы с Blob-данными</h2>
+        <p>Ранее в главен <a target="_blank" href="../1.%20Fetch/index.html">Fetch</a> мы видели, что очень легко
+        отправить динамически сгенерированные бинарные данные в формате <code>Blob</code>. Мы можем явно передать
+        ее в параметр <code>body</code> запроса <code>fetch</code>.</p>
+        <p>На практике бывает удобнее отправлять изображение не отдельно, а в составе формы, добавив дополнительные
+        поля для имени и другие метаданные.</p>
+        <p>Кроме того, серверы часто настроены на прием именно форм, а не просто бинарных данных.</p>
+        <p>В примере ниже посылается изображение из <code>&lt;canvas&gt;</code> и еще несколько полей, как форма,
+        используя <code>FormData</code>:</p>
+<pre><code class="language-html">&lt;canvas id="canvasElem" width=100 height=80 style="border: 1px solid black"&lt;/canvas&gt;
+
+&lt;input type="button" value="Отправить" onclick="submit()"&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">canvasElem.onmousemove = function(event) {
+        let context = canvasElem.getContext('2d');
+        context.lineTo(event.clientX, event.clientY);
+        context.stroke();
+    };
+
+    async function submit() {
+        let imageBlob = await new Promise(resolve => canvasElem(resolve, 'image/png'));
+
+        let formData = new FormData();
+        formData.append('firstName', 'John');
+        formData.append('image', imageBlob, 'image.png');
+
+        let response = await fetch('/post/image-form', {
+            method: 'POST',
+            body: formData
+        });
+        let result = await response.json();
+        alert(result.message);
+    }</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            let div = document.currentScript.previousElementSibling;
+            div.firstElementChild.addEventListener('click', function() {
+                if (div.children.length > 1) {
+                    div.lastElementChild.remove();
+                }
+                let canvas = document.createElement('canvas');
+                canvas.style.marginTop = '0.5rem';
+                canvas.width = window.innerWidth / 2;
+                canvas.height = window.innerHeight / 2;
+                canvas.style.display = 'block';
+                canvas.style.border = '3px solid rgb(245, 242, 240)';
+                canvas.style.borderRadius = '0.5rem';
+                let context = canvas.getContext('2d');
+                div.append(canvas);
+
+                let isDrawing = false;
+                canvas.addEventListener('pointerdown', function() {
+                    isDrawing = true;
+                    context.beginPath();
+                });
+
+                canvas.addEventListener('pointermove', function(event) {
+                    if (!isDrawing) return;
+
+                    context.lineTo(event.offsetX, event.offsetY);
+                    context.stroke();
+                });
+
+                canvas.addEventListener('pointerup', function() {
+                    isDrawing = false;
+                });
+
+                canvas.addEventListener('pointerleave', function() {
+                    isDrawing = false;
+                });
+
+                let button = document.createElement('button');
+                button.innerHTML = 'Отправить';
+                button.style.marginTop = '0.5rem';
+                div.append(button);
+
+                button.addEventListener('click', async function() {
+                    let imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+
+                    let formData = new FormData();
+                    formData.append('firstName', 'John');
+                    formData.append('image', imageBlob, 'image.png');
+
+                    let response = await fetch('http://localhost:3000/post/form-data', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    let result = await response.json();
+                    alert(result.message);
+                });
+
+            });
+        </script>
+        <p>Пожалуйста, обратите внимание на то, как добавляется изображение <code>Blob</code>:</p>
+<pre><code class="language-javascript">formData.append('image', imageBlob, 'image.png');</code></pre>
+        <p>Как если бы в форме был элемент <code>&lt;input type="file" name="image"</code> и пользователь прикрепил
+        бы файл с именем <code>"image.png"</code> (3-й аргумент) и данными <code>imageBlob</code> (2-й аргумент) из
+        своей файловой системы.</p>
+        <p>Сервер прочитает и данные и файл, точно так же, как если бы это была обычная отправка формы.</p>
+    </article>
+
+    <article>
         <h2>Итого</h2>
         <p>Объекты <a target="_blank" href="https://xhr.spec.whatwg.org/#interface-formdata">FormData</a> используются,
         чтобы взять данные из HTML-формы и отправить их с помощью <code>fetch</code> или другого метода для

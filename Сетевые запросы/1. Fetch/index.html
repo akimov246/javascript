@@ -490,17 +490,13 @@ alert(result.message);</code></pre>
                     isDrawing = false;
                 };
 
-                canvas.addEventListener('pointerdown', function() {
-
-                });
-
                 let button = document.createElement('button');
                 button.innerHTML = 'Отправить';
                 button.style.marginTop = '0.5rem';
                 div.append(button);
 
                 button.addEventListener('click', async function() {
-                    let blob = await new Promise(resolve => canvas.toBlob(resolve, 'img/png'));
+                    let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
                     let response = await fetch('http://localhost:3000/post/image', {
                         method: 'POST',
                         body: blob

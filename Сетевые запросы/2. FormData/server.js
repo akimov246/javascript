@@ -54,6 +54,13 @@ app.post('/post/avatar', async (req, res) => {
     res.type('application/json').send(result);
 });
 
+app.post('/post/form-data', async (req, res) => {
+    let data = await req.file();
+    res.type('application/json').send({
+        message: `Получен файл ${data.filename} от пользователя ${data.fields.firstName.value}.`
+    });
+});
+
 app.listen({port: port}, () => {
     console.log(`Сервер запущен на http://localhost:${port}`);
 });
