@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch: ход загрузки</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Fetch: ход загрузки</h2>
+        <p>Метод <code>fetch</code> позволяет отслеживать процесс <i>получения</i> данных.</p>
+        <p>Заметим, на данный момент в <code>fetch</code> нет способа отслеживать процесс <i>отправки</i>. Для этого
+        используйте <a target="_blank" href="https://learn.javascript.ru/xmlhttprequest">XMLHttpRequest</a>, позже
+        мы его рассмотрим.</p>
+        <p>Чтобы отслеживать ход загрузки данных с сервера, можно использовать свойство <code>response.body</code>.
+        Это <code>ReadableStream</code> («поток для чтения») - особый объект, который предоставляет тело ответа
+        по частям, по мере поступления. Потоки для чтения описаны в спецификации <a target="_blank" href="https://streams.spec.whatwg.org/#rs-class">Streams API</a>.</p>
+        <p>В отличие от <code>response.text()</code>, <code>response.json()</code> и других методов,
+        <code>response.body</code> дает полный контроль над процессом чтения, и мы можем подсчитать, сколько данных
+        получено на каждый момент.</p>
+        <p>Вот примерный код, который читает ответ из <code>response.body</code>:</p>
+<pre><code class="language-javascript">// Вместо response.json() и других методов
+const reader = response.body.getReader();
+
+// Бесконечный цикл, пока идет загрузка
+while (true) {
+    // done становится true в последнем фрагменте
+    // value - Uint8Array из байтов каждого фрагмента
+    const {done, value} = await reader.read();
+
+    if (done) {
+        break;
+    }
+
+    console.log(`Получено ${value.length} байт`);
+}</code></pre>
+        <p>Результат вызова <code>await reader.read()</code> - это объект с двумя свойствами:</p>
+        <ul>
+            <li>
+                <p><b><code>done</code></b> - <code>true</code>, когда чтение закончено, иначе <code>false</code>.</p>
+            </li>
+            <li>
+                <p><b><code>value</code></b> - типизированный массив данных ответа <code>Uint8Array</code>.</p>
+            </li>
+        </ul>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Streams API также описывает асинхронный перебор по <code>ReadableStream</code>, при помощи цикла
+            <code>for await ... of</code>, но он пока слабо поддерживается, поэтому используем цикл <code>while</code>.</p>
+        </article>
+
+        <p>Мы получаем новые фрагменты данных в цикле, пока загрузка не завершится, то есть пока <code>done</code>
+        не станет <code>true</code>.</p>
+        <p>Чтобы отслеживать процесс загрузки, нам нужно при получении очередного фрагмента прибавлять его длину
+        <code>value</code> к счетчику.</p>
+        <p>Вот полный рабочий пример, который получает ответ сервера и в процессе получения выводит в консоли длину
+        полученных данных:</p>
+<pre><code class="language-javascript">// Шаг 1: начинаем загрузку fetch, получаем поток для чтения
+let response = await fetch('https://api.github.com/repos/javascript-tutorial/en.javascript.info/commits?per_page=100');
+
+const reader = response.body.getReader();
+
+// Шаг 2: получаем длину содержимого ответа
+const contentLength = +response.headers.get('Content-Length');
+
+// Шаг 3: считываем данные:
+let receivedLength = 0; // Количество байт, полученных на данный момент
+let chunks = []; // Массив полученных двоичных фрагментов (составляющих тело ответа)
+
+while (true) {
+    const {done, value} = await reader.read();
+
+    if (done) {
+        break;
+    }
+
+    chunks.push(value);
+    receivedLength += value.length;
+
+    console.log(`Получено ${receivedLength} из ${contentLength}`);
+}
+
+// Шаг 4: соединим фрагменты в общий типизированный массив Uint8Array
+let chunksAll = new Uint8Array(receivedLength); // (4.1)
+let position = 0;
+for (let chunk of chunks) {
+    chunksAll.set(chunk, position); // (4.2)
+    position += chunk.length;
+}
+
+// Шаг 5: декодируем Uint8Array обратно в строку
+let result = new TextDecoder('utf-8').decode(chunksAll);
+
+// Готово!
+let commits = JSON.parse(result);
+alert(commit[0].author.login);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', async function() {
+                console.clear();
+                let response = await fetch('http://localhost:8000/');
+                let reader = response.body.getReader();
+
+                const contentLength = +response.headers.get('Content-Length');
+
+                let receivedLength = 0;
+                let chunks = [];
+
+                while (true) {
+                    let {done, value} = await reader.read();
+
+                    if (done) {
+                        break;
+                    }
+
+                    chunks.push(value);
+                    receivedLength += value.length;
+
+                    console.log(`Получено: ${Math.floor(100 / contentLength * receivedLength)}% (${receivedLength} из ${contentLength})`);
+                }
+
+                // let chunksAll = new Uint8Array(receivedLength);
+                // let offset = 0;
+                // for (let chunk of chunks) {
+                //     chunksAll.set(chunk, offset)
+                //     offset = chunk.length
+                // }
+
+                //let result = new TextDecoder().decode(chunksAll);
+                let result = await new Blob(chunks, {type: 'text/plain'}).text();
+                if (result.length > 100) {
+                    console.log(result.slice(0, 100) + '...');
+                } else {
+                    console.log(result);
+                }
+            });
+        </script>
+        <p>Разберемся что здесь произошло:</p>
+        <ol>
+            <li>
+                <p>Мы обращаемся к <code>fetch</code> как обычно, но вместо вызова <code>response.json</code> мы
+                получаем доступ к потоку чтения <code>response.body.getReader()</code>.</p>
+                <p>Обратите внимание, что мы не можем использовать одновременно оба эти метода для чтения одного
+                и того же ответа: либо обычный метод <code>response.json</code>, либо чтение потока <code>response.body</code>.</p>
+            </li>
+            <li>
+                <p>Еще до чтения потока мы можем вычислить полную длину ответа из заголовка <code>Content-Length</code>.</p>
+                <p>Он может быть нечитаемым при запросах на другой источник (подробнее в разделе
+                <a target="_blank" href="https://learn.javascript.ru/fetch-crossorigin">Fetch: запросы на другие сайты</a>)
+                и, в общем-то, серверу необязательно его устанавливать. Тем не менее обычно длина указана.</p>
+            </li>
+            <li>
+                <p>Вызываем <code>await reader.read()</code> до окончания загрузки.</p>
+                <p>Все, что получили, мы складываем по «кусочкам» в массив <code>chunks</code>. Это важно, потому что
+                после того, как ответ получен, мы уже не сможем «перечитать» его, используя <code>response.json()</code>
+                или любой другой способ.</p>
+            </li>
+            <li>
+                <p>В самом конце у нас типизированный массив - <code>Uint8Array</code>. В нем находятся фрагменты данных.
+                Нам нужно их склеить, чтобы получить строку. К сожалению, для этого нет специального метода,
+                но можно сделать, например, так:</p>
+                <ol>
+                    <li>
+                        <p>Создаем <code>chunksAll = new Uint8Array(receivedLength)</code> - массив того же типа
+                        заданной длины.</p>
+                    </li>
+                    <li>
+                        <p>Используем <code>.set(chunk, position)</code> для копирования каждого фрагмента
+                        друг за другому в него.</p>
+                    </li>
+                </ol>
+            </li>
+            <li>
+                <p>Наш результат теперь хранится в <code>chunksAll</code>. Это не строка, а байтовый массив.</p>
+                <p>Чтобы получить именно строку, надо декодировать байты. Встроенный объект
+                <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/2.%20TextDecoder%20и%20TextEncoder/index.html">TextDecoder</a>
+                как раз этим и занимается. Потом мы можем, если необходимо, преобразовать строку в данные с помощью
+                <code>JSON.parse</code>.</p>
+                <p>Что если результат нам нужен в бинарном виде вместо строки? Это еще проще. Замените шаги 4 и 5 на
+                создание единого <code>Blob</code> из всех фрагментов:</p>
+<pre><code class="language-javascript">let blob = new Blob(chunks);</code></pre>
+            </li>
+        </ol>
+        <p>В итого у нас есть результат (строки или <code>Blob</code>, смотря что удобно) и отслеживание процесса получения.</p>
+        <p>На всякий случай повторимся, что здесь мы рассмотрели, как отслеживать процесс получения данных с сервера,
+        а не их отправки на сервер. Для отслеживания отправки у <code>fetch</code> пока нет способа.</p>
+    </article>
+</body>
+</html>
