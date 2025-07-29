@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch: запросы на другие сайты</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Fetch: запросы на другие сайты</h2>
+        <p>Если мы сделаем запрос <code>fetch</code> на другой веб-сайт, он, вероятно, завершится неудачей.</p>
+        <p>Например, давайте попробуем запросить <code>https://example.com</code>:</p>
+<pre><code class="language-javascript">try {
+    await fetch('https://example.com');
+} catch(error) {
+    alert(error); // Failed to fetch
+}</code></pre>
+        <p>Вызов <code>fetch</code> не удался, как и ожидалось.</p>
+        <p>Ключевым понятием здесь является <i>источник</i> (origin) - комбинация домен/порт/протокол.</p>
+        <p>Запросы на другой источник - отправленные на другой домен (или даже поддомен), или протокол, или порт -
+        требуют специальных заголовков от удаленной стороны.</p>
+        <p>Эта политика называется «CORS»: Cross-Origin Resource Sharing («совместное использование ресурсов между
+        разными источниками»).</p>
+    </article>
+
+    <article>
+        <h2>Зачем нужен CORS? Экскурс в историю</h2>
+        <p>CORS существует для защиты интернета от злых хакеров.</p>
+        <p>Серьезно. Давайте сделаем краткое историческое отступление.</p>
+        <p><b>Многие годы скрипт с одного сайта не мог получить доступ к содержимому другого сайта.</b></p>
+        <p>Это простое, но могучее правило было основой интернет-безопасности. Например, хакерский скрипт
+        с сайта <code>hacker.com</code> не мог получить доступ к почтовому ящику пользователя на сайте <code>gmail.com</code>.
+        И люди чувствовали себя спокойно.</p>
+        <p>В то время в JavaScript не было методов для сетевых запросов. Это был «игрушечный» язык для украшения веб-страниц.</p>
+        <p>Но веб-разработчики жаждали большей власти. Чтобы обойти этот запрет и все же получать данные с других
+        сайтов, были придуманы разные хитрости.</p>
+
+        <h3>Использование форм</h3>
+        <p>Одним из способов общения с другим сервером была отправка туда формы <code>&lt;form&gt;</code>. Люди отправляли
+        ее в <code>&lt;iframe&gt;</code>, чтобы оставаться на текущей странице, вот так:</p>
+<pre><code class="language-html">&lt;!-- цель формы --&gt;
+&lt;iframe name="iframe"&gt;&lt;/iframe&gt;
+
+&lt;!-- форма могла быть динамически сгенерирована и отправлены с помощью JavaScript --&gt;
+&lt;form target="iframe" method="POST" action="https://another.com/..."&gt;
+    ...
+&lt;/form&gt;</code></pre>
+        <p>Таким способом было возможно сделать GET/POST запрос к другому сайту даже без сетевых методов, так как
+        формы можно отправлять куда угодно. Но так как запрещено получать доступ к содержимому <code>&lt;iframe&gt;</code>
+        с другого сайта, прочитать ответ было невозможно.</p>
+        <p>Если быть точным, были трюки и для этого, требующие специального кода на странице и в ифрейме, так что
+        общение с ифреймом было технически возможно. Сейчас мы не будем вдаваться в подробности, пусть эти динозавры
+        покоятся с миром.</p>
+
+        <h3>Использование скриптов</h3>
+        <p>Еще один трюк заключался в использовании тега <code>&lt;script&gt;</code>. У него может быть любой
+        <code>src</code>, с любым доменом, например <code>&lt;script src="https://another.com/..."&gt;</code>.
+        Это дает возможность загрузить и выполнить скрипт откуда угодно.</p>
+        <p>Если сайт, например <code>another.com</code>, хотел представить данные для такого доступа, он предоставлял
+        так называемый «протокол JSONP» (<b>JSON</b> with <b>P</b>adding).</p>
+        <p>Вот как он работал.</p>
+        <p>Например, нам на нашем сайте нужны данные с сайта <code>https://another.com</code>, скажем, погода:</p>
+        <ol>
+            <li>
+                <p>Сначала, заранее, объявляем глобальную функцию для обработки данных, например
+                <code>gotWeather</code>.</p>
+<pre><code class="language-javascript">// 1. Объявить функцию для обработки погодных данных
+function gotWeather({temperature, humidity}) {
+    alert(`Температура: ${temperature}, влажность: ${humidity}`);
+}</code></pre>
+            </li>
+            <li>
+                <p>Затем создаем тег <code>&lt;script&gt;</code> с
+                <code>src="https://another.com/weather.json?callback=gotWeather"</code>, при этом имя нашей функции -
+                в URL-параметре <code>callback</code>.</p>
+<pre><code class="language-javascript">let script = document.createElement('script');
+script.src = 'https://another.com/weather.json?callback=gotWeather';
+document.body.append(script);</code></pre>
+            </li>
+            <li>
+                <p>Удаленный сервер с <code>another.com</code> должен в ответ сгенерировать скрипт, который вызывает
+                <code>gotWeather(...)</code> с данными, которые хочет передать.</p>
+<pre><code class="language-javascript">// Ожидаемый ответ от сервера выглядит так:
+gotWeather({
+    temperature: 25,
+    humidity: 78
+});</code></pre>
+            </li>
+            <li>
+                <p>Когда этот скрипт загрузится и выполнится, наша функция <code>gotWeather</code> получает данные.</p>
+            </li>
+        </ol>
+        <p>Это работает и не нарушает безопасность, потому что обе стороны согласились передавать данные таким образом.
+        А когда обе стороны согласны, то это определенно не хак. Все еще существуют сервисы, которые предоставляют
+        такой доступ, так как это работает даже для очень старых браузеров.</p>
+        <p>Спустя некоторое время в браузерном JavaScript появились методы для сетевых запросов.</p>
+        <p>Вначале запросы на другой источник были запрещены. Но в результате долгих дискуссий было решено разрешить их
+        делать, но для использования новых возможностей требовалось разрешение сервера, выраженное в специальных заголовках.</p>
+    </article>
+
+    <article>
+        <h2>Простые запросы</h2>
+        <p>Есть два вида запросов на другой источник:</p>
+        <ol>
+            <li>
+                <p>Простые.</p>
+            </li>
+            <li>
+                <p>Все остальные.</p>
+            </li>
+        </ol>
+        <p>Простые запросы будут попроще, поэтому давайте начнем с них.</p>
+        <p><a target="_blank" href="https://fetch.spec.whatwg.org/#terminology">Простой запрос</a> - это запрос,
+        удовлетворяющий следующим условиям:</p>
+        <ol>
+            <li>
+                <p><a target="_blank" href="https://fetch.spec.whatwg.org/#simple-method">Простой метод</a>:
+                GET, POST или HEAD.</p>
+            </li>
+            <li>
+                <p><a target="_blank" href="https://fetch.spec.whatwg.org/#simple-header">Простые заголовки</a> -
+                разрешены только:</p>
+                <ul>
+                    <li>
+                        <p><code>Accept</code>,</p>
+                    </li>
+                    <li>
+                        <p><code>Accept-Language</code>,</p>
+                    </li>
+                    <li>
+                        <p><code>Content-Language</code>,</p>
+                    </li>
+                    <li>
+                        <p><code>Content-Type</code> со значением <code>application/x-www-form-urlencoded</code>,
+                        <code>multipart/form-data</code> или <code>text/plain</code>.</p>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>Любой другой запрос считается «непростым». Например, запрос с методом <code>PUT</code> или с HTTP-заголовком
+        <code>API-Key</code> не соответствует условиям.</p>
+        <p><b>Принципиальное отличие между ними состоит в том, что «простой запрос» может быть сделан
+        через <code>&lt;form&gt;</code> или <code>&lt;script&gt;</code>, без каких-то специальных методов.</b></p>
+        <p>Таким образом, даже очень старый сервер должен быть способен принять простой запрос.</p>
+        <p>В противоположность этому, запросы с нестандартными заголовками или, например, методом <code>DELETE</code>
+        нельзя создать таким способом. Долгое время JavaScript не мог делать такие запросы. Поэтому старый
+        сервер может предположить, что такие запросы поступают от привилегированного источника, «просто потому,
+        что веб-страница неспособна их посылать».</p>
+        <p>Когда мы пытаемся сделать непростой запрос, браузер посылает специальные предварительный запрос
+        («предзапрос», по англ. «preflight»), который спрашивает у сервера - согласен ли он принять такой непростой
+        запрос или нет?</p>
+        <p>И, если сервер явно не дает согласие в заголовках, непростой запрос не посылается.</p>
+        <p>Далее мы разберем конкретные детали.</p>
+    </article>
+
+    <article>
+        <h2>CORS для простых запросов</h2>
+        <p>При запросе на другой источник браузер всегда ставит «от себя» заголовок <code>Origin</code>.</p>
+        <p>Например, если мы запрашиваем <code>https://anywhere.com/request</code> со страницы
+        <code>https:/javascript.info/page</code>, заголовки будут такими:</p>
+<pre><code class="language-http">GET /request
+Host: anywhere.com
+Origin: https://javascript.info
+...</code></pre>
+        <p>Как вы можете видеть, заголовок <code>Origin</code> содержит именно источник (протокол/домен/порт), без пути.</p>
+        <p>Сервер может проверить <code>Origin</code> и, если он согласен принять такой запрос, добавить особый заголовок
+        <code>Access-Control-Allow-Origin</code> к ответу. Этот заголовок должен содержать разрешенный источник
+        (в нашем случае <code>https://javascript.info</code>) или звездочку <code>*</code>. Тогда ответ успешен,
+        в противном случае возникает ошибка.</p>
+        <p>Здесь браузер играет роль доверенного посредника:</p>
+        <ol>
+            <li>
+                <p>Он гарантирует, что к запросу на другой источник добавляется правильный заголовок <code>Origin</code>.</p>
+            </li>
+            <li>
+                <p>Он проверяет наличие разрешающего заголовка <code>Access-Control-Allow-Origin</code> в ответе и,
+                если все хорошо, то JavaScript получает доступ к ответу сервера, в противном случае - доступ запрещается
+                с ошибкой.</p>
+            </li>
+        </ol>
+        <img src="images/xhr-another-domain.svg" alt style="width: 40vw">
+        <p>Вот пример ответа сервера, который разрешает доступ:</p>
+<pre><code class="language-http">200 OK
+Content-Type: text/plain; charset=UTF-8
+Access-Control-Allow-Origin: https://javascript.info</code></pre>
+    </article>
+
+    <article>
+        <h2>Заголовки ответа</h2>
+        <p>По умолчанию при запросе к другому источнику JavaScript может получить доступ только к так называемым
+        «простым» заголовкам ответа:</p>
+        <ul>
+            <li>
+                <p><code>Cache-Control</code></p>
+            </li>
+            <li>
+                <p><code>Content-Language</code></p>
+            </li>
+            <li>
+                <p><code>Content-Length</code></p>
+            </li>
+            <li>
+                <p><code>Content-Type</code></p>
+            </li>
+            <li>
+                <p><code>Expires</code></p>
+            </li>
+            <li>
+                <p><code>Last-Modified</code></p>
+            </li>
+            <li>
+                <p><code>Pragma</code></p>
+            </li>
+        </ul>
+        <p>При доступе к любому другому заголовку ответа будет ошибка.</p>
+        <p>Чтобы разрешить JavaScript доступ к любому другому заголовку ответа, сервер должен указать заголовок
+        <code>Access-Control-Expose-Headers</code>. Он содержит список, через запятую, заголовков, которые не являются
+        простыми, но доступ к которым разрешен.</p>
+        <p>Например:</p>
+<pre><code class="language-http">200 OK
+Content-Type: text/html; charset=UTF-8
+Content-Length: 12345
+Content-Encoding: gzip
+API-Key: 2c9de507f2c54aa1
+Access-Control-Allow-Origin: https://javascript.info
+Access-Control-Expose-Headers: Content-Encoding,API-Key</code></pre>
+        <p>При таком заголовке <code>Access-Control-Expose-Headers</code>, скрипту разрешено получить заголовки
+        <code>Content-Encoding</code> и <code>API-Key</code> ответа.</p>
+    </article>
+
+    <article>
+        <h2>«Непростые» запросы</h2>
+        <p>Мы можем использовать любой HTTP-метод: не только <code>GET/POST</code>, но и <code>PATCH</code>,
+        <code>DELETE</code> и другие.</p>
+        <p>Некоторое время назад никто не мог даже предположить, что веб-страница способна делать такие запросы.
+        Так что могут существовать веб-сервисы, которые рассматривают нестандартный метод как сигнал:
+        «Это не браузер». Они могут учитывать это при проверке прав доступа.</p>
+        <p>Поэтому, чтобы избежать недопониманий, браузер не делает «непростые» запросы (которые нельзя было
+        сделать в прошлом) сразу. Перед этим он посылает предварительный запрос, спрашивая разрешения.</p>
+        <p>Предварительный запрос использует метод <code>OPTIONS</code>, у него нет тела, но есть три заголовка:</p>
+        <ul>
+            <li>
+                <p><code>Origin</code> содержит именно источник (протокол/домен/порт), без пути.</p>
+            </li>
+            <li>
+                <p><code>Access-Control-Request-Method</code> содержит HTTP-метод «непростого» запроса.</p>
+            </li>
+            <li>
+                <p><code>Access-Control-Request-Headers</code> предоставляет разделенный запятыми список его
+                «непростых» HTTP-заголовков.</p>
+            </li>
+        </ul>
+        <p>Если сервер согласен принимать такие запросы, то он должен ответить без тела, со статусом 200 и с
+        заголовками:</p>
+        <ul>
+            <li>
+                <p><code>Access-Control-Allow-Origin</code> должен содержать разрешенный источник.</p>
+            </li>
+            <li>
+                <p><code>Access-Control-Allow-Methods</code> должен содержать разрешенные методы.</p>
+            </li>
+            <li>
+                <p><code>Access-Control-Allow-Headers</code> должен содержать список разрешенных заголовков.</p>
+            </li>
+            <li>
+                <p>Кроме того, заголовок <code>Access-Control-Max-Age</code> может указывать количество секунд,
+                на которое нужно кешировать разрешения. Так что браузеру не придется посылать предзапрос для последующих
+                запросов, удовлетворяющих данным разрешениям.</p>
+            </li>
+        </ul>
+        <img src="images/xhr-preflight.svg" alt style="width: 40vw">
+        <p>Давайте пошагово посмотрим, как это работает, на примере <code>PATCH</code> запроса (этот метод часто
+        используется для обновления данных) на другой источник:</p>
+<pre><code class="language-javascript">let response = await fetch('https://site.com/service.json', {
+    method: 'PATCH',
+    headers: {
+        'Content-Type': 'application/json',
+        'API-Key': 'secret'
+    }
+});</code></pre>
+        <p>Этот запрос не является простым по трем причинам (достаточно одной):</p>
+        <ul>
+            <li>
+                <p>Метод <code>PATCH</code>.</p>
+            </li>
+            <li>
+                <p><code>Content-Type</code> не один из: <code>application/x-www-form-urlencoded</code>,
+                <code>multipart/form-data</code>, <code>text/plain</code>.</p>
+            </li>
+            <li>
+                <p>Содержит «непростой» заголовок <code>API-Key</code>.</p>
+            </li>
+        </ul>
+
+        <h3>Шаг 1: предзапрос</h3>
+        <p>Перед тем, как послать такой запрос, браузер самостоятельно генерирует и посылает предзапрос, который
+        выглядит следующим образом:</p>
+<pre><code class="language-http">OPTIONS /service.json
+Host: site.com
+Origin: https://javascript.info
+Access-Control-Request-Method: PATCH
+Access-Control-Request-Headers: Content-Type,API-Key</code></pre>
+        <ul>
+            <li>
+                <p>Метод: <code>OPTIONS</code>.</p>
+            </li>
+            <li>
+                <p>Путь - точно такой же, как в основном запросе: <code>/service.json</code>.</p>
+            </li>
+            <li>
+                <p>Особые заголовки:</p>
+                <ul>
+                    <li>
+                        <p><code>Origin</code> - источник.</p>
+                    </li>
+                    <li>
+                        <p><code>Access-Control-Request-Method</code> - запрашиваемый метод.</p>
+                    </li>
+                    <li>
+                        <p><code>Access-Control-Request-Headers</code> - разделенный запятыми список «непростых» заголовков
+                        запроса.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+        <h3>Шаг 2: ответ метода на предзапрос</h3>
+        <p>Сервер должен ответить со статусом 200 и заголовками:</p>
+        <ul>
+            <li>
+                <p><code>Access-Control-Allow-Methods: PATCH</code></p>
+            </li>
+            <li>
+                <p><code>Access-Control-Allow-Headers: Content-Type,API-Key</code></p>
+            </li>
+        </ul>
+        <p>Это разрешит будущую коммуникацию, в противном случае возникнет ошибка.</p>
+        <p>Если сервер ожидает в будущем другие методы и заголовки, то он может в ответе перечислить из все сразу,
+        разрешить заранее, например:</p>
+<pre><code class="language-http">200 OK
+Access-Control-Allow-Methods: PUT,PATCH,DELETE
+Access-Control-Allow-Headers: API-Key,Content-Type,If-Modified-Since,Cache-Control
+Access-Control-Max-Age: 86400</code></pre>
+        <p>Теперь когда браузер видит, что <code>PATCH</code> есть в <code>Access-Control-Allow-Methods</code>,
+        а <code>Content-Type,API-Key</code> в списке <code>Access-Control-Allow-Headers</code>, он посылает наш основной
+        запрос.</p>
+        <p>Кроме того, ответ на предзапрос кешируется на время, указанное в заголовке <code>Access-Control-Max-Age</code>
+        (86400 секунд - один день), так что последующие запросы не вызовут предзапрос. Они будут отосланы сразу при условии,
+        что соответствуют закешированным разрешениям.</p>
+
+        <h3>Шаг 3: основной запрос</h3>
+        <p>Если предзапрос успешен, браузер делает основной запрос. Алгоритм здесь такой же, что и для простых
+        запросов.</p>
+        <p>Основной запрос имеет заголовок <code>Origin</code> (потому что он идет на другой источник):</p>
+<pre><code class="language-http">PATCH /service.json
+Host: site.com
+Content-Type: application/json
+API-Key: secret
+Origin: https://javascript.info</code></pre>
+
+        <h3>Шаг 4: основной ответ</h3>
+        <p>Сервер не должен забывать о добавлении <code>Access-Control-Allow-Origin</code> к ответу на основной запрос.
+        Успешный предзапрос не освобождает от этого:</p>
+<pre><code class="language-http">Access-Control-Allow-Origin: https://javascript.info</code></pre>
+        <p>После этого JavaScript может прочитать ответ сервера.</p>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Предзапрос осуществляется «за кулисами», невидимо для JavaScript.</p>
+            <p>JavaScript получает только ответ на основной запрос или ошибку, если со стороны сервера нет разрешения.</p>
+        </article>
+    </article>
+
+    <article>
+        <h2>Авторизационные данные</h2>
+        <p>Запрос на другой источник по умолчанию не содержит авторизационных данных (credentials), под которыми
+        здесь понимаются куки и заголовки HTTP-аутентификации.</p>
+        <p>Это нетипично для HTTP-запросов. Обычно запрос к <code>https://site.com</code> сопровождается всеми
+        куки с этого домена. Но запросы на другой источник, сделанные методами JavaScript - исключение.</p>
+        <p>Например, <code>fetch('https://another.com')</code> не посылает никаких куки, даже тех (!), которые принадлежат
+        домену <code>another.com</code>.</p>
+        <p>Почему?</p>
+        <p>Потому что запрос с авторизационными данными дает намного больше возможностей, чем без них. Если он разрешен,
+        то это позволяет JavaScript действовать от имени пользователя и получать информацию, используя его авторизационные
+        данные.</p>
+        <p>Действительно ли сервер настолько доверяет скрипту? Тогда он должен явно разрешить такие запросы при помощи
+        дополнительного заголовка.</p>
+        <p>Чтобы включить отправку авторизационных данных в <code>fetch</code>, нам нужно добавить опцию
+        <code>credentials: 'include'</code>, вот так:</p>
+<pre><code class="language-javascript">fetch('https://another.com', {
+    credentials: 'include'
+});</code></pre>
+        <p>Теперь <code>fetch</code> пошлет куки с домена <code>another.com</code> вместе с нашим запросом на этот сайт.</p>
+        <p>Если сервер согласен принять запрос с <i>авторизационными данными</i>, он должен добавить заголовок
+        <code>Access-Control-Allow-Credentials: true</code> к ответу, в дополнение к <code>Access-Control-Allow-Origin</code>.</p>
+        <p>Например:</p>
+<pre><code class="language-http">200 OK
+Access-Control-Allow-Origin: https://javascript.info
+Access-Control-Allow-Credentials: true</code></pre>
+        <p>Пожалуйста, обратите внимание: в <code>Access-Control-Allow-Origin</code> запрещено использовать звездочку
+        <code>*</code> для запросов с авторизационными данными. Там должен быть именно источник, как показано выше.
+        Это дополнительная мера безопасности, чтобы гарантировать, что сервер действительно знает, кому он
+        доверяет делать такие запросы.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>С точки зрения браузера запросы к другому источнику бывают двух видов: «простые» и все остальные.</p>
+        <p><a target="_blank" href="https://fetch.spec.whatwg.org/#terminology">Простые запросы</a> должны
+        удовлетворять следующим условиям:</p>
+        <ul>
+            <li>
+                <p>Метод: <code>GET</code>, <code>POST</code> или <code>HEAD</code>.</p>
+            </li>
+            <li>
+                <p>Заголовки - мы можем установить только:</p>
+                <ul>
+                    <li>
+                        <p><code>Accept</code></p>
+                    </li>
+                    <li>
+                        <p><code>Accept-Language</code></p>
+                    </li>
+                    <li>
+                        <p><code>Content-Language</code></p>
+                    </li>
+                    <li>
+                        <p><code>Content-Type</code> со значением <code>application/x-www-urlencoded</code>,
+                        <code>multipart/form-data</code> или <code>text/plain</code></p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Основное их отличие заключается в том, что простые запросы с давних времен выполнялись с использованием
+        тегов <code>&lt;form&gt;</code> или <code>&lt;script&gt;</code>, в то время как непростые долгое время были
+        невозможны для браузеров.</p>
+        <p>Практическая разница состоит в том, что простые запросы отправляются сразу с заголовком <code>Origin</code>,
+        а для других браузер делает предварительный запрос, спрашивая разрешения.</p>
+
+        <h3>Для простых запросов:</h3>
+        <ul>
+            <li>
+                <p>→ Браузер посылает заголовок <code>Origin</code> с источником.</p>
+            </li>
+            <li>
+                <p>← Для запросов без авторизационных данных (не отправляются по умолчанию) сервер должен установить:</p>
+                <ul>
+                    <li>
+                        <p><code>Access-Control-Allow-Origin</code> в <code>*</code> или то же значение, что и
+                        <code>Origin</code>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>← Для запросов с авторизационными данными сервер должен установить:</p>
+                <ul>
+                    <li>
+                        <p><code>Access-Control-Allow-Origin</code> в то же значение, что и <code>Origin</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>Access-Control-Allow-Credentials</code> в <code>true</code>.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Дополнительно, чтобы разрешить JavaScript доступ к любым заголовкам ответа, кроме <code>Cache-Control</code>,
+        <code>Content-Language</code>, <code>Content-Type</code>, <code>Expires</code>, <code>Last-Modified</code>
+        или <code>Pragma</code>, сервер должен перечислить разрешенные в заголовке <code>Access-Control-Expose-Headers</code>.</p>
+
+        <h3>Для непростых запросов перед основным запросом отправляется предзапрос:</h3>
+        <ul>
+            <li>
+                <p>→ Браузер посылает запрос <code>OPTIONS</code> на тот же адрес с заголовками:</p>
+                <ul>
+                    <li>
+                        <p><code>Access-Control-Request-Method</code> - содержит запрашиваемый метод.</p>
+                    </li>
+                    <li>
+                        <p><code>Access-Control-Request-Headers</code> - перечисляет непростые запрашиваемые заголовки.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>← Сервер должен ответить со статусом 200 и заголовками:</p>
+                <ul>
+                    <li>
+                        <p><code>Access-Control-Allow-Methods</code> со списком разрешенных методов.</p>
+                    </li>
+                    <li>
+                        <p><code>Access-Control-Allow-Headers</code> со списком разрешенных заголовков.</p>
+                    </li>
+                    <li>
+                        <p><code>Access-Control-Max-Age</code> с количеством секунд для кеширования разрешений.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>→ Затем отправляется основной запрос, применяется предыдущая «простая» схема.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch: прерывание запроса</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Fetch: прерывание запроса</h2>
+        <p>Как мы знаем, метод <code>fetch</code> возвращает промис. А в JavaScript в целом нет понятия «отмены» промиса.
+        Как же прервать запрос <code>fetch</code>?</p>
+        <p>Для таких целей существует специальный встроенный объект: <code>AbortController</code>, который можно
+        использовать для отмены не только <code>fetch</code>, но и других асинхронных задач.</p>
+        <p>Использовать его достаточно просто:</p>
+        <ul>
+            <li>
+                <p>Шаг 1: создаем контроллер:</p>
+<pre><code class="language-javascript">let controller = new AbortController();</code></pre>
+                <p>Контроллер <code>controller</code> - чрезвычайно простой объект.</p>
+                <ul>
+                    <li>
+                        <p>Он имеет единственный метод <code>abort()</code> и единственное свойство <code>signal</code>.</p>
+                    </li>
+                    <li>
+                        <p>При вызове <code>abort()</code>:</p>
+                        <ul>
+                            <li>
+                                <p>Генерируется событие с именем <code>abort</code> на объекте <code>controller.signal</code>.</p>
+                            </li>
+                            <li>
+                                <p>Свойство <code>controller.signal.aborted</code> становится равным <code>true</code>.</p>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+                <p>Все, кто хочет узнать о вызове <code>abort()</code>, ставят обработчики на <code>controller.signal</code>,
+                    чтобы отслеживать его.</p>
+                <p>Вот так (пока без <code>fetch</code>):</p>
+                <pre><code class="language-javascript">let controller = new AbortController();
+let signal = controller.signal;
+
+// Срабатывает при вызове controller.abort()
+signal.addEventListener('abort', () => alert('Отмена!'));
+
+controller.abort(); // Отмена!
+
+alert(signal.aborted); // true</code></pre>
+                <div style="margin: 0.5rem">
+                    <button>Запустить пример</button>
+                </div>
+                <script>
+                    document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                        let controller = new AbortController();
+                        let signal = controller.signal;
+
+                        signal.addEventListener('abort', () => alert('Отмена!'));
+
+                        controller.abort();
+
+                        alert(signal.aborted);
+                    });
+                </script>
+            </li>
+            <li>
+                <p>Шаг 2: передайте свойство <code>signal</code> опцией в метод <code>fetch</code>:</p>
+<pre><code class="language-javascript">let controller = new AbortController();
+fetch(url, {
+    signal: controller.signal
+});</code></pre>
+                <p>Метод <code>fetch</code> умеет работать с <code>AbortController</code>, он слушает событие
+                <code>abort</code> на <code>signal</code>.</p>
+            </li>
+            <li>
+                <p>Шаг 3: чтобы прервать выполнение <code>fetch</code>, вызовите <code>controller.abort()</code>:</p>
+<pre><code class="language-javascript">controller.abort();</code></pre>
+                <p>Вот и все: <code>fetch</code> получает событие из <code>signal</code> и прерывает запрос.</p>
+            </li>
+        </ul>
+        <p>Когда <code>fetch</code> отменяется, его промис завершается с ошибкой <code>AbortError</code>, поэтому мы
+        должны обработать ее, например, в <code>try...catch</code>:</p>
+<pre><code class="language-javascript">// Прерывать через 1 секунду
+let controller = new AbortController();
+setTimeout(() => controller.abort(), 1000);
+
+try {
+    let response = await fetch('http://localhost:8000/', {
+        signal: controller.signal
+    });
+} catch(error) {
+    if (error.name === 'AbortError') { // Обработать ошибку от вызова abort()
+        alert('Прервано!');
+    } else {
+        throw error;
+    }
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', async function() {
+                let controller = new AbortController();
+                setTimeout(() => controller.abort(), 1000);
+
+                try {
+                    let response = await fetch('http://localhost:8000/', {
+                        signal: controller.signal
+                    });
+                } catch(error) {
+                    if (error.name === 'AbortError') {
+                        alert('Прервано!');
+                    } else {
+                        throw error;
+                    }
+                }
+            });
+        </script>
+        <p><b><code>AbortController</code> - масштабируемый, он позволяет отменить несколько вызовов <code>fetch</code>
+        одновременно.</b></p>
+        <p>Например, здесь мы запрашиваем много URL параллельно, и контроллер прерывает их все:</p>
+<pre><code class="language-javascript">let urls = [...]; // Список URL ля параллельных fetch
+
+let controller = new AbortController();
+
+let fetchJobs = urls.map(url => fetch(url, {
+    signal: controller.signal
+}));
+
+let results = await Promise.all(fetchJobs);
+
+// Если откуда-то вызвать controller.abort(), то это прервет все вызовы fetch</code></pre>
+        <p>Если у нас есть собственные асинхронные задачи, отличные от <code>fetch</code>, мы можем использовать
+        один <code>AbortController</code> для их остановки вместе с <code>fetch</code>.</p>
+        <p>Нужно лишь слушать его событие <code>abort</code>:</p>
+<pre><code class="language-javascript">let urls = [...];
+let controller = new AbortController();
+
+let ourJob = new Promise((resolve, reject) => { // Наша задача
+    ...
+    controller.signal.addEventListener('abort', reject);
+});
+
+let fetchJobs = urls.map(url => fetch(url, { // Запросы fetch
+    signal: controller.signal
+}));
+
+// Ожидать выполнения нашей задачи и всех запросов
+let results = await Promise.all([...fetchJobs, ourJob]);
+
+// Вызов откуда-нибудь еще:
+// controller.abort() прервет все вызовы fetch и наши задачи</code></pre>
+        <p>Так что <code>AbortController</code> существует не только для <code>fetch</code>, это универсальный объект
+        для отмены асинхронных задач, в <code>fetch</code> встроена интеграция с ним.</p>
+    </article>
+</body>
+</html>
