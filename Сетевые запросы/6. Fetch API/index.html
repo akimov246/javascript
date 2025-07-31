@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch API</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Fetch API</h2>
+        <p>На данный момент мы уже многое знаем про <code>fetch</code>.</p>
+        <p>Давайте рассмотрим оставшуюся часть API, чтобы охватить все возможности.</p>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Заметим: большинство этих возможностей используются редко. Вы можете пропустить эту главу и, несмотря
+            на это, нормально использовать <code>fetch</code>.</p>
+            <p>Тем не менее полезно знать, что вообще может <code>fetch</code>, чтобы, когда появится необходимость,
+            вернуться и прочитать конкретные детали.</p>
+        </article>
+
+        <p>Нижеследующий список - это все возможные опции для <code>fetch</code> с соответствующими значениями по
+        умолчанию (в комментариях указаны альтернативные значения):</p>
+<pre><code class="language-javascript">let promise = fetch(url, {
+    method: 'GET', // POST, PUT, DELETE, etc.
+    headers: {
+        // Значение этого заголовка обычно ставится автоматически, в зависимости от тела запроса
+        'Content-Type': 'text/plain;charset=UTF-8'
+    },
+    body: undefined, // string, FormData, Blob, BufferSource или URLSearchParams
+    referrer: 'about:client', // Или '' для того, чтобы не посылать заголовок Referer, или URL с текущего источника
+    referrerPolicy: 'strict-origin-when-cross-origin', // no-referrer-when-downgrade, no-referrer, origin, same-origin...
+    mode: 'cors', // same-origin, no-cors
+    credentials: 'same-origin', // omit, include
+    cache: 'default', // no-store, reload, no-cache, force-cache или only-if-cached
+    redirect: 'follow', // manual, error
+    integrity: '', // Контрольная сумма, например "sha256-abcdef1234567890"
+    keepalive: false, // true
+    signal: undefined, // AbortCollector, чтобы прервать запрос
+    window: window // null
+});</code></pre>
+        <p>Довольно-таки внушительный список, не так ли?</p>
+        <p>В главе <a target="_blank" href="../1.%20Fetch/index.html">Fetch</a> мы разобрали параметры <code>method</code>,
+        <code>headers</code>, и <code>body</code>.</p>
+        <p>Опция <code>signal</code> разъяснена в главе <a target="_blank" href="../4.%20Fetch.%20Прерывание%20запроса/index.html">Fetch: прерывание запроса</a>.</p>
+        <p>Теперь давайте пройдемся по оставшимся возможностям.</p>
+    </article>
+
+    <article>
+        <h2>referrer, referrerPolicy</h2>
+        <p>Данные опции определяют, как <code>fetch</code> устанавливает HTTP-заголовок <code>Referer</code>.</p>
+        <p>Обычно этот заголовок ставиться автоматически и содержит URL-адрес страницы, с которой пришел запрос.
+        В большинстве случаев он совсем не важен, в некоторых случаях, с целью большей безопасности, имеет смысл
+        убрать или укоротить его.</p>
+        <p><b>Опция <code>referrer</code> позволяет установить любой <code>Referer</code></b> в пределах текущего источника
+        или же убрать его.</p>
+        <p>Чтобы не отправлять <code>Referer</code>, нужно указать значением пустую строку:</p>
+<pre><code class="language-javascript">fetch('/page', {
+    referrer: '' // Не ставить заголовок Referer
+});</code></pre>
+        <p>Для того, чтобы установить другой URL-адрес (должен быть с текущего источника):</p>
+<pre><code class="language-javascript">fetch('/page', {
+    // Предположим, что мы находимся на странице https://javascript.info
+    // Мы можем установить любое значение Referer при условии, что оно принадлежит текущему источнику
+    referrer: 'https://javascript.info/anotherpage'
+});</code></pre>
+        <p><b>Опция <code>referrerPolicy</code> устанавливает общие правила для <code>Referer</code>.</b></p>
+        <p>Выделяется 3 типа запросов:</p>
+        <ol>
+            <li>
+                <p>Запрос на тот же источник.</p>
+            </li>
+            <li>
+                <p>Запрос на другой источник.</p>
+            </li>
+            <li>
+                <p>Запрос с HTTPS на HTTP (с безопасного протокола на небезопасный).</p>
+            </li>
+        </ol>
+        <p>В отличие от настройки <code>referrer</code>, которая позволяет задать точное значение <code>Referer</code>,
+        настройка <code>referrerPolicy</code> сообщает браузеру общие правила, что делать для каждого типа запроса.</p>
+        <p>Возможные значения описаны в <a target="_blank" href="https://w3c.github.io/webappsec-referrer-policy">спецификации Referrer Policy</a>:</p>
+        <ul>
+            <li>
+                <p><code>'strict-origin-when-cross-origin'</code> - значение по умолчанию: для <code>'same-origin'</code>
+                отправлять полный <code>Referer</code>, для <code>'cross-origin'</code> отправлять только
+                <code>'origin'</code>, если только это не HTTPS → HTTP запрос, тогда не отправлять ничего.</p>
+            </li>
+            <li>
+                <p><code>'no-referrer-when-downgrade'</code> - всегда отправлять полный <code>Referer</code>,
+                за исключением случаев, когда мы отправляем запрос с HTTPS на HTTP (на менее безопасный протокол).</p>
+            </li>
+            <li>
+                <p><code>'no-referrer'</code> - никогда не отправлять <code>Referer</code>.</p>
+            </li>
+            <li>
+                <p><code>'origin'</code> - отправлять в <code>Referer</code> только текущий источник, а не полный
+                URL-адрес страницы, например, посылать только <code>http://site.com</code> вместо
+                <code>http://site.com/path</code>.</p>
+            </li>
+            <li>
+                <p><code>'origin-when-cross-origin'</code> - отправлять полный <code>Referer</code> для запросов
+                в пределах текущего источника, но для запросов на другой источник отправлять только сам источник.</p>
+            </li>
+            <li>
+                <p><code>'same-origin'</code> - отправлять полный <code>Referer</code> для запросов в пределах
+                текущего источника, а для запросов на другой источник не отправлять его вообще.</p>
+            </li>
+            <li>
+                <p><code>'strict-origin'</code> - отправлять только значение источника, не отправлять <code>Referer</code>
+                для HTTPS → HTTP запросов.</p>
+            </li>
+            <li>
+                <p><code>'unsafe-url'</code> - всегда отправлять полный URL-адрес в <code>Referer</code>, даже при
+                запросах HTTPS → HTTP.</p>
+            </li>
+        </ul>
+        <p>Вот таблица со всеми комбинациями:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Значение</th>
+                <th>На тот же источник</th>
+                <th>На другой источник</th>
+                <th>HTTPS → HTTP</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>'no-referrer'</code></td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>'no-referrer-when-downgrade'</code></td>
+                <td>full</td>
+                <td>full</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>'origin'</code></td>
+                <td>origin</td>
+                <td>origin</td>
+                <td>origin</td>
+            </tr>
+            <tr>
+                <td><code>'origin-when-cross-origin'</code></td>
+                <td>full</td>
+                <td>origin</td>
+                <td>origin</td>
+            </tr>
+            <tr>
+                <td><code>'same-origin'</code></td>
+                <td>full</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>'strict-origin'</code></td>
+                <td>origin</td>
+                <td>origin</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>'strict-origin-when-cross-origin'</code> или <code>''</code> (по умолчанию)</td>
+                <td>full</td>
+                <td>origin</td>
+                <td>-</td>
+            </tr>
+            <tr>
+                <td><code>'unsafe-url'</code></td>
+                <td>full</td>
+                <td>full</td>
+                <td>full</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Допустим, у нас есть админка со структурой URL, которая не должна стать известной снаружи.</p>
+        <p>Если мы отправляем запрос <code>fetch</code>, то по умолчанию он всегда отправляет заголовок
+        <code>Referer</code> с полным URL-адресом нашей админки (исключение - это когда мы делаем запрос от HTTPS
+        на HTTP, в таком случае <code>Referrer</code> не будет отправляться).</p>
+        <p>Например, <code>Referer: https://javascript.info/admin/secret/paths</code>.</p>
+        <p>Если мы хотим, чтобы другие сайты получали только источник, но не URL-путь, это сделает такая настройка:</p>
+<pre><code class="language-javascript">fetch('https://another.com/page', {
+    // ...
+    referrerPolicy: 'origin-when-cross-origin' // Referer: https://javascript.info
+});</code></pre>
+        <p>Мы можем поставить ее во все вызовы <code>fetch</code>, возможно, интегрировать в JavaScript-библиотеку
+        нашего проекта, которая делает все запросы и внутри использует <code>fetch</code>.</p>
+        <p>Единственным отличием в поведении будет то, что для всех запросов на другой источник <code>fetch</code>
+        будет посылать только источник в заголовке <code>Referer</code> (например, <code>https://javascript.info</code>,
+        без пути). А для запросов на наш источник мы продолжим получать полный <code>Referer</code> (это может быть
+        полезно для отладки).</p>
+
+        <article class="note">
+            <h3>Политика установки Referer (Referrer Policy) - не только для <code>fetch</code></h3>
+            <p>Политика установки <code>Referer</code>, описанная в
+            <a target="_blank" href="https://w3c.github.io/webappsec-referrer-policy">спецификации Referrer Policy</a>,
+            существует не только для <code>fetch</code>, она более глобальная.</p>
+            <p>В частности, можно поставить политику по умолчанию для всей страницы, используя
+            HTTP-заголовок <code>Referrer-Policy</code>, или на уровне ссылки
+            <a>&lt;a rel="noreferrer"&gt;</a>.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>mode</h2>
+        <p>Опция <code>mode</code> - это защита от нечаянной отправки запроса на другой источник:</p>
+        <ul>
+            <li>
+                <p><code>'cors'</code> - стоит по умолчанию, позволяет делать такие запросы так, как описано
+                в <a target="_blank" href="../5.%20Fetch.%20Запросы%20на%20другие%20сайты/index.html">Fetch: запросы на другие сайты</a>.</p>
+            </li>
+            <li>
+                <p><code>'same-origin'</code> - запросы на другой источник запрещены.</p>
+            </li>
+            <li>
+                <p><code>'no-cors'</code> - разрешены только простые запросы на другой источник.</p>
+            </li>
+        </ul>
+        <p>Эта опция может пригодиться, если URL-адрес для <code>fetch</code> приходит от третьей стороны, и нам нужен
+        своего рода «глобальный выключатель» для запросов на другие источники.</p>
+    </article>
+
+    <article>
+        <h2>credentials</h2>
+        <p>Опция <code>credentials</code> указывает, должен ли <code>fetch</code> отправлять куки и авторизованные
+        заголовки HTTP вместе с запросом.</p>
+        <ul>
+            <li>
+                <p><code>'same-origin'</code> - стоит по умолчанию, не отправлять для запросов на другой источник.</p>
+            </li>
+            <li>
+                <p><code>'include'</code> - отправлять всегда, но при этом необходим заголовок
+                <code>Access-Control-Allow-Credentials</code> в ответе от сервера, чтобы JavaScript получил доступ
+                к ответу сервера, об этом говорилось в главе
+                <a target="_blank" href="../5.%20Fetch.%20Запросы%20на%20другие%20сайты/index.html">Fetch: запросы на другие сайты</a>.</p>
+            </li>
+            <li>
+                <p><code>'omit'</code> - не отправлять ни при каких обстоятельствах, даже для запросов, сделанных в пределах
+                текущего источника.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>cache</h2>
+        <p>По умолчанию <code>fetch</code> делает запросы, использую стандартное HTTP-кеширование. То есть,
+        учитываются заголовки <code>Expires</code>, <code>Cache-Control</code>, отправляется <code>If-Modified-Since</code>
+        и так далее. Так же, как и обычные HTTP-запросы.</p>
+        <p>Настройка <code>cache</code> позволяет игнорировать HTTP-кеш или же настроить его использование:</p>
+        <ul>
+            <li>
+                <p><code>'default'</code> - <code>fetch</code> будет использовать стандартные правила и заголовки
+                HTTP кеширования.</p>
+            </li>
+            <li>
+                <p><code>'no-store'</code> - полностью игнорировать HTTP-кеш, этот режим становится режимом по умолчанию,
+                если присутствуют такие заголовки как <code>If-Modified-Since</code>, <code>If-None-Match</code>,
+                <code>If-Unmodified-Since</code>, <code>If-Match</code> или <code>If-Range</code>.</p>
+            </li>
+            <li>
+                <p><code>'reload'</code> - не брать результат из HTTP-кеша (даже при его присутствии), но сохранить
+                ответ в кеше (если это дозволено заголовками ответа).</p>
+            </li>
+            <li>
+                <p><code>'no-cache'</code> - в случае, если существует кешированный ответ - создать условный запрос,
+                в противном же случае - обычный запрос. Сохранить ответ в HTTP-кеше.</p>
+            </li>
+            <li>
+                <p><code>'force-cache'</code> - использовать ответ из HTTP-кеша, даже если он устаревший. Если же ответ
+                в HTTP-кеше отсутствует, сделать обычный HTTP-запрос, действовать как обычно.</p>
+            </li>
+            <li>
+                <p><code>'only-if-cached'</code> - использовать ответ из HTTP-кеша, даже если он устаревший. Если же ответ
+                в HTTP-кеше отсутствует, то выдается ошибка. Это работает, только когда <code>mode</code> установлен
+                в <code>'same-origin'</code>.</p>
+            </li>
+        </ul>
+    </article>
+
+
+    <article>
+        <h2>redirect</h2>
+        <p>Обычно <code>fetch</code> прозрачно следует HTTP-редиректам, таким как 301, 302 и так далее.</p>
+        <p>Это можно поменять при помощи опции <code>redirect</code>:</p>
+        <ul>
+            <li>
+                <p><code>'follow'</code> - стоит по умолчанию, следовать HTTP-редиректам.</p>
+            </li>
+            <li>
+                <p><code>'error'</code> - ошибка в случае HTTP-редиректа.</p>
+            </li>
+            <li>
+                <p><code>'manual'</code> - не следовать HTTP-редиректу, но установить адрес редиректа в
+                <code>response.url</code>, а <code>response.redirected</code> будет иметь значение
+                <code>false</code>, чтобы мы могли сделать перенаправление на адрес вручную.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>integrity</h2>
+        <p>Опция <code>integrity</code> позволяет проверить, соответствует ли ответ известной заранее контрольной сумме.</p>
+        <p>Как описано в <a target="_blank" href="https://w3c.github.io/webappsec-subresource-integrity">спецификации</a>,
+        поддерживаемыми хеш-функциями являются SHA-256, SHA-384 и SHA-512. В зависимости от браузера, могут быть и другие.</p>
+        <p>Например, мы скачиваем файл, и мы точно знаем, что его контрольная сумма по алгоритму SHA-256 равна
+        «abcdef» (разумеется, настоящая контрольная сумма будет длиннее).</p>
+        <p>Мы можем добавить это в настройку <code>integrity</code> вот так:</p>
+<pre><code class="language-javascript">fetch('http://site.com/file', {
+    integrity: 'sha256-abcdef'
+});</code></pre>
+        <p>Затем <code>fetch</code> самостоятельно вычислит SHA-256 и сравнит его с нашей строкой. В случае несоответствия
+        будет ошибка.</p>
+    </article>
+
+    <article>
+        <h2>keepalive</h2>
+        <p>Опция <code>keepalive</code> указывает на то, что запрос может «пережить» страницу, которая его отправила.</p>
+        <p>Например, мы собираем статистические данные о том, как посетитель ведет себя на нашей странице (на что он
+        кликает, части страницы, которые он просматривает), для анализа и улучшения интерфейса.</p>
+        <p>Когда посетитель покидает нашу страницу - мы хотим сохранить обработанные данные на нашем сервере.</p>
+        <p>Для этого мы можем использовать событие <code>window.onunload</code>:</p>
+<pre><code class="language-javascript">window.onunload = function() {
+    fetch('/analytics', {
+        method: 'POST',
+        body: 'statistics',
+        keepalive: true
+    });
+};</code></pre>
+        <p>Обычно, когда документ выгружается, все связанные с ним сетевые запросы прерываются. Но настройка
+        <code>keepalive</code> указывает браузеру выполнять запрос в фоновом режиме даже после того, как пользователь
+        покидает страницу. Поэтому эта опция обязательна, чтобы такой запрос удался.</p>
+        <p>У нее есть ряд ограничений:</p>
+        <ul>
+            <li>
+                <p>Мы не можем посылать мегабайты: лимит тела для запроса с <code>keepalive</code> - 64 Кбайт.</p>
+                <ul>
+                    <li>
+                        <p>Если мы собираем больше данных, можем отправлять их регулярно, «пакетами», тогда на момент
+                        последнего запроса в <code>onunload</code> их останется немного.</p>
+                    </li>
+                    <li>
+                        <p>Этот лимит распространяется на все запросы с <code>keepalive</code>. То есть, мы не можем
+                        его обойти, послав 100 запросов одновременно - каждые по 64 Кбайт.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Мы не сможем обработать ответ от сервера, если запрос сделан при <code>onunload</code>: в тот
+                момент документ уже выгружен, его функции не сработают.</p>
+                <ul>
+                    <li>
+                        <p>Обычно сервер посылает пустой ответ на такие запросы, так что это не является проблемой.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </article>
+    <script>
+        (async function() {
+            let response = await fetch('http://localhost:8000/file_hash', {
+                method: 'GET',
+                referrer: 'http://localhost:63342/anotherpage',
+                referrerPolicy: 'origin-when-cross-origin',
+                mode: 'cors',
+                integrity: 'sha256-80CnfMVVp0HOLvhstKe+nspBl1y+t2TVwmU/QnjLKhw='
+            });
+            console.log(await response.text())
+        })();
+    </script>
+</body>
+</html>
