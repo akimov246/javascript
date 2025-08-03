@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Объекты URL</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Объекты URL</h2>
+        <p>Встроенный класс <a target="_blank" href="https://url.spec.whatwg.org/#api">URL</a> предоставляет удобный
+        интерфейс для создания и разбора URL-адресов.</p>
+        <p>Нет сетевых методов, которые требуют именно объект <code>URL</code>, обычные строки вполне подходят.
+        Так что, технически, мы не обязаны использовать <code>URL</code>. Но иногда он может быть весьма удобным.</p>
+    </article>
+
+    <article>
+        <h2>Создание URL</h2>
+        <p>Синтаксис создания нового объекта <code>URL</code>:</p>
+<pre><code class="language-javascript">new URL(url, [base])</code></pre>
+        <ul>
+            <li>
+                <p><code>url</code> - полный URL-адрес или только путь, если указан второй параметр.</p>
+            </li>
+            <li>
+                <p><code>base</code> - необязательный «базовый» URL: если указан и аргумент <code>url</code> содержит
+                только путь, то адрес будет создан относительно него.</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+<pre><code class="language-javascript">let url = new URL('https://javascript.info/profile/admin');</code></pre>
+        <p>Эти два URL одинаковы:</p>
+<pre><code class="language-javascript">let url1 = new URL('https://javascript.info/profile/admin');
+let url2 = new URL('/profile/admin', 'https://javascript.info');
+
+alert(url1); // https://javascript.info/profile/admin
+alert(url2); // https://javascript.info/profile/admin
+</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let url1 = new URL('https://javascript.info/profile/admin');
+                let url2 = new URL('/profile/admin', 'https://javascript.info');
+
+                alert(url1);
+                alert(url2);
+            });
+        </script>
+        <p>Можно легко создать новый URL о пути относительно существующего URL-адреса:</p>
+<pre><code class="language-javascript">let url = new URL('https://javascript.info/profile/admin');
+let newUrl = new URL('tester', url);
+
+alert(newUrl); // https://javascript.info/profile/tester</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let url = new URL('https://javascript.info/profile/admin');
+                let newUrl = new URL('tester', url);
+
+                alert(newUrl);
+            });
+        </script>
+        <p>Объект <code>URL</code> дает доступ к компонентам URL, поэтому это отличный способ «разобрать»
+        URL-адрес, например:</p>
+<pre><code class="language-javascript">let url = new URL('https://javascript.info/url');
+
+alert(url.protocol); // https:
+alert(url.host); // javascript.info
+alert(url.pathname); // /url</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let url = new URL('https://javascript.info/url');
+
+                alert(url.protocol);
+                alert(url.host);
+                alert(url.pathname);
+            });
+        </script>
+        <p>Вот шпаргалка по компонентам URL:</p>
+        <img src="images/url-object.svg" alt style="width: 60vw">
+        <ul>
+            <li>
+                <p><code>href</code> - это полный URL-адрес, то же самое, что <code>url.toString()</code>.</p>
+            </li>
+            <li>
+                <p><code>protocol</code> - протокол, заканчивается символом двоеточия <code>:</code>.</p>
+            </li>
+            <li>
+                <p><code>search</code> - строка параметров, начинается с вопросительного знака <code>?</code>.</p>
+            </li>
+            <li>
+                <p><code>hash</code> - начинается с символа <code>#</code>.</p>
+            </li>
+            <li>
+                <p>Также есть свойства <code>user</code> и <code>password</code>, если используется HTTP-аутентификация:
+                <code>http://login:password@site.com</code> (не нарисованы сверху, так как редко используются).</p>
+            </li>
+        </ul>
+
+        <article>
+            <h3>Можно передавать объекты <code>URL</code> в сетевые методы (и большинство других) вместо строк</h3>
+            <p>Мы можем использовать объект <code>URL</code> в методах <code>fetch</code> или <code>XMLHttpRequest</code>
+            и почти во всех других, где ожидается URL-строка.</p>
+            <p>Вообще, объект <code>URL</code> можно передавать почти куда угодно вместо строки, так как большинство
+            методов сконвертируют объект в строку, при этом он станет строкой с полным URL-адресом.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>SearchParams «?...»</h2>
+        <p>Допустим, мы хотим создать URL-адрес с заданными параметрами, например,
+        <code>https://google.com/search?query=JavaScript</code>.</p>
+        <p>Мы можем указать их в строке:</p>
+<pre><code class="language-javascript">new URL('https://google.com/search?query=JavaScript')</code></pre>
+        <p>... Но параметры должны быть правильно закодированы, чтобы они могли содержать не-латинские буквы,
+        пробелы и т.п. (об этом подробнее далее).</p>
+        <p>Так что для этого есть свойство <code>url.searchParams</code> - объект типа
+        <a target="_blank" href="https://url.spec.whatwg.org/#urlsearchparams">URLSearchParams</a>.</p>
+        <p>Он предоставляет удобные методы для работы с параметрами:</p>
+        <ul>
+            <li>
+                <p><code>append(name, value)</code> - добавить параметр по имени.</p>
+            </li>
+            <li>
+                <p><code>delete(name)</code> - удалить параметр по имени.</p>
+            </li>
+            <li>
+                <p><code>get(name)</code> - получить параметр по имени.</p>
+            </li>
+            <li>
+                <p><code>getAll(name)</code> - получить все параметры с одинаковым именем <code>name</code>
+                (такое возможно, например: <code>?user=John&user=Pete</code>).</p>
+            </li>
+            <li>
+                <p><code>has(name)</code> - проверить наличие параметра по имени.</p>
+            </li>
+            <li>
+                <p><code>set(name, value)</code> - задать/заменить параметр.</p>
+            </li>
+            <li>
+                <p><code>sort()</code> - отсортировать параметры по имени, используется редко.</p>
+            </li>
+            <li>
+                <p>... И является перебираемым, аналогично <code>Map</code>.</p>
+            </li>
+        </ul>
+        <p>Пример добавления параметров, содержащих пробелы и знаки препинания:</p>
+<pre><code class="language-javascript">let url = new URL('https://google.com/search');
+url.searchParams.set('q', 'test me!'); // Добавим параметр, содержащий пробел и !
+
+alert(url); // https://google.com/search?q=test+me%21
+
+url.searchParams.set('tbs', 'qdr:y'); // Параметр с двоеточием :
+
+// Параметры автоматически кодируются
+alert(url); // https://google.com/search?q=test+me%21&tbs=qdr%3Ay
+
+// Перебрать параметры (в исходном виде)
+for (let [name, value] of url.searchParams) {
+    alert(`${name}=${value}`); // q=test me!, далее tbs=qdr:y
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let url = new URL('https://google.com/search');
+                url.searchParams.set('q', 'test me!');
+
+                alert(url);
+
+                url.searchParams.set('tbs', 'qdr:y');
+
+                alert(url);
+
+                for (let [name, value] of url.searchParams) {
+                    alert(`${name}=${value}`);
+                }
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Кодирование</h2>
+        <p>Существует стандарт <a target="_blank" href="https://datatracker.ieft.org/doc/html/rfc3986">RFC3986</a>,
+        который определяет список разрешенных и запрещенных символов в URL.</p>
+        <p>Запрещенные символы, например, нелатинские буквы и пробелы, должны быть закодированы - заменены
+        соответствующими кодами UTF-8 с префиксом <code>%</code>, например: <code>%20</code> (исторически сложилось
+        так, что пробел в URL-адресе можно также кодировать символом <code>+</code>, но это исключение).</p>
+        <p>К счастью, объекты <code>URL</code> делают все это автоматически. Мы просто указываем параметры в обычном,
+        незакодированном виде, а затем конвертируем <code>URL</code> в строку:</p>
+<pre><code class="language-javascript">let url = new URL('https://ru.wikipedia.org/wiki/Тест');
+
+url.searchParams.set('key', 'ъ');
+alert(url); // https://ru.wikipedia.org/wiki/%D0%A2%D0%B5%D1%81%D1%82?key=%D1%8A</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let url = new URL('https://ru.wikipedia.org/wiki/Тест');
+
+                url.searchParams.set('key', 'ъ');
+                alert(url);
+            });
+        </script>
+        <p>Как видно, слово <code>Тест</code> в пути URL-адреса и буква <code>ъ</code> в параметре закодированы.</p>
+        <p>URL стал длиннее, так как каждая кириллическая буква представляется двумя байтами в кодировке UTF-8.</p>
+
+        <h3>Кодирование в строках</h3>
+        <p>Раньше, до того как появились объекты <code>URL</code>, люди использовали для URL-адресов обычные строки.</p>
+        <p>Сейчас <code>URL</code> часто удобнее, но строки все еще можно использовать. Во многих случаях код с ними
+        короче.</p>
+        <p>Однако, если мы используем строку, то надо самим позаботиться о кодировании специальных символов.</p>
+        <p>Для этого есть встроенные функции:</p>
+        <ul>
+            <li>
+                <p><code>encodeURI</code> - кодирует URL-адрес целиком.</p>
+            </li>
+            <li>
+                <p><code>decodeURI</code> - декодирует URL-адрес целиком.</p>
+            </li>
+            <li>
+                <p><code>encodeURIComponent</code> - кодирует компонент URL, например, параметр, хеш, имя пути и т.п.</p>
+            </li>
+            <li>
+                <p><code>decodeURIComponent</code> - декодирует компонент URL.</p>
+            </li>
+        </ul>
+        <p>Возникает естественный вопрос: «Какая разница между <code>encodeURIComponent</code> и <code>encodeURI</code>?
+        Когда использовать одну и другую функцию?»</p>
+        <p>Это легко понять, если мы посмотрим на URL-адрес, разбитый на компоненты на рисунке выше:</p>
+<pre><code>https://site.com:8080/path/page?p1=v1&p2=v2#hash</code></pre>
+        <p>Как мы видим, в URL-адресе разрешены символы <code>:</code>, <code>?</code>, <code>=</code>,
+        <code>&</code>, <code>#</code>.</p>
+        <p>... С другой стороны, если взглянуть на один компонент, например, URL-параметр, то в нем такие символы
+        должны быть закодированы, чтобы не поломать форматирование.</p>
+        <ul>
+            <li>
+                <p><code>encodeURI</code> - кодирует только символы, полностью запрещенные в URL.</p>
+            </li>
+            <li>
+                <p><code>encodeURIComponent</code> - кодирует эти же символы, плюс, в дополнение к ним, символы
+                <code>#</code>, <code>$</code>, <code>&</code>, <code>+</code>, <code>,</code>, <code>/</code>,
+                <code>:</code>, <code>;</code>, <code>=</code>, <code>?</code> и <code>@</code>.</p>
+            </li>
+        </ul>
+        <p>Так что для URL целиком можно использовать <code>encodeURI</code>:</p>
+<pre><code class="language-javascript">let url = encodeURI('https://site.com/привет');
+
+alert(url); // https://site.com/%D0%BF%D1%80%D0%B8%D0%B2%D0%B5%D1%82</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let url = encodeURI('https://site.com/привет')
+
+                alert(url);
+            });
+        </script>
+        <p>... А для параметров лучше будет взять <code>encodeURIComponent</code>:</p>
+<pre><code class="language-javascript">let music = encodeURIComponent('Rock&Roll');
+
+let url = `https://google.com/search?q=${music}`;
+alert(url); // https://google.com/search?q=Rock%26Roll</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let music = encodeURIComponent('Rock&Roll');
+
+                let url = `https://google.com/search?q=${music}`;
+                alert(url);
+            });
+        </script>
+        <p>Сравните с <code>encodeURI</code>:</p>
+<pre><code class="language-javascript">let music = encodeURI('Rock&Roll');
+
+let url = `https://google.com/search?q=${music}`;
+alert(url); // https://google.com/search?q=Rock&Roll</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let music = encodeURI('Rock&Roll');
+
+                let url = `https://google.com/search?q=${music}`;
+                alert(url);
+            });
+        </script>
+        <p>Как видим, функция <code>encodeURI</code> не закодировала символ <code>&</code>, который является
+        разрешенным в составе полного URL-адреса.</p>
+        <p>Но внутри параметра поиска символ <code>&</code> должен быть закодирован, в противном случае
+        мы получим <code>q=Rock&Roll</code>, что значит <code>q=Rock</code> плюс непонятный параметр <code>Roll</code>.
+        Не то, что предполагалось.</p>
+        <p>Чтобы правильно вставить параметр поиска в строку URL, мы должны использовать для него только
+        <code>encodeURIComponent</code>. Наиболее безопасно кодировать и имя, и значение, за исключением
+        случаев, когда мы абсолютно уверены в том, что они не содержат только разрешенные символы.</p>
+
+        <article class="note">
+            <h3>Разница в кодировании с <code>URL</code></h3>
+            <p>Классы <a target="_blank" href="https://url.spec.whatwg.org/#url-class">URL</a> и
+            <a target="_blank" href="https://url.spec.whatwg.org/#interface-urlsearchparams">URLSearchParams</a>
+            базируются на последней спецификации URI, описывающей устройство адресов:
+            <a target="_blank" href="https://datatracker.ieft.org/doc/html/rfc3986">RFC3986</a>, в то время как
+            функции <code>encode*</code> - на устаревшей версии стандарта
+            <a target="_blank" href="https://ietf.org/rfc/rfc2396.txt"></a>.</p>
+            <p>Различий мало, но они есть, например, по-разному кодируются адреса IPv6:</p>
+<pre><code class="language-javascript">// Допустимый URL-адрес IPv6
+let url = 'http://[2607:f8b0:4005:802::1007]/';
+
+alert(encodeURI(url)); // http://%5B2607:f8b0:4005:802::1007%5D/
+alert(new URL(url)); // http://[2607:f8b0:4005:802::1007]/</code></pre>
+            <div style="margin: 0.5rem">
+                <button>Запустить пример</button>
+            </div>
+            <script>
+                document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                    let url = 'http://[2607:f8b0:4005:802::1007]/';
+
+                    alert(encodeURI(url));
+                    alert(new URL(url));
+                });
+            </script>
+            <p>Как мы видим, функция <code>encodeURI</code> заменила квадратные скобки <code>[...]</code>, сделав
+            адрес некорректным. Причина: URL-адреса IPv6 не существовали в момент создания стандарта
+            RFC2396 (август 1998).</p>
+            <p>Тем не менее такие случаи редки. По большей части функции <code>encode*</code> работают хорошо.</p>
+        </article>
+    </article>
+</body>
+</html>
