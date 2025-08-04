@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>XMLHttpRequest</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 5rem;
+            width: 50vw;
+            margin-top: 0.5rem;
+        }
+
+        .outer {
+            position: relative;
+            height: 2rem;
+            width: 100%;
+            background: gainsboro;
+        }
+
+        .inner {
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #0099ff;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>XMLHttpRequest</h2>
+        <p><code>XMLHttpRequest</code> - это встроенный в браузер объект, который дает возможность делать HTTP-запросы
+        к серверу без перезагрузки страницы.</p>
+        <p>Несмотря на наличие слова «XML» в названии, <code>XMLHttpRequest</code> может работать с любыми данными,
+        а не только с XML. Мы можем загружать/скачивать файлы, отслеживать прогресс и многое другое.</p>
+        <p>На сегодняшний день не обязательно использовать <code>XMLHttpRequest</code>, так как существует другой,
+        более современный метод <code>fetch</code>.</p>
+        <p>В современной веб-разработке <code>XMLHttpRequest</code> используется по трем причинам:</p>
+        <ol>
+            <li>
+                <p>По историческим причинам: существует много кода, использующего <code>XMLHttpRequest</code>, который
+                нужно поддерживать.</p>
+            </li>
+            <li>
+                <p>Необходимость поддерживать старые браузеры и нежелание использовать полифилы (например, чтобы
+                уменьшить количество кода).</p>
+            </li>
+            <li>
+                <p>Потребность в функциональности, котору <code>fetch</code> пока что не может предоставить, к примеру,
+                отслеживание прогресса отправки на сервер.</p>
+            </li>
+        </ol>
+        <p>Что-то из этого списка звучит знакомо? Если да, то вперед, приятного знакомства с <code>XMLHttpRequest</code>.
+        Если же нет, возможно, имеет смысл изучать сразу <a target="_blank" href="../1.%20Fetch/index.html">Fetch</a>.</p>
+    </article>
+
+    <article>
+        <h2>Основы</h2>
+        <p><code>XMLHttpRequest</code> имеет два режима работы: синхронный и асинхронный.</p>
+        <p>Сначала рассмотрим асинхронный, так как в большинстве случаев используется именно он.</p>
+        <p>Чтобы сделать запрос, нам нужно выполнить три шага:</p>
+        <ol>
+            <li>
+                <p>Создать <code>XMLHttpRequest</code>.</p>
+<pre><code class="language-javascript">let xhr = new XMLHttpRequest(); // У конструктора нет аргументов</code></pre>
+                <p>Конструктор не имеет аргументов.</p>
+            </li>
+            <li>
+                <p>Инициализировать его.</p>
+<pre><code class="language-javascript">xhr.open(method, URL, [async, user, password]);</code></pre>
+                <p>Этот метод обычно вызывается сразу после <code>new XMLHttpRequest</code>. В него передаются
+                основные параметры запроса:</p>
+                <ul>
+                    <li>
+                        <p><code>method</code> - HTTP-метод. Обычно это <code>"GET"</code> или <code>"POST"</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>URL</code> - URL, куда отправляется запрос: строка, может быть и объект
+                        <a target="_blank" href="../7.%20Объекты%20URL/index.html">URL</a>.</p>
+                    </li>
+                    <li>
+                        <p><code>async</code> - если указать <code>false</code>, тогда запрос будет выполнен синхронно,
+                        это мы рассмотрим чуть позже.</p>
+                    </li>
+                    <li>
+                        <p><code>user</code>, <code>password</code> - логин и пароль для базовой HTTP-авторизации (если требуется).</p>
+                    </li>
+                </ul>
+                <p>Заметим, что вызов <code>open</code>, вопреки своему названию, не открывает соединение. Он лишь
+                конфигурирует запрос, но непосредственно отсылается запрос только лишь после вызова <code>send</code>.</p>
+            </li>
+            <li>
+                <p>Послать запрос.</p>
+<pre><code>xhr.send([body]);</code></pre>
+                <p>Этот метод устанавливает соединение и отсылает запрос к серверу. Необязательный параметр <code>body</code>
+                содержит тело запроса.</p>
+                <p>Некоторые типы запросов, такие как <code>GET</code>, не имеют тела. А некоторые, как, например,
+                <code>POST</code>, используют <code>body</code>, чтобы отправлять данные на сервер. Мы позже
+                увидим примеры.</p>
+            </li>
+            <li>
+                <p>Слушать события на <code>xhr</code>, чтобы получить ответ.</p>
+                <p>Три наиболее используемые события:</p>
+                <ul>
+                    <li>
+                        <p><code>load</code> - происходит, когда получен какой-либо ответ, включая ответы с HTTP-ошибкой,
+                        например, 404.</p>
+                    </li>
+                    <li>
+                        <p><code>error</code> - когда запрос не может быть выполнен, например, нет соединения или
+                        невалидный URL.</p>
+                    </li>
+                    <li>
+                        <p><code>progress</code> - происходит периодически во время загрузки ответа, сообщает о прогрессе.</p>
+<pre><code class="language-javascript">xhr.onload = function() {
+    alert(`Загружено: ${xhr.status} ${xhr.response}`);
+});
+
+xhr.onerror = function() { // Происходит, только когда запрос совсем не получилось выполнить
+    alert('Ошибка соединения');
+};
+
+xhr.onprogress = function(event) { // Запускается периодически
+    // event.loaded - количество загруженных байт
+    // event.lengthComputable - равно true, если сервер присылает заголовок Content-Length
+    // event.total - количество байт всего (только если lengthComputable равно true)
+    alert(`Загружено ${event.loaded} из ${event.total}`);
+};
+</code></pre>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+        <p>Вот полный пример. Код ниже загружает <code>/xmlhttprequest/example/load</code> с сервера и сообщает
+        о прогрессе:</p>
+<pre><code class="language-javascript">// 1. Создаем новый XMLHttpRequest-объект
+let xhr = new XMLHttpRequest();
+
+// 2. Настраиваем его: GET-запрос по URL /xmlhttprequest/example/load
+xhr.open('GET', '/xmlhttprequest/example/load');
+
+// 3. Отправляем запрос
+xhr.send();
+
+// 4. Этот код сработает после того, как мы получим ответ сервера
+xhr.onload = function() {
+    if (xhr.status !== 200) { // Анализируем HTTP-статус ответа, если статус не 200, то произошла ошибка
+        alert(`Ошибка ${xhr.status}: xhr.statusText`); // Например, 404: Not Found
+    } else { // Если все прошло гладко, выводим результат
+        alert(`Готово, получили ${xhr.response.length} байт`); // response - это ответ сервера
+    }
+};
+
+xhr.onprogress = function(event) {
+    if (event.lengthComputable) {
+        alert(`Получено ${event.loaded} из ${event.total} байт`);
+    } else {
+        alert(`Получено ${event.loaded} байт`); // Если в ответе нет заголовка Content-Length
+    }
+};
+
+xht.onerror = function() {
+    alert('Запрос не удался');
+};</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let xhr = new XMLHttpRequest();
+
+                xhr.open('GET', 'http://localhost:8000/article/xmlhttprequest/example/load');
+
+                xhr.send();
+
+                xhr.onload = function() {
+                    if (xhr.status !== 200) {
+                        alert(`Ошибка ${xhr.status}: ${xhr.statusText}`);
+                    } else {
+                        alert(`Готово!\nПолучили ${xhr.response.length} байт`);
+                    }
+                };
+
+                xhr.onprogress = function(event) {
+                    if (event.lengthComputable) {
+                        console.log(`Получено ${event.loaded} из ${event.total} байт`);
+                    } else {
+                        alert(`Получено ${event.loaded} байт`);
+                    }
+                }
+
+                xhr.onerror = function() {
+                    alert('Запрос не удался');
+                }
+            });
+        </script>
+        <p>После ответа сервера мы можем получить результат запроса в следующих свойствах <code>xhr</code>:</p>
+        <ul>
+            <li>
+                <p><code>status</code></p>
+                <p>Код состояния HTTP (число): <code>200</code>, <code>404</code>, <code>403</code> и так далее,
+                может быть <code>0</code> в случае, если ошибка не связана с HTTP.</p>
+            </li>
+            <li>
+                <p><code>statusText</code></p>
+                <p>Сообщение о состоянии ответа HTTP строка: обычно <code>OK</code> для <code>200</code>, <code>Not Found</code>
+                для <code>404</code>, <code>Forbidden</code> для <code>403</code>, и так далее.</p>
+            </li>
+            <li>
+                <p><code>response</code> <b>(в старом коде может встречаться как <code>responseText</code>)</b></p>
+                <p>Тело ответа сервера.</p>
+            </li>
+        </ul>
+        <p>Мы можем также указать таймаут - промежуток времени, который мы готовы ждать ответ:</p>
+<pre><code class="language-javascript">xhr.timeout = 10000; // Таймаут указывается в миллисекундах, т.е. 10 секунд</code></pre>
+        <p>Если запрос не успевает выполниться в установленное время, то он прерывается, и происходит событие
+        <code>timeout</code>.</p>
+
+        <article class="note">
+            <h3>URL с параметрами</h3>
+            <p>Чтобы добавить к URL параметры, вида <code>?name=value</code>, и корректно кодировать их, можно использовать
+            объект <a target="_blank" href="../7.%20Объекты%20URL/index.html">URL</a>:</p>
+<pre><code class="language-javascript">let url = new URL('https://google.com/search');
+url.searchParams.set('q', 'test me!');
+
+// Параметр 'q' закодирован
+xhr.open('GET', url); // https://google.com/seqrch?q=test+me%21</code></pre>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Тип ответа</h2>
+        <p>Мы можем использовать свойство <code>xhr.responseType</code>, чтобы указать ожидаемый тип ответа:</p>
+        <ul>
+            <li>
+                <p><code>""</code> (по умолчанию) - строка.</p>
+            </li>
+            <li>
+                <p><code>"text"</code> - строка.</p>
+            </li>
+            <li>
+                <p><code>"arraybuffer"</code> - <code>ArrayBuffer</code> (для бинарных данных, смотрите
+                в <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/1.%20ArrayBuffer,%20бинарные%20массивы/index.html">ArrayBuffer, бинарные массивы</a>).</p>
+            </li>
+            <li>
+                <p><code>"blob"</code> - <code>Blob</code> (для бинарных данных, смотрите в
+                <a target="_blank" href="../../Бинарные%20данные%20и%20файлы/3.%20Blob/index.html">Blob</a>).</p>
+            </li>
+            <li>
+                <p><code>"document"</code> - XML-документ (может использовать XPath и другие XML-методы).</p>
+            </li>
+            <li>
+                <p><code>"json"</code> - JSON (парсится автоматически).</p>
+            </li>
+        </ul>
+        <p>К примеру, давайте получим ответ в формате JSON:</p>
+<pre><code class="language-javascript">let xhr = new XMLHttpRequest();
+
+xhr.open('GET', '/article/xmlhttprequest/example/json');
+
+xhr.responseType = 'json';
+
+xhr.send();
+
+// Тело ответа {"message": "Привет, мир!"}
+xhr.onload = function() {
+    let responseObj = xhr.response;
+    alert(responseObj.message); // Привет, мир!
+};</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://localhost:8000/article/xmlhttprequest/example/json');
+                xhr.responseType = 'json';
+                xhr.send();
+
+                xhr.onload = function() {
+                    let responseObj = xhr.response;
+                    alert(responseObj.message);
+                };
+            });
+        </script>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>В старом коде вы можете встретить свойства <code>xhr.responseText</code> и даже <code>xhr.responseXML</code>.</p>
+            <p>Они существуют по историческим причинам, раньше с их помощью получали строки или XML-документы.
+            Сегодня следует устанавливать желаемый тип объекта в <code>xhr.responseType</code> и получать
+            <code>xhr.response</code>, как показано выше.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Состояния запроса</h2>
+        <p>У <code>XMLHttpRequest</code> есть состояния, которые меняются по мере выполнения запроса. Текущее состояние
+        можно посмотреть в свойстве <code>xhr.readyState</code>.</p>
+        <p>Список всех состояний, указанных в <a target="_blank" href="https://xhr.spec.whatwg.org/#states">спецификации</a>:</p>
+<pre><code class="language-javascript">UNSENT = 0; // Исходное состояние
+OPENED = 1; // Вызван метод open
+HEADERS_RECEIVED = 2; // Получены заголовки ответа
+LOADING = 3; // Ответ в процессе передачи (данные частично получены)
+DONE = 4; // Запрос завершен</code></pre>
+        <p>Изменения в состоянии объекта запроса генерируют событие <code>readystatechange</code>:</p>
+<pre><code class="language-javascript">xhr.onreadystatechange = function() {
+    if (xhr.readyState === 3) {
+        // Загрузка
+    }
+    if (xhr.readyState === 4) {
+        // Запрос завершен
+    }
+};</code></pre>
+        <p>Вы можете наткнуться на обработчики события <code>readystatechange</code> в очень старом коде, так уж
+        сложилось исторически, когда-то не было событий <code>load</code> и других. Сегодня из-за существования
+        событий <code>load/error/progress</code> можно сказать, что событие <code>readystatechange</code> «морально устарело».</p>
+    </article>
+
+    <article>
+        <h2>Отмена запроса</h2>
+        <p>Если мы передумали делать запрос, можно отменить его вызовом <code>xhr.abort()</code>:</p>
+<pre><code class="language-javascript">xhr.abort(); // Завершить запрос</code></pre>
+        <p>При этом генерируется событие <code>abort</code>, а <code>xhr.status</code> устанавливается на <code>0</code>.</p>
+    </article>
+
+    <article>
+        <h2>Синхронные запросы</h2>
+        <p>Если в методе <code>open</code> третий параметр <code>async</code> установлен на <code>false</code>, запрос
+        выполнится синхронно.</p>
+        <p>Другими словами, выполнение JavaScript останавливается на <code>send()</code> и возобновляется после
+        получения ответа. Так ведут себя, например, функции <code>alert</code> или <code>prompt</code>.</p>
+        <p>Вот переписанный пример с параметром <code>async</code>, равным <code>false</code>:</p>
+<pre><code class="language-javascript">let xhr = new XMLHttpRequest();
+
+xhr.open('GET', '/article/xmlhttprequest/hello.txt', false);
+
+try {
+    xhr.send();
+    if (xhr.status !== 200) {
+        alert(`Ошибка ${xhr.status}: ${xhr.statusText}`);
+    } else {
+        alert(xhr.response);
+    }
+}   catch(error) { // Для отлова ошибок используем конструкцию try...catch вместо onerror
+    alert('Запрос не удался');
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://localhost:8000/article/xmlhttprequest/hello.txt', false);
+
+                try {
+                    xhr.send();
+                    if (xhr.status !== 200) {
+                        alert(`Ошибка ${xhr.status}: ${xhr.statusText}`);
+                    } else {
+                        alert(xhr.response);
+                    }
+                }   catch(error) {
+                    alert('Запрос не удался');
+                }
+            });
+        </script>
+        <p>Выглядит, может быть, и неплохо, но синхронные запросы используются редко, так как они блокируют
+        выполнение JavaScript до тех пор, пока загрузка не завершена. В некоторых браузерах нельзя прокручивать
+        страницу, пока идет синхронный запрос. Ну а если же синхронный запрос по какой-то причине выполняется
+        слишком долго, браузер предложит закрыть «зависшую» страницу.</p>
+        <p>Многие продвинутые возможности <code>XMLHttpRequest</code>, такие, как выполнение запроса на другой домен
+        или установка таймаута, недоступны для синхронных запросов. Также, как вы могли заметить, ни о какой индикации
+        прогресса речь тут не идет.</p>
+        <p>Из-за всего этого синхронные запросы используют очень редко. Мы более не будем рассматривать их.</p>
+    </article>
+
+    <article>
+        <h2>HTTP-заголовки</h2>
+        <p><code>XMLHttpRequest</code> умеет как указывать свои заголовки в запросе, так и читать присланные в ответ.</p>
+        <p>Для работы с HTTP-заголовками есть 3 метода:</p>
+        <p><code>setRequestHeader(name, value)</code></p>
+        <p>Устанавливает заголовок запроса с именем <code>name</code> и значением <code>value</code>.</p>
+        <p>Например:</p>
+<pre><code class="language-javascript">xhr.setRequestHeader('Content-Type', 'application/json');</code></pre>
+
+        <article class="warning">
+            <h3>Ограничения на заголовки</h3>
+            <p>Некоторые заголовки управляются исключительно браузером, например, <code>Referer</code> или
+            <code>Host</code>, а также ряд других. Полный список <a target="_blank" href="https://fetch.spec.whatwg.org/#forbidden-request-header">тут</a>.</p>
+            <p><code>XMLHttpRequest</code> не разрешено изменять их ради безопасности пользователей и для обеспечения
+            корректности HTTP-запроса.</p>
+        </article>
+
+        <article class="warning">
+            <h3>Поставленный заголовок нельзя снять</h3>
+            <p>Еще одной особенностью <code>XMLHttpRequest</code> является то, что отменить <code>setRequestHeader</code>
+            невозможно.</p>
+            <p>Если заголовок определен, то его нельзя снять. Повторные вызовы лишь добавляют информацию к заголовку,
+            а не перезаписывают его.</p>
+            <p>Например:</p>
+<pre><code class="language-javascript">xhr.setRequestHeader('X-Auth', '123');
+xhr.setRequestHeader('X-Auth', '456');
+
+// Заголовок получится такой:
+// X-Auth: 123, 456</code></pre>
+        </article>
+
+        <p><code>getResponseHeader(name)</code></p>
+        <p>Возвращает значение заголовка ответа <code>name</code> (кроме <code>Set-Cookie</code> и <code>Set-Cookie2</code>).</p>
+        <p>Например:</p>
+<pre><code class="language-javascript">xhr.getResponseHeader('Content-Type');</code></pre>
+        <p><code>getAllResponseHeaders()</code></p>
+        <p>Возвращает все заголовки ответа, кроме <code>Set-Cookie</code> и <code>Set-Cookie2</code>.</p>
+        <p>Заголовки возвращаются в виде единой строки, например:</p>
+<pre><code class="language-http">Cache-Control: max-age=31536000
+Content-Length: 4260
+Content-Type: image/png
+Date: Sat, 08 Sep 2012 16:53:16 GMT</code></pre>
+        <p>Между заголовками всегда стоит перевод строки в два символа <code>"\r\n"</code> (независимо от ОС), так что мы
+        можем легко разделить их на отдельные заголовки. Значение заголовка всегда отделено двоеточием с пробелом
+        <code>": "</code>. Этот формат задан стандартом.</p>
+        <p>Таким образом, если хочется получить объект с парами заголовок-значение, нам нужно задействовать
+        немного JS.</p>
+        <p>Вот так (предполагается, что если два заголовка имеют одинаковое имя, то последний перезаписывает предыдущий):</p>
+<pre><code class="language-javascript">let headers = xhr
+    .getAllResponseHeaders()
+    .split('\r\n')
+    .reduce((result, current) => {
+        let [name, value] = current.split(': ');
+        result[name] = value;
+        return result;
+    }, {});
+
+// headers['Content-Type'] = 'image/png'</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let xhr = new XMLHttpRequest();
+                xhr.open('GET', 'http://localhost:8000/article/xmlhttprequest/example/load');
+                xhr.send();
+
+
+                xhr.onload = function() {
+                    console.log(xhr.getAllResponseHeaders());
+                    let headers = xhr.getAllResponseHeaders()
+                        .split('\r\n')
+                        .reduce((result, current) => {
+                            let [name, value] = current.split(': ');
+                            result[name] = value;
+                            return result;
+                        }, {});
+
+                    alert(headers['content-type']);
+                };
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>POST, FormData</h2>
+        <p>Чтобы сделать POST-запрос, мы можем использовать встроенный объект
+        <a target="_blank" href="../2.%20FormData/index.html">FormData</a>.</p>
+        <p>Синтаксис:</p>
+<pre><code class="language-javascript">let formData = new FormData([form]); // Создаем объект, по желанию будем данные формы &lt;form&gt;
+formData.append(name, value); // Добавляем поле</code></pre>
+        <p>Мы создаем объект, при желании указываем, из какой формы <code>form</code> взять данные, затем, если нужно,
+        с помощью метода <code>append</code> добавляем дополнительные поля, после чего:</p>
+        <ol>
+            <li>
+                <p><code>xhr.open('POST', ...)</code> - создаем <code>POST</code>-запрос.</p>
+            </li>
+            <li>
+                <p><code>xhr.send(formData)</code> - отсылаем форму серверу.</p>
+            </li>
+        </ol>
+        <p>Например:</p>
+<pre><code class="language-html">&lt;form name="person"&gt;
+    &lt;input name="name" value="Петя"&gt;
+    &lt;input name="surname" value="Васечкин"&gt;
+&lt;/form&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">// Заполним FormData данными из формы
+    let formData = new FormData(document.forms.person);
+
+    // Добавим еще одно поле
+    formData.append('middle', 'Иванович');
+
+    // Отправим данные
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/article/xmlhttprequest/post/user');
+    xhr.send(formData);
+
+    xhr.onload = () => alert(xhr.response);</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            let div = document.currentScript.previousElementSibling;
+            div.firstElementChild.addEventListener('click', function() {
+                while (div.children.length > 1) {
+                    div.lastElementChild.remove();
+                }
+
+                let form = document.createElement('form');
+                form.style.marginTop = '0.5rem';
+                let name = document.createElement('input');
+                name.style.marginRight = '0.2rem';
+                name.type = 'text';
+                name.name = 'name';
+                name.value = 'Петя';
+                let surname = document.createElement('input');
+                surname.type = 'text';
+                surname.name = 'surname';
+                surname.value = 'Васечкин';
+                form.append(name);
+                form.append(surname);
+                div.append(form);
+
+                let formData = new FormData(form);
+                formData.append('middle', 'Иванович');
+
+                let xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://localhost:8000/article/xmlhttprequest/post/user');
+                xhr.responseType = 'json';
+                xhr.send(formData);
+
+                xhr.onload = () => alert(xhr.response.message);
+            });
+        </script>
+        <p>Обычно форма отсылается в кодировке <code>multipart/form-data</code>.</p>
+        <p>Если нам больше нравится формат JSON, то используем <code>JSON.stringify</code> и отправляем данные как строку.</p>
+        <p>Важно не забыть поставить соответствующий заголовок <code>Content-Type: application/json</code>, многие
+        серверные фреймворки автоматически декодируют JSON при его наличии:</p>
+<pre><code class="language-javascript">let xhr = new XMLHttpRequest();
+
+let json = JSON.stringify({
+    name: 'Вася',
+    surname: 'Петров'
+});
+
+xhr.open('POST', '/article/xmlhttprequest/post/json');
+xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+
+xhr.send(json);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let json = JSON.stringify({
+                    name: 'Вася',
+                    surname: 'Петров'
+                });
+
+                let xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://localhost:8000/article/xmlhttprequest/post/json');
+                xhr.responseType = 'json';
+                xhr.send(json);
+
+                xhr.onload = () => alert(xhr.response.message);
+            });
+        </script>
+        <p>Метод <code>.send(body)</code> весьма всеяден. Он может отправить практически что угодно в <code>body</code>,
+        включая объекты типа <code>Blob</code> и <code>BufferSource</code>.</p>
+    </article>
+
+    <article>
+        <h2>Прогресс отправки</h2>
+        <p>Событие <code>progress</code> срабатывает только на стадии загрузки ответа сервера.</p>
+        <p>А именно: если мы отправляем что-то через <code>POST</code>-запрос, <code>XMLHttpRequest</code> сперва
+        отправит наши данные (тело запроса) на сервер, а потом загрузит ответ от сервера. И событие <code>progress</code>
+        будет срабатывать только во время загрузки ответа.</p>
+        <p>Если мы отправляем что-то большое, то нас гораздо больше интересует прогресс отправки данных на сервер.
+        Но <code>xhr.onprogress</code> тут не поможет.</p>
+        <p>Существует другой объект, без методов, только для отслеживания событий отправки: <code>xhr.upload</code>.</p>
+        <p>Он генерирует события, похожие на события <code>xhr</code>, но только во время отправки данных на сервер:</p>
+        <ul>
+            <li>
+                <p><code>loadstart</code> - начало загрузки данных.</p>
+            </li>
+            <li>
+                <p><code>progress</code> - генерируется периодически во время отправки на сервер.</p>
+            </li>
+            <li>
+                <p><code>abort</code> - загрузка прервана.</p>
+            </li>
+            <li>
+                <p><code>error</code> - ошибка, не связанная с HTTP.</p>
+            </li>
+            <li>
+                <p><code>load</code> - загрузка успешно завершена.</p>
+            </li>
+            <li>
+                <p><code>timeout</code> - вышло время, отведенное на загрузку (при установленном свойстве <code>timeout</code>).</p>
+            </li>
+            <li>
+                <p><code>loadend</code> - загрузка завершена, вне зависимости от того, как - успешно или нет.</p>
+            </li>
+        </ul>
+        <p>Примеры обработчиков для этих событий:</p>
+<pre><code class="language-javascript">xhr.upload.onprogress = function(event) {
+    alert(`Отправлено ${event.loaded} из ${event.total} байт`);
+};
+
+xhr.upload.onload = function() {
+    alert('Данные успешно отправлены');
+};
+
+xhr.upload.onerror = function() {
+    alert(`Произошла ошибка во время отправки: ${xhr.status}`);
+};</code></pre>
+        <p>Пример из реальной жизни: загрузка файла на сервер с индикацией прогресса:</p>
+<pre><code class="language-html">&lt;input type="file" onchange="upload(this.files[0])"&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">function upload(file) {
+        let xhr = new XMLHttpRequest();
+
+        // Отслеживаем процесс отправки
+        xhr.upload.onprogress = function(event) {
+            console.log(`Отправлено ${event.loaded} из ${event.total}`);
+        };
+
+        // Ждем завершения: неважно, успешного или нет
+        xhr.onloadend = function() {
+            if (xhr.status !== 200) {
+                console.log('Успех!');
+            } else {
+                console.log('Ошибка ' + this.status);
+            }
+        };
+
+        xhr.open('POST', '/article/xmlhttprequest/post/upload');
+        xhr.send(file);
+    }</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                while (this.parentElement.children.length > 1) {
+                    this.parentElement.lastElementChild.remove();
+                }
+
+                let fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.style.display = 'block';
+                fileInput.style.marginTop = '0.5rem';
+                this.parentElement.append(fileInput);
+
+                let container;
+
+                fileInput.onchange = function(event) {
+                    if (container) {
+                        container.remove();
+                    }
+                    container = document.createElement('div');
+                    container.className = 'container';
+                    let progressLabel = document.createElement('p');
+                    progressLabel.style.margin = '0';
+                    progressLabel.innerHTML = '0%'
+
+                    let progressBarOuter = document.createElement('div');
+                    progressBarOuter.className = 'outer';
+                    let progressBarInner = document.createElement('div');
+                    progressBarInner.className = 'inner';
+
+                    progressBarOuter.append(progressBarInner);
+                    container.append(progressBarOuter);
+                    container.append(progressLabel);
+                    event.target.parentElement.append(container);
+
+                    let file = event.target.files[0];
+                    if (!file) return;
+                    let formData = new FormData();
+                    formData.append('file', file);
+
+                    let xhr = new XMLHttpRequest();
+                    xhr.responseType = 'json';
+
+                    xhr.upload.onprogress = function(event) {
+                        progressBarInner.style.width = Math.floor(event.loaded / event.total * 100) + '%';
+                        progressLabel.innerHTML = Math.floor(event.loaded / event.total * 100) + '%';
+                    };
+
+                    xhr.open('POST', 'http://localhost:8000/article/xmlhttprequest/post/upload');
+                    xhr.send(formData);
+
+                    xhr.onload = function() {
+                        alert(`Файл ${xhr.response.filename} успешно загружен на сервер`);
+                    }
+                }
+
+
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Запросы на другой источник</h2>
+        <p><code>XMLHttpRequest</code> может осуществлять запросы на другие сайты, используя ту же политику CORS,
+        что и <a target="_blank" href="../5.%20Fetch.%20Запросы%20на%20другие%20сайты/index.html">Fetch</a>.</p>
+        <p>Точно так же, как и при работе с <code>fetch</code>, по умолчанию на другой источник не отсылаются куки
+        и заголовки HTTP-авторизации. Чтобы это изменить, установите <code>xhr.withCredentials</code> в <code>true</code>:</p>
+<pre><code class="language-javascript">let xhr = new XMLHttpRequest();
+xhr.withCredentials = true;
+
+xhr.open('POST', 'https://anywhere.com/request');
+...</code></pre>
+        <p>Детали по заголовкам, которые при этом необходимы, смотрите в главе
+        <a target="_blank" href="../5.%20Fetch.%20Запросы%20на%20другие%20сайты/index.html">Fetch</a>.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Типичный код GET-запроса с использованием <code>XMLHttpRequest</code>:</p>
+<pre><code class="language-javascript">let xhr = new XMLHttpRequest();
+
+xhr.open('GET', '/my/url');
+
+xhr.send();
+
+xhr.onload = function() {
+    if (xhr.status !== 200) { // HTTP ошибка?
+        // Обработаем ошибку
+        alert(`Ошибка ${xhr.status}`);
+        return;
+    }
+    // Получим ответ из xhr.response
+};
+
+xhr.onprogress = function(event) {
+    // Выведем прогресс
+    alert(`Загружено ${event.loaded} из ${event.total}`);
+};
+
+xhr.onerror = function() {
+    // Обработаем ошибку, не связанную с HTTP (например, нет соединения)
+};</code></pre>
+        <p>Событий на самом деле больше, в <a target="_blank" href="https://www.w3.org/TR/XMLHttpRequest/#events">современной спецификации</a>
+        они все перечислены в том порядке, в каком генерируются во время запроса:</p>
+        <ul>
+            <li>
+                <p><code>loadstart</code> - начало запроса.</p>
+            </li>
+            <li>
+                <p><code>progress</code> - прибыла часть данных ответа, тело ответа полностью на данный момент можно получить
+                из свойства <code>responseText</code>.</p>
+            </li>
+            <li>
+                <p><code>abort</code> - запрос был прерван вызовом <code>xhr.abort()</code>.</p>
+            </li>
+            <li>
+                <p><code>error</code> - произошла ошибка соединения, например, неправильное доменное имя. Событие
+                не генерируется для HTTP-ошибок, как, например, 404.</p>
+            </li>
+            <li>
+                <p><code>load</code> - запрос успешно завершен.</p>
+            </li>
+            <li>
+                <p><code>timeout</code> - запрос был отменен по причине истечения отведенного для него времени
+                (происходит, только если установлен таймаут).</p>
+            </li>
+            <li>
+                <p><code>loadend</code> - срабатывает после <code>load</code>, <code>error</code>, <code>timeout</code>
+                или <code>abort</code>.</p>
+            </li>
+        </ul>
+        <p>События <code>error</code>, <code>abort</code>, <code>timeout</code> и <code>load</code> взаимно исключают
+        друг друга - может произойти только одно из них.</p>
+        <p>Наиболее часто используют события завершения загрузки (<code>load</code>), ошибки загрузки
+        (<code>error</code>), или мы можем использовать единый обработчик <code>loadend</code> для всего и смотреть
+        в свойствах объекта запроса <code>xhr</code> детали произошедшего.</p>
+        <p>Также мы уже видели событие: <code>readystatechange</code>. Исторически оно появилось одним из первых, даже
+        раньше, чем была составлена спецификация. Сегодня нет необходимости использовать его, так как оно может
+        быть заменено современными событиями, но на него можно часто наткнуться в старом коде.</p>
+        <p>Если же нам нужно следить именно за процессом отправки данных на сервер, тогда можно использовать
+        те же события, но для объекта <code>xhr.upload</code>.</p>
+    </article>
+</body>
+</html>
