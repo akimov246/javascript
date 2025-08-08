@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Возобновляемая загрузка файлов</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .example {
+            display: flex;
+            margin-top: 0.5rem;
+            gap: 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Возобновляемая загрузка файлов</h2>
+        <p>При помощи <code>fetch</code> достаточно просто отправить файл на сервер.</p>
+        <p>Но как возобновить загрузку, если соединение прервалось? Для этого нет готовой настройки, но у нас есть
+        все средства, чтобы решить эту задачу самостоятельно.</p>
+        <p>Возобновляемая загрузка должна сопровождаться индикацией прогресса, ведь, скорее всего, нам нужно отправлять
+        большие файлы. Поскольку <code>fetch</code> не позволяет отслеживать прогресс отправки, то мы будем
+        использовать <a target="_blank" href="../8.%20XMLHttpRequest/index.html">XMLHttpRequest</a>.</p>
+    </article>
+
+    <article>
+        <h2>Не очень полезное событие progress</h2>
+        <p>Чтобы возобновить отправку, нам нужно знать, какая часть файла была успешно передана до того, как соединение
+        прервалось.</p>
+        <p>Можно установить обработчик <code>xhr.upload.onprogress</code>, чтобы отслеживать процесс загрузки, но,
+        к сожалению, это бесполезно, так как этот обработчик вызывается, только когда данные <i>отправляются</i>,
+        но были ли они получены сервером? Браузер этого не знает.</p>
+        <p>Возможно, отправленные данные оказались в буфере прокси-сервера локальной сети или удаленный сервер просто
+        отключился и не мог принять их, или данные потерялись где-то по пути при разрыве соединения и так и не достигли
+        пункта назначения.</p>
+        <p>В общем, событие <code>progress</code> подходит только для того, чтобы показывать красивый индикатор загрузки,
+        не более.</p>
+        <p>Для возобновления же загрузки нужно <i>точно</i> знать, сколько байт было получено сервером. И только сам
+        сервер может это сказать, поэтому будем делать для этого отдельный запрос.</p>
+    </article>
+
+    <article>
+        <h2>Алгоритм</h2>
+        <ol>
+            <li>
+                <p>Во-первых, создадим уникальный идентификатор для файла, который собираемся загружать:</p>
+<pre><code class="language-javascript"> let fileId = file.name + '-' + file.size + '-' + +file.lastModifiedDate;</code></pre>
+                <p>Это нужно, чтобы при возобновлении загрузки серверу было понятно, какой файл мы продолжаем загружать.</p>
+                <p>Если имя или размер, или дата модификации файла изменятся, то у него уже будет другой <code>fileId</code>.</p>
+            </li>
+            <li>
+                <p>Далее, посылаем запрос к серверу с просьбой указать количество уже полученных байтов:</p>
+<pre><code class="language-javascript">let response = await fetch('status', {
+    headers: {
+        'X-File-Id': fileId
+    }
+});
+
+// Сервер получил столько-то байтов
+let startByte = +await response.text();</code></pre>
+                <p>Предполагается, что сервер учитывает загружаемые файлы с помощью заголовка <code>X-File-Id</code>.
+                Это на стороне сервера должно быть реализовано.</p>
+                <p>Если файл серверу неизвестен, то он должен ответить <code>0</code>.</p>
+            </li>
+            <li>
+                <p>Затем мы можем использовать метод <code>slice</code> объекта <code>Blob</code>, чтобы отправить
+                данные, начиная со <code>startByte</code> байта:</p>
+<pre><code class="language-javascript">xhr.open('POST', 'upload');
+
+// Идентификатор файла, чтобы сервер знал, что мы загружаем
+xhr.setRequestHeader('X-File-Id, fieldId);
+
+// Номер байта, начиная с которого мы будем отправлять данные.
+// Таким образом, сервер поймет, с какого момента мы возобновляем загрузку.
+
+xhr.setRequestHeader('X-Start-Byte', startByte);
+
+xhr.upload.onprogress = (e) => {
+    console.log(`Uploaded ${startByte + e.loaded} of ${startByte + e.total}`);
+};
+
+// Файл file может быть взят из input.files[0] или другого источника
+xhr.send(file.slice(startByte));</code></pre>
+                <p>Здесь мы посылаем серверу и идентификатор файла в заголовке <code>X-File-Id</code>, чтобы он знал,
+                что мы загружаем, и номер стартового байта в заголовке <code>X-Start-Byte</code>, чтобы он понял,
+                что мы продолжаем отправку, а не начинаем ее с нуля.</p>
+                <p>Сервер должен проверить информацию на своей стороне, и если обнаружится, что такой файл уже
+                когда-то загружался, и его текущий размер равен значению из заголовка <code>X-Start-Byte</code>, то
+                вновь принимаемые данные добавлять в этот файл.</p>
+            </li>
+        </ol>
+        <p>Как мы видим, современные методы работы с сетью очень близки по своим возможностям к файловым менеджерам -
+        контроль заголовков, индикация процесса загрузки, отправка данных по частям и так далее.</p>
+        <p>Можно реализовать и возобновляемую отправку и многое другое.</p>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            let div = document.currentScript.previousElementSibling;
+            div.firstElementChild.addEventListener('click', function() {
+                while (div.children.length > 1) {
+                    div.lastElementChild.remove();
+                }
+
+                let container = document.createElement('div');
+                container.classList.add('example');
+
+                let fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                container.append(fileInput);
+
+                let abortButton = document.createElement('button');
+                abortButton.innerHTML = 'Abort';
+                let resumeButton = document.createElement('button');
+                resumeButton.innerHTML = 'Resume';
+                container.append(abortButton);
+                container.append(resumeButton);
+
+                div.append(container);
+
+                fileInput.addEventListener('change', upload);
+                let xhr = new XMLHttpRequest();
+
+                async function upload() {
+                    xhr.open('POST', 'http://localhost:8000/article/resume-upload/upload');
+                    let file = fileInput.files[0];
+
+                    let response = await fetch('http://localhost:8000/article/resume-upload/status', {
+                        headers: {
+                            'X-File-Id': file.name
+                        }
+                    });
+
+                    let startByte = +await response.text();
+                    if (startByte === file.size) {
+                        console.log('Файл уже загружен на сервер.');
+                        return;
+                    }
+
+                    xhr.onload = function() {
+                        console.log(xhr.response);
+                    };
+
+                    xhr.setRequestHeader('X-File-Id', file.name);
+
+                    if (!startByte) {
+                        xhr.upload.onprogress = function(event) {
+                            console.log(`Uploaded ${event.loaded} of ${event.total}`);
+                        };
+
+                        xhr.send(file);
+                    } else {
+                        console.log('Загрузка продолжается...')
+                        xhr.upload.onprogress = function(event) {
+                            console.log(`Uploaded ${startByte + event.loaded} of ${startByte + event.total}`);
+                        };
+                        xhr.send(file.slice(startByte));
+                    }
+                }
+
+                abortButton.onclick = function() {
+                    xhr.abort();
+                };
+
+                resumeButton.onclick = function() {
+                    upload();
+                };
+            });
+        </script>
+    </article>
+</body>
+</html>
