@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Длинные опросы</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .container {
+            width: 50vw;
+        }
+
+        .chat {
+            height: 10rem;
+            border: 1px solid black;
+            margin-top: 0.5rem;
+            overflow-y: scroll;
+            padding-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Длинные опросы</h2>
+        <p>Длинные опросы - это самый простой способ поддерживать постоянное соединение с сервером, не используя
+        при этом никаких специфических протоколов (типа WebSocket или Server Sent Events).</p>
+        <p>Его очень легко реализовать, и он хорошо подходит для многих задач.</p>
+    </article>
+
+    <article>
+        <h2>Частые опросы</h2>
+        <p>Самый простой способ получать новую информацию от сервера - периодический опрос. То есть, регулярные запросы
+        на сервер вида: «Привет, я здесь, у вас есть какая-нибудь информация для меня?». Например, раз в 10 секунд.</p>
+        <p>В ответ сервер, во-первых, помечает у себя, что клиент онлайн, а во-вторых посылает весь пакет сообщений,
+        накопившихся к данному моменту.</p>
+        <p>Это работает, но есть недостатки:</p>
+        <ol>
+            <li>
+                <p>Сообщения передаются с задержкой до 10 секунд (между запросами).</p>
+            </li>
+            <li>
+                <p>Даже если сообщений нет, сервер «атакуется» запросами каждые 10 секунд, даже если пользователь
+                переключился куда-нибудь или спит. С точки зрения производительности, это довольно большая нагрузка.</p>
+            </li>
+        </ol>
+        <p>Так что, если речь идет об очень маленьком сервисе, подход может оказаться жизнеспособным, но в целом,
+        он нуждается в улучшении.</p>
+    </article>
+
+    <article>
+        <h2>Длинные опросы</h2>
+        <p>«Длинные опросы» - гораздо лучший способ взаимодействия с сервером.</p>
+        <p>Они также очень просто в реализации, и сообщения доставляются без задержек.</p>
+        <p>Как это происходит:</p>
+        <ol>
+            <li>
+                <p>Запрос отправляется на сервер.</p>
+            </li>
+            <li>
+                <p>Сервер не закрывает соединение, пока у него не возникнет сообщение для отсылки.</p>
+            </li>
+            <li>
+                <p>Когда появляется сообщение - сервер отвечает на запрос, посылая его.</p>
+            </li>
+            <li>
+                <p>Браузер немедленно делает новый запрос.</p>
+            </li>
+        </ol>
+        <p>Для данного метода ситуация, когда браузер отправил запрос и удерживает соединение с сервером в ожидании
+        ответа, является стандартной. Соединение прерывается только доставкой сообщений.</p>
+        <img src="images/long-polling.svg" alt style="width: 40vw">
+        <p>Если соединение будет потеряно, скажем, из-за сетевой ошибки, браузер немедленно посылает новый запрос.</p>
+        <p>Примерный код клиентской функции <code>subscribe</code>, которая реализует длинные опросы:</p>
+<pre><code class="language-javascript">async function subscribe() {
+    let response = await fetch('/subscribe');
+
+    if (response.status === 502) {
+        // Статус 502 - это таймаут соединения;
+        // Возможен, когда соединение ожидало слишком долго
+        // и сервер (или промежуточный прокси) закрыл его
+        // давайте восстановим связь
+        await subscribe();
+    } else if (response.status !== 200) {
+        // Какая-то ошибка, покажем ее
+        showMessage(response.statusText);
+        // Подключимся снова через секунду.
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await subscribe();
+    } else {
+        // Получим и покажем сообщение
+        let message = await response.text();
+        showMessage(message);
+        // И снова вызовем subscribe() для получения следующего сообщения
+        await subscribe();
+    }
+}
+
+subscribe();</code></pre>
+        <p>Функция <code>subscribe()</code> делает запрос, затем ожидает ответ, обрабатывает его и снова вызывает
+        сама себя.</p>
+
+        <article class="warning">
+            <h2>Сервер должен поддерживать много ожидающих соединений.</h2>
+            <p>Архитектура сервера должна быть способна работать со многими ожидающими подключениями.</p>
+            <p>Некоторые серверные архитектуры запускают отдельный процесс для каждого соединения. Для большого
+            количества соединений будет столько же процессов, и каждый процесс занимает значительный объем памяти.
+            Так много соединений просто поглотят всю память.</p>
+            <p>Часто такая проблема возникает с бэкендом, написанным на PHP или Ruby, но технически дело не в языке,
+            а в реализации. На большинстве языков можно написать подходящий сервер, но на некоторых это проще сделать.</p>
+            <p>Бэкенды, написанные с помощью Node.js, обычно не имеют таких проблем.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Демо: чат</h2>
+        <div class="container">
+            <input name="message" type="text" style="width: 25rem">
+            <button>Отправить</button>
+            <div class="chat"></div>
+        </div>
+        <script>
+            let button = document.querySelector('button');
+            let messageInput = document.querySelector('input[name="message"]');
+            let chat = document.querySelector('.chat');
+
+            button.addEventListener('click', onClick);
+            messageInput.addEventListener('keydown', (event) => {
+                if (event.code === 'Enter' && !event.shiftKey) {
+                    onClick();
+                }
+            });
+
+            function onClick() {
+                let text = messageInput.value;
+                messageInput.value = '';
+                if (text) {
+                    sendMessage(text);
+                }
+            }
+
+            let lastIndex = 0;
+
+            async function pollMessages() {
+                let response = await fetch(`http://localhost:8000/article/long-polling/receive?last_index=${lastIndex}`);
+                let data = await response.json();
+
+                if (data.messages.length > 0) {
+                    for (let message of data.messages) {
+                        chat.innerHTML += `${message}<br>`;
+                        chat.scrollTop = chat.scrollHeight;
+                    }
+                    lastIndex = data.last_index;
+                }
+                pollMessages();
+            }
+
+            async function sendMessage(text) {
+                await fetch('http://localhost:8000/article/long-polling/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({text: text})
+                });
+            }
+
+            pollMessages();
+        </script>
+    </article>
+
+    <article>
+        <h2>Область применения</h2>
+        <p>Длинные опросы прекрасно работают, когда сообщения приходят редко.</p>
+        <p>Если сообщения приходят очень часто, то схема приема-отправки сообщений, приведенная выше,
+        становится похожей на «пилу».</p>
+        <p>Каждое сообщение - это отдельный запрос, с заголовками, авторизацией и так далее.</p>
+        <p>Поэтому в этом случае предпочтительней использовать другой метод, такой как
+        <a target="_blank" href="https://learn.javascript.ru/websocket">WebSocket</a> или
+        <a target="_blank" href="https://learn.javascript.ru/server-sent-events">Server Sent Events</a>.</p>
+    </article>
+</body>
+</html>
