@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .container {
+            width: 50vw;
+        }
+
+        .chat {
+            height: 10rem;
+            border: 1px solid black;
+            margin-top: 0.5rem;
+            overflow-y: scroll;
+            padding-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>WebSocket</h2>
+        <p>Протокол <code>WebSocket</code> («веб-сокет»), описанный в спецификации
+        <a target="_blank" href="https://datatracker.ietf.org/doc/html/rfc6455">RFC 6455</a>, обеспечивает возможность
+        обмена данными между браузером и сервером через постоянное соединение. Данные передаются по нему в обоих
+        направлениях в виде «пакетов», без разрыва соединения и дополнительных HTTP-запросов.</p>
+        <p>WebSocket особенно хорош для сервисов, которые нуждаются в постоянном обмене данными, например онлайн игры,
+        торговые площадки, работающие в реальном времени и т.д.</p>
+    </article>
+
+    <article>
+        <h2>Простой пример</h2>
+        <p>Чтобы открыть веб-сокет-соединение, нам нужно создать объект <code>new WebSocket</code>, указав в
+        URL-адресе специальный протокол <code>ws</code>:</p>
+<pre><code class="language-javascript">let socket = new WebSocket('ws://javascript.info');</code></pre>
+        <p>Также существует протокол <code>wss://</code>, использующий шифрование. Это как HTTPS для веб-сокетов.</p>
+
+        <article class="note">
+            <h3>Всегда предпочитайте <code>wss://</code></h3>
+            <p>Протокол <code>wss://</code> не только использует шифрование, но и обладает повышенной надежностью.</p>
+            <p>Это потому, что данне <code>ws://</code> не зашифрованы, видны для любого посредника. Старые прокси-серверы
+            не знают о WebSocket, они могут увидеть «странные» заголовки и закрыть соединение.</p>
+            <p>С другой стороны, <code>wss://</code> - это WebSocket поверх TLS (также, как HTTPS - это HTTP поверх
+            TLS), безопасный транспортный уровень шифрует данные от отправителя и расшифровывает на стороне получателя.
+            Пакеты данных передаются в зашифрованном виде через прокси, которые не могут видеть, что внутри,
+            и всегда пропускают их.</p>
+        </article>
+
+        <p>Как только объект <code>WebSocket</code> создан, мы должны слушать его события. Их всего 4:</p>
+        <ul>
+            <li>
+                <p><code>open</code> - соединение установлено.</p>
+            </li>
+            <li>
+                <p><code>message</code> - получены данные.</p>
+            </li>
+            <li>
+                <p><code>error</code> - ошибка.</p>
+            </li>
+            <li>
+                <p><code>close</code> - соединение закрыто.</p>
+            </li>
+        </ul>
+        <p>... А если мы хотим отправить что-нибудь, то вызов <code>socket.send(data)</code> сделает это.</p>
+        <p>Вот пример:</p>
+<pre><code class="language-javascript">let socket = new WebSocket('ws://localhost:8000/article/websocket/demo/hello');
+
+socket.onopen = function(event) {
+    alert('[open] Соединение установлено');
+    alert('Отправляем данные на сервер');
+    socket.send('Меня зовут Джон');
+};
+
+socket.onmessage = function(event) {
+    alert(`[message] Данные получены с сервера: ${event.data}`);
+};
+
+socket.onclose = function(event) {
+    if (event.wasClean) {
+        alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+    } else {
+        // Например, сервер убил процесс или сеть недоступна
+        // Обычно в этом случае event.code=1006
+        alert('[close] Соединение прервано');
+    }
+};
+
+socket.onerror = function(event) {
+    alert('[error]');
+};</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function() {
+                let socket = new WebSocket('ws://localhost:8000/article/websocket/demo/hello');
+
+                socket.onopen = function() {
+                    alert(`[open] Соединение установлено`);
+                    alert('Отправляем данные на сервер');
+                    socket.send('Меня зовут Джон');
+                };
+
+                socket.onmessage = function(event) {
+                    alert(`[message] Данные получены с сервера: ${event.data}`);
+                };
+
+                socket.onclose = function(event) {
+                    if (event.wasClean) {
+                        alert(`[close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+                    } else {
+                        alert(`[close] Соединение прервано, код=${event.code}`);
+                    }
+                };
+
+                socket.onerror = function() {
+                    alert('[error]');
+                };
+            });
+        </script>
+        <p>Для демонстрации есть небольшой пример сервера. Он отвечает «Привет с сервера, Джон», после ожидает
+        5 секунд и закрывает соединение.</p>
+        <p>Так вы увидите события <code>open</code> → <code>message</code> → <code>close</code>.</p>
+        <p>В общем-то, все, мы уже можем общаться по протоколу WebSocket. Просто, не так ли?</p>
+        <p>Теперь давайте поговорим более подробно.</p>
+    </article>
+
+    <article>
+        <h2>Открытие веб-сокета</h2>
+        <p>Когда <code>new WebSocket(url)</code> создан, он тут же сам начинает устанавливать соединение.</p>
+        <p>Браузер, при помощи специальных заголовков, спрашивает сервер: «Ты поддерживаешь WebSocket?» и если
+        сервер отвечает «да», они начинают работать по протоколу WebSocket, который уже не является HTTP.</p>
+        <img src="images/websocket-handshake.svg" alt style="width: 40vw">
+        <p>Вот пример заголовков для запроса, который делает <code>new WebSocket('wss://javascript.info/chat')</code>.</p>
+<pre><code class="language-http">GET /chat
+Host: javascript.info
+Origin: https://javascript.info
+Connection: Upgrade
+Upgrade: websocket
+Sec-WebSocket-Key: Iv8io/9s+lYFgZWcXczP8Q==
+Sec-WebSocket-Version: 13</code></pre>
+        <ul>
+            <li>
+                <p><code>Origin</code> - источник текущей страницы (например, <code>https://javascript.info</code>).
+                Объект WebSocket по своей природе не завязан на текущий источник. Нет никаких
+                специальных заголовков или других ограничений. Старые сервера все равно не могут работать с WebSocket,
+                поэтому проблем с совместимостью нет. Но заголовок <code>Origin</code> важен, так как он позволяет
+                серверу решать, использовать ли WebSocket с этим сайтом.</p>
+            </li>
+            <li>
+                <p><code>Connection: Upgrade</code> - сигнализирует, что клиент хотел бы изменить протокол.</p>
+            </li>
+            <li>
+                <p><code>Upgrade: websocket</code> - запрошен протокол «websocket».</p>
+            </li>
+            <li>
+                <p><code>Sec-WebSocket-Key</code> - случайный ключ, созданный браузером для обеспечения безопасности.</p>
+            </li>
+            <li>
+                <p><code>Sec-WebSocket-Version</code> - версия протокола WebSocket, текущая версия 13.</p>
+            </li>
+        </ul>
+
+        <article class="note">
+            <h3>Запрос WebSocket нельзя эмулировать</h3>
+            <p>Мы не можем использовать <code>XMLHttpRequest</code> или <code>fetch</code> для создания такого
+            HTTP-запроса, потому что JavaScript не позволяет устанавливать такие заголовки.</p>
+        </article>
+
+        <p>Если сервер согласен переключиться на WebSocket, то он должен отправить в ответ код 101:</p>
+<pre><code class="language-http">101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: hsBlbuDTkk24srzEOTBUlZAlC2g=</code></pre>
+        <p>Здесь <code>Sec-WebSocket-Accept</code> - это <code>Sec-WebSocket-Key</code>, перекодированный с помощью
+        специального алгоритма. Браузер использует его, чтобы убедиться, что ответ соответствует запросу.</p>
+        <p>После этого данные передаются по протоколу WebSocket, и вскоре мы увидим его структуру («фреймы»).
+        И это вовсе не HTTP.</p>
+    </article>
+
+    <article>
+        <h2>Расширения и подпротоколы</h2>
+        <p>Могут быть дополнительные заголовки <code>Sec-WebSocket-Extensions</code> и <code>Sec-WebSocket-Protocol</code>,
+        описывающие расширения и подпротоколы.</p>
+        <p>Например:</p>
+        <ul>
+            <li>
+                <p><code>Sec-WebSocket-Extensions: deflate-frame</code> означает, что браузер поддерживает сжатие
+                данных. Расширение - это что-то, связанное с передачей данных, расширяющее сам протокол WebSocket.
+                Заголовок <code>Sec-WebSocket-Extensions</code> отправляется браузером автоматически со списком
+                всевозможных расширений, которые он поддерживает.</p>
+            </li>
+            <li>
+                <p><code>Sec-WebSocket-Protocol: soap, wamp</code> означает, что мы будем передавать не только произвольные
+                данные, но и данные в протоколах <a target="_blank" href="https://en.wikipedia.org/wiki/SOAP">SOAP</a> или
+                WAMP (The WebSocket Application Messaging Protocol - «протокол обмена сообщениями WebSocket приложений»).
+                То есть этот заголовок описывает не передачу, а формат данных, который мы собираемся использовать.
+                Официальные подпротоколы WebSocket регистрируются в
+                <a target="_blank" href="https://www.iana.org/assignments/websocket/websocket.xml">каталоге IANA</a>.</p>
+                <p>Этот необязательный заголовок ставим мы сами, передавая массив подпротоколов вторым параметром
+                <code>new WebSocket</code>, вот так:</p>
+<pre><code class="language-javascript">let socket = new WebSocket('wss://javascript.info/chat', ['soap', 'wamp']);</code></pre>
+            </li>
+        </ul>
+        <p>Сервер должен ответить перечнем протоколов и расширений, которые он может использовать.</p>
+        <p>Например, запрос:</p>
+<pre><code class="language-http">GET /chat
+Host: javascript.info
+Upgrade: websocket
+Connection: Upgrade
+Origin: https://javascript.info
+Sec-WebSocket-Key: Iv8io/9s+lYFgZWcXczP8Q==
+Sec-WebSocket-Version: 13
+Sec-WebSocket-Extensions: deflate-frame
+Sec-WebSocket-Protocol: soap, wamp</code></pre>
+        <p>Ответ:</p>
+<pre><code class="language-http">101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: hsBlbuDTkk24srzEOTBUlZAlC2g=
+Sec-WebSocket-Extensions: deflate-frame
+Sec-WebSocket-Protocol: soap</code></pre>
+        <p>Здесь сервер отвечает, что поддерживает расширение <code>deflate-frame</code> и может использовать только
+        протокол <code>SOAP</code> из всего списка запрошенных протоколов.</p>
+    </article>
+
+    <article>
+        <h2>Передача данных</h2>
+        <p>Поток данных в WebSocket состоит из «фреймов», фрагментов данных, которые могут быть отправлены любой
+        стороной, и которые могут быть следующих видов:</p>
+        <ul>
+            <li>
+                <p>«Текстовые фреймы» - содержат текстовые данные, которые стороны отправляют друг другу.</p>
+            </li>
+            <li>
+                <p>«Бинарные фреймы» - содержат бинарные данные, которые стороны отправляют друг другу.</p>
+            </li>
+            <li>
+                <p>«Пинг-понг фреймы» используются для проверки соединения; отправляется с сервера, браузер
+                реагирует на них автоматически.</p>
+            </li>
+            <li>
+                <p>Так же есть «фрейм закрытия соединения» и некоторые другие служебные фреймы.</p>
+            </li>
+        </ul>
+        <p>В браузере мы напрямую работаем только с текстовыми и бинарными фреймами.</p>
+        <p><b>Метод WebSocket <code>.send()</code> может отправлять и текстовые, и бинарные данные.</b></p>
+        <p>Вызов <code>socket.send(body)</code> принимает <code>body</code> в виде строки или любом бинарном
+        формате включая <code>Blob</code>, <code>ArrayBuffer</code> и другие. Дополнительных настроек не требуется,
+        просто отправляем в любом формате.</p>
+        <p><b>При получении данных, текст всегда поступает в виде строки. А для бинарных данных мы можем выбрать
+        один из двух форматов: <code>Blob</code> или <code>ArrayBuffer</code>.</b></p>
+        <p>Это задается свойством <code>socket.binaryType</code>, по умолчанию оно равно <code>"blob"</code>, так что
+        бинарные данные поступают в виде <code>Blob</code>-объектов.</p>
+        <p><a target="_blank" href="../../Бинарные%20данные%20и%20файлы/3.%20Blob/index.html">Blob</a> - это
+        высокоуровневый бинарный объект, он напрямую интегрируется с <code>&lt;a&gt;</code>, <code>&lt;img&gt;</code> и
+        другими тегами, так что это вполне удобное значение по умолчанию. Но для обработки данных, если требуется
+        доступ к отдельным байтам, мы можем изменить его на <code>"arraybuffer"</code>:</p>
+<pre><code class="language-javascript">socket.binaryType = 'arraybuffer';
+socket.onmessage = (event) => {
+    // event.data является строкой (если текст) или arraybuffer (если двоичные данные)
+};</code></pre>
+    </article>
+
+    <article>
+        <h2>Ограничение скорости</h2>
+        <p>Представим, что наше приложение генерирует много данных для отправки. Но у пользователя медленное
+        соединение, возможно, он в интернете с мобильного телефона и не из города.</p>
+        <p>Мы можем вызывать <code>socket.send(data)</code> снова и снова. Но данные будут буферизованы (сохранены)
+        в памяти и отправлены лишь с той скоростью, которую позволяет сеть.</p>
+        <p>Свойство <code>socket.bufferedAmount</code> хранит количество байт буферизованных данных на текущий момент,
+        ожидающих отправки по сети.</p>
+        <p>Мы можем изучить его, чтобы увидеть, действительно ли сокет доступен для передачи.</p>
+<pre><code class="language-javascript">// Каждые 100мс проверить сокет и отправить больше данных,
+// только если все текущие отосланы
+setInterval(() => {
+    if (socket.bufferedAmount === 0) {
+        socket.send(modeData());
+    }
+}, 100);</code></pre>
+    </article>
+
+    <article>
+        <h2>Закрытие подключения</h2>
+        <p>Обычно, когда сторона хочет закрыть соединение (браузер и сервер имеют равные права), они отправляют
+        «фрейм закрытия соединения» с кодом закрытия и указывают причину в виде текста.</p>
+        <p>Метод для этого:</p>
+<pre><code class="language-javascript">socket.close([code], [reason]);</code></pre>
+        <ul>
+            <li>
+                <p><code>code</code> - специальный WebSocket-код закрытия (не обязателен).</p>
+            </li>
+            <li>
+                <p><code>reason</code> - строка с описанием причины закрытия (не обязательна).</p>
+            </li>
+        </ul>
+        <p>Затем противоположная сторона в обработчике события <code>close</code> получит код <code>code</code>
+        и причину <code>reason</code>, например:</p>
+<pre><code class="language-javascript">// Закрывающая сторона:
+socket.close(1000, 'Работа закончена');
+
+// Другая сторона
+socket.onclose = (event) => {
+    // event.close === 1000
+    // event.reason === 'Работа закончена'
+    // event.wasClean === true (закрыто чисто)
+};</code></pre>
+        <p><code>code</code> - это не любое число, а специальный код закрытия WebSocket.</p>
+        <p>Наиболее распространенные значения:</p>
+        <ul>
+            <li>
+                <p><code>1000</code> - по умолчанию, нормальное закрытие.</p>
+            </li>
+            <li>
+                <p><code>1006</code> - невозможно установить такой код вручную, указывает, что соединение было потеряно
+                (нет фрейма закрытия).</p>
+            </li>
+        </ul>
+        <p>Есть и другие коды:</p>
+        <ul>
+            <li>
+                <p><code>1001</code> - сторона отключилась, например, сервер выключен или пользователь покинул страницу.</p>
+            </li>
+            <li>
+                <p><code>1009</code> - сообщение слишком большое для обработки.</p>
+            </li>
+            <li>
+                <p><code>1011</code> - непредвиденная ошибка на сервере.</p>
+            </li>
+            <li>
+                <p>... И так далее.</p>
+            </li>
+        </ul>
+        <p>Полный список находится в <a target="_blank" href="https://datatracker.ietf.org/doc/html/rfc6455#section-7.4.1">RFC6455, §7.4.1</a>.</p>
+        <p>Коды WebSocket чем-то похожи на коды HTTP, но они разные. В частности, любые коды меньше <code>1000</code>
+        зарезервированы. Если мы попытаемся установить такой код, то получим ошибку.</p>
+<pre><code class="language-javascript">// В случае, если соединение сброшено
+socket.onclose = event => {
+    // event.code === 1006
+    // event.reason === ''
+    // event.wasClean === false (нет закрывающего кадра)
+};</code></pre>
+    </article>
+
+    <article>
+        <h2>Состояние соединения</h2>
+        <p>Чтобы получить состояние соединения, существует дополнительное свойство <code>socket.readyState</code>
+        со значениями:</p>
+        <ul>
+            <li>
+                <p><code>0</code> - «CONNECTING»: соединение еще не установлено.</p>
+            </li>
+            <li>
+                <p><code>1</code> - «OPEN»: обмен данными.</p>
+            </li>
+            <li>
+                <p><code>2</code> - «CLOSING»: соединение закрывается.</p>
+            </li>
+            <li>
+                <p><code>3</code> - «CLOSED»: соединение закрыто.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Пример чата</h2>
+        <div class="container">
+            <input name="message" type="text" style="width: 25rem">
+            <button>Отправить</button>
+            <div class="chat"></div>
+        </div>
+        <script>
+            let button = document.querySelector('div.container button');
+            let messageInput = document.querySelector('input[name="message"]');
+            let chat = document.querySelector('.chat');
+
+            let socket = new WebSocket('ws://localhost:8000/article/websocket/chat/ws');
+
+            function onClick() {
+                let message = messageInput.value;
+                if (message) {
+                    messageInput.value = '';
+                    socket.send(message);
+                }
+            }
+
+            button.addEventListener('click', onClick);
+            messageInput.addEventListener('keydown', (event) => {
+                if (event.code === 'Enter' && !event.shiftKey) {
+                    let message = messageInput.value;
+                    if (message) {
+                        messageInput.value = '';
+                        socket.send(message);
+                    }
+                }
+            });
+
+            socket.onmessage = function(event) {
+                let message = event.data;
+                chat.insertAdjacentHTML('beforeend', `${message}<br>`);
+                chat.scrollTop = chat.scrollHeight;
+            };
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>WebSocket - это современный способ иметь постоянное соединение между браузером и сервером.</p>
+        <ul>
+            <li>
+                <p>Нет ограничений, связанных с кросс-доменными запросами.</p>
+            </li>
+            <li>
+                <p>Имеют хорошую поддержку браузерами.</p>
+            </li>
+            <li>
+                <p>Могут отправлять/получать как строки, так и бинарные данные.</p>
+            </li>
+        </ul>
+        <p>API прост.</p>
+        <p>Методы:</p>
+        <ul>
+            <li>
+                <p><code>socket.send(data)</code></p>
+            </li>
+            <li>
+                <p><code>socket.close([code], [reason])</code></p>
+            </li>
+        </ul>
+        <p>События:</p>
+        <ul>
+            <li>
+                <p><code>open</code></p>
+            </li>
+            <li>
+                <p><code>message</code></p>
+            </li>
+            <li>
+                <p><code>error</code></p>
+            </li>
+            <li>
+                <p><code>close</code></p>
+            </li>
+        </ul>
+        <p>WebSocket сам по себе не содержит такие функции, как переподключение при обрыве соединения, аутентификацию
+        пользователей и другие механизмы высокого уровня. Для этого есть клиентские и серверные библиотеки, а также
+        можно реализовать это вручную.</p>
+        <p>Иногда, чтобы добавить WebSocket к уже существующему проекту, WebSocket-сервер запускают параллельно
+        с основным сервером. Они совместно используют одну базу данных. Запросы к WebSocket отправляются на
+        <code>wss://ws.site.com</code> - поддомен, который ведет к WebSocket-серверу, в то время как
+        <code>https://site.com</code> ведет на основной HTTP-сервер.</p>
+        <p>Конечно, возможны и другие пути интеграции.</p>
+    </article>
+</body>
+</html>
