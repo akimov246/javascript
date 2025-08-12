@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Server Sent Events</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .log {
+            max-height: 10rem;
+            overflow-y: scroll;
+            width: 25rem;
+            padding-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Server Sent Events</h2>
+        <p>Спецификация <a target="_blank" href="https://html.spec.whatwg.org/multipage/comms.html#the-eventsource-interface">Server Sent Events</a>
+        описывает встроенный класс <code>EventSource</code>, который позволяет поддерживать соединение с сервером
+        и получать от него события.</p>
+        <p>Как и в случае с <code>WebSocket</code>, соединение постоянно.</p>
+        <p>Но есть несколько важных различий:</p>
+        <table>
+            <thead>
+            <tr>
+                <th><code>WebSocket</code></th>
+                <th><code>EventSource</code></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Двунаправленность: и сервер, и клиент могут обмениваться сообщениями</td>
+                <td>Однонаправленность: данные посылает только сервер</td>
+            </tr>
+            <tr>
+                <td>Бинарные и текстовые данные</td>
+                <td>Только текст</td>
+            </tr>
+            <tr>
+                <td>Протокол WebSocket</td>
+                <td>Обычный HTTP</td>
+            </tr>
+            </tbody>
+        </table>
+        <p><code>EventSource</code> не настолько мощный способ коммуникации с сервером, как <code>WebSocket</code>.</p>
+        <p>Зачем нам его использовать?</p>
+        <p>Основная причина: он проще. Многим приложениям не требуется вся мощь <code>WebSocket</code>.</p>
+        <p>Если нам нужно получать поток данных с сервера: неважно, сообщения в чате или же цены для магазина -
+        с этим легко справится <code>EventSource</code>. К тому же, он поддерживает автоматическое переподключение
+        при потере соединения, которое, используя <code>WebSocket</code>, нам бы пришлось реализовывать самим.
+        Кроме того, используется старый добрый HTTP, а не новый протокол.</p>
+    </article>
+
+    <article>
+        <h2>Получение сообщений</h2>
+        <p>Чтобы начать получать данные, нам нужно просто создать <code>new EventSource(url)</code>.</p>
+        <p>Браузер установит соединение с <code>url</code> и будет поддерживать его открытым, ожидая события.</p>
+        <p>Сервер должен ответить со статусом 200 и заголовком <code>Content-Type: text/event-stream</code>, затем он
+        должен поддерживать соединение открытым и отправлять сообщения в особом формате:</p>
+<pre><code>data: Сообщение 1
+
+data: Сообщение 2
+
+data: Сообщение 3
+data: в две строки</code></pre>
+        <ul>
+            <li>
+                <p>Текст сообщения указывается после <code>data:</code>, пробел после двоеточия необязателен.</p>
+            </li>
+            <li>
+                <p>Сообщения разделяются двойным переносом строки <code>\n\n</code>.</p>
+            </li>
+            <li>
+                <p>Чтобы разделить сообщение на несколько строк, мы можем отправить несколько <code>data:</code>
+                подряд (третье сообщение).</p>
+            </li>
+        </ul>
+        <p>На практике сложные сообщения обычно отправляются в формате JSON, в котором перевод строки кодируется
+        как <code>\n</code>, так что в разделении сообщения на несколько строк обычно нет нужды.</p>
+        <p>Например:</p>
+<pre><code>data: {"user": "Джон", "message": "Первая строка\nВторая строка"}</code></pre>
+        <p>... Так что можно считать, что в каждом <code>data:</code> содержится ровно одно такое сообщение.</p>
+        <p>Для каждого сообщения генерируется событие <code>message</code>:</p>
+<pre><code class="language-javascript">let eventSource = new EventSource('/events/subscribe');
+
+eventSource.onmessage = function(event) {
+    console.log('Новое сообщение', event.data);
+    // Этот код выведет в консоль 3 сообщения, из потока данных ваше
+};
+
+// Или eventSource.addEventListener('message', ...)</code></pre>
+    </article>
+
+    <article>
+        <h2>Кросс-доменные запросы</h2>
+        <p><code>EventSource</code>, как и <code>fetch</code>, поддерживает кросс-доменные запросы. Мы можем использовать
+        любой URL:</p>
+<pre><code class="language-javascript">let source = new EventSource('https://another-site.com/events');</code></pre>
+        <p>Сервер получит заголовок <code>Origin</code> и должен будет ответить с заголовком
+        <code>Access-Control-Allow-Origin</code>.</p>
+        <p>Чтобы послать авторизационные данные, следует установить дополнительную опцию <code>withCredentials</code>:</p>
+<pre><code class="language-javascript">let source = new EventSource('https://another-site.com/events', {
+    withCredentials: true
+});</code></pre>
+        <p>Более подробное описание кросс-доменных заголовков вы можете прочитать в главе
+        <a target="_blank" href="../5.%20Fetch.%20Запросы%20на%20другие%20сайты/index.html">Fetch: запросы на другие сайты</a>.</p>
+    </article>
+
+    <article>
+        <h2>Переподключение</h2>
+        <p>После создания <code>new EventSource</code> подключается к серверу и, если соединение обрывается, -
+        переподключается.</p>
+        <p>Это очень удобно, так как нам не приходится беспокоиться об этом.</p>
+        <p>По умолчанию между попытками возобновить соединение будет небольшая пауза в несколько секунд.</p>
+        <p>Сервер может выставить рекомендуемую задержку, указав в ответе <code>retry:</code> (в миллисекундах):</p>
+<pre><code>retry: 15000
+data: Привет, я выставил задержку переподключения в 15 секунд</code></pre>
+        <p>Поле <code>retry:</code> может посылаться как вместе с данными, так и отдельным сообщением.</p>
+        <p>Браузеру следует ждать именно столько миллисекунд перед новой попыткой подключения. Или дольше, например,
+        если браузер знает (от операционной системы), что соединения с сетью нет, то он может осуществить
+        переподключение только когда оно появится.</p>
+        <ul>
+            <li>
+                <p>Если сервер хочет остановить попытки переподключения, он должен ответить со статусом 204.</p>
+            </li>
+            <li>
+                <p>Если браузер хочет прекратить соединение, он может вызвать <code>eventSource.close()</code>:</p>
+<pre><code class="language-javascript">let eventSource = new EventSource(...);
+
+eventSource.close();</code></pre>
+            </li>
+        </ul>
+        <p>Также переподключение не произойдет, если в ответе указан неверный <code>Content-Type</code> или его
+        статус отличается от 301, 307, 200 и 204. Браузер создаст событие <code>"error"</code> и не будет
+        восстанавливать соединение.</p>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>После того как соединение окончательно закрыто, «переоткрыть» его уже нельзя. Если необходимо
+            снова подключиться, просто создайте новый <code>EventSource</code>.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Идентификатор сообщения</h2>
+        <p>Когда соединение прерывается из-за проблем с сетью, ни сервер, ни клиент не могут быть уверены в том,
+        какие сообщения были доставлены, а какие - нет.</p>
+        <p>Чтобы правильно возобновить подключение, каждое сообщение должно иметь поле <code>id</code>:</p>
+<pre><code>data: Сообщение 1
+id: 1
+
+data: Сообщение 2
+id: 2
+
+data: Сообщение 3
+data: в две строки
+id: 3</code></pre>
+        <p>Получая сообщение с указанным <code>id:</code>, браузер:</p>
+        <ul>
+            <li>
+                <p>Установит его значение свойству <code>eventSource.lastEventId</code>.</p>
+            </li>
+            <li>
+                <p>При переподключении отправит заголовок <code>Last-Event-ID</code> с этим <code>id</code>, чтобы
+                сервер мог переслать последующие сообщения.</p>
+            </li>
+        </ul>
+
+        <article class="note">
+            <h3>Указывайте <code>id:</code> после <code>data:</code></h3>
+            <p>Обратите внимание: <code>id</code> указывается сервером после данных <code>data</code> сообщения,
+            чтобы обновление <code>lastEventId</code> произошло после того, как сообщение будет получено.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Статус подключения: readyState</h2>
+        <p>У объекта <code>EventSource</code> есть свойство <code>readyState</code>, имеющее одно из трех значений:</p>
+<pre><code class="language-javascript">EventSource.CONNECTING = 0; // Подключение или переподключение
+EventSource.OPEN = 1; // Подключено
+EventSource.CLOSED = 2; // Подключение закрыто</code></pre>
+        <p>При создании объекта и разрыве соединения оно автоматически устанавливается в значение
+        <code>EventSource.CONNECTING</code> (равно <code>0</code>).</p>
+        <p>Мы можем обратиться к этому свойству, чтобы узнать текущее состояние <code>EventSource</code>.</p>
+    </article>
+
+    <article>
+        <h2>Типы событий</h2>
+        <p>По умолчанию объект <code>EventSource</code> генерирует 3 события:</p>
+        <ul>
+            <li>
+                <p><code>message</code> - получено сообщение, доступно как <code>event.data</code>.</p>
+            </li>
+            <li>
+                <p><code>open</code> - соединение открыто.</p>
+            </li>
+            <li>
+                <p><code>error</code> - не удалось установить соединение, например, сервер вернут статус 500.</p>
+            </li>
+        </ul>
+        <p>Сервер может указать другой тип события с помощью <code>event: ...</code> в начале сообщения.</p>
+        <p>Например:</p>
+<pre><code>event: join
+data: Боб
+
+data: Привет
+
+event: leave
+data: Боб</code></pre>
+        <p>Чтобы начать слушать пользовательские события, нужно использовать <code>addEventListener</code>, а не
+        <code>onmessage</code>:</p>
+<pre><code class="language-javascript">eventSource.addEventListener('join', event => {
+    alert(`${event.data} зашел`);
+});
+
+eventSource.addEventListener('message', event => {
+    alert(`Сказал: ${event.data}`);
+});
+
+eventSource.addEventListener('leave', event => {
+    alert(`${event.data} вышел`);
+});</code></pre>
+    </article>
+
+    <article>
+        <h2>Полный пример</h2>
+        <p>В этом примере сервер посылает сообщения <code>1</code>, <code>2</code>, <code>3</code>, затем
+        <code>пока-пока</code> и разрывает сообщение.</p>
+        <p>После этого браузер автоматически переподключается.</p>
+        <div class="container">
+            <label><button id="start">Старт</button> Нажмите кнопку «Старт» для начала</label>
+            <div class="log"></div>
+            <label><button id="stop">Стоп</button> Чтобы закончить, нажмите «Стоп»</label>
+        </div>
+
+        <script>
+            let log = document.querySelector('.log');
+            let startButton = document.getElementById('start');
+            let stopButton = document.getElementById('stop');
+
+            let eventSource;
+
+            startButton.addEventListener('click', function() {
+                log.style.height = '10rem';
+                log.style.border = '1px solid black';
+                eventSource = new EventSource('http://localhost:8000/article/server-sent-events');
+
+                eventSource.addEventListener('open', function(event) {
+                    log.innerHTML += `Событие: ${event.type}<br>`;
+                    log.scrollTop = log.scrollHeight;
+                });
+
+                eventSource.addEventListener('message', function(event) {
+                    log.innerHTML += `Событие: ${event.type}, данные: ${event.data}<br>`;
+                    log.scrollTop = log.scrollHeight;
+                });
+
+                eventSource.addEventListener('bye', function(event) {
+                    log.innerHTML += `Событие: ${event.type}, данные: ${event.data}<br>`;
+                    log.scrollTop = log.scrollHeight;
+                });
+
+                eventSource.addEventListener('error', function(event) {
+                    log.innerHTML += `Событие: ${event.type}<br>`;
+                    if (this.readyState === EventSource.CONNECTING) {
+                        log.innerHTML += `Переподключение (readyState=${this.readyState})...<br>`;
+                    } else {
+                        log.innerHTML += `Произошла ошибка.<br>`;
+                    }
+                    log.scrollTop = log.scrollHeight;
+                });
+            });
+
+            stopButton.addEventListener('click', function() {
+                eventSource?.close();
+                log.innerHTML += 'Соединение закрыто<br>';
+                log.scrollTop = log.scrollHeight;
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Объект <code>EventSource</code> автоматически устанавливает постоянное соединение и позволяет серверу
+        отправлять через него сообщения.</p>
+        <p>Он предоставляет:</p>
+        <ul>
+            <li>
+                <p>Автоматическое переподключение с настраиваемой <code>retry</code> задержкой.</p>
+            </li>
+            <li>
+                <p>Идентификаторы сообщений для восстановления соединения. Последний полученный идентификатор
+                посылается в заголовке <code>Last-Event-ID</code> при пересоединении.</p>
+            </li>
+            <li>
+                <p>Текущее состояние, записанное в свойстве <code>readyState</code>.</p>
+            </li>
+        </ul>
+        <p>Это делает <code>EventSource</code> достойной альтернативой протоколу <code>WebSocket</code>, который
+        сравнительно низкоуровневый и не имеет таких встроенных возможностей (хотя их и можно реализовать).</p>
+        <p>Для многих приложений возможностей <code>EventSource</code> вполне достаточно.</p>
+        <p>Поддерживается во всех современных браузерах (кроме Internet Explorer).</p>
+        <p>Синтаксис:</p>
+<pre><code class="language-javascript">let source = new EventSource(url, [credentials]);</code></pre>
+        <p>Второй аргумент - необязательный объект с одним свойством: <code>{widthCredentials: true}</code>.
+        Он позволяет отправлять авторизованные данные на другие домены.</p>
+        <p>В целом, кросс-доменная безопасность реализована так же, как в <code>fetch</code> и других методах работы
+        с сетью.</p>
+
+        <h3>Свойства объекта <code>EventSource</code></h3>
+        <ul>
+            <li>
+                <p><code>readyState</code> - текущее состояние подключения:</p>
+                <ul>
+                    <li>
+                        <p><code>EventSource.CONNECTING (=0)</code></p>
+                    </li>
+                    <li>
+                        <p><code>EventSource.OPEN (=1)</code></p>
+                    </li>
+                    <li>
+                        <p><code>EventSource.CLOSED (=2)</code></p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>lastEventId</code> - <code>id</code> последнего полученного сообщения. При переподключении браузер посылает его
+                    в заголовке <code>Last-Event-ID</code>.</p>
+            </li>
+        </ul>
+
+        <h3>Методы</h3>
+        <ul>
+            <li>
+                <p><code>close()</code> - закрывает соединение.</p>
+            </li>
+        </ul>
+
+        <h3>События</h3>
+        <ul>
+            <li>
+                <p><code>message</code> - сообщение получено, переданные данные записаны в <code>event.data</code>.</p>
+            </li>
+            <li>
+                <p><code>open</code> - соединение установлено.</p>
+            </li>
+            <li>
+                <p><code>error</code> - в случае ошибки, включая как потерю соединения, так и другие ошибки в нем
+                Мы можем обратиться к свойству <code>readyState</code>, чтобы проверить, происходит ли переподключение.</p>
+            </li>
+            <li>
+                <p>Сервер может выставить собственное событие с помощью <code>event:</code>. Такие события должны быть
+                обработаны с помощью <code>addEventListener</code>, а не <code>on&lt;event&gt;</code>.</p>
+            </li>
+        </ul>
+
+        <h3>Формат ответа сервера</h3>
+        <p>Сервер посылает сообщения, разделенные двойным переносом строки <code>\n\n</code>.</p>
+        <p>Сообщение состоит из следующих полей:</p>
+        <ul>
+            <li>
+                <p><code>data:</code> - тело сообщения, несколько <code>data</code> подряд интерпретируются как одно
+                сообщение, разделенное переносом строк <code>\n</code>.</p>
+            </li>
+            <li>
+                <p><code>id:</code> - обновляет свойство <code>lastEventId</code>, отправляемое в <code>Last-Event-ID</code>
+                при переподключении.</p>
+            </li>
+            <li>
+                <p><code>retry:</code> - рекомендованная задержка перед переподключением в миллисекундах. Не может быть
+                установлена с помощью JavaScript.</p>
+            </li>
+            <li>
+                <p><code>event:</code> - имя пользовательского события, должно быть указано перед <code>data:</code>.</p>
+            </li>
+        </ul>
+        <p>Сообщение может включать одно или несколько этих полей в любом порядке, но <code>id</code> обычно ставят
+        в конце.</p>
+    </article>
+</body>
+</html>
