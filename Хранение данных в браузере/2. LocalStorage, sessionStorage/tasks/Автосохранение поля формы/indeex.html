@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Автосохранение поля формы</title>
+    <style>
+        textarea {
+            height: 10rem;
+            width: 20rem;
+        }
+    </style>
+</head>
+<body>
+    <textarea placeholder="Напишите сообщение здесь"></textarea>
+    <button style="display: block">Очистить</button>
+
+    <script>
+        let textarea = document.querySelector('textarea');
+        let button = document.querySelector('button');
+
+        button.addEventListener('click', function() {
+            textarea.value = '';
+            textarea.focus();
+        });
+
+        window.addEventListener('unload', function() {
+            localStorage.setItem('textareaValue', textarea.value);
+        });
+
+        window.addEventListener('load', function() {
+            if (!localStorage.getItem('textareaValue') !== null) {
+                textarea.value = localStorage.getItem('textareaValue');
+                textarea.focus();
+            }
+        });
+    </script>
+</body>
+</html>

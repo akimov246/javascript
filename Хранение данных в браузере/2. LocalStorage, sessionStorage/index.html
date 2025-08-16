@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LocalStorage, sessionStorage</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>LocalStorage, sessionStorage</h2>
+        <p>Объекты веб-хранилища <code>localStorage</code> и <code>sessionStorage</code> позволяют хранить пары
+        ключ/значение в браузере.</p>
+        <p>Что в них важно - данные, которые в них записаны, сохраняются после обновления страницы (в случае
+        <code>sessionStorage</code>) и даже после перезапуска браузера (при использовании <code>localStorage</code>).
+        Скоро мы это увидим.</p>
+        <p>Но ведь у нас уже есть куки. Зачем тогда эти объекты?</p>
+        <ul>
+            <li>
+                <p>В отличие от куки, объекты веб-хранилища не отправляются на сервер при каждом запросе. Именно поэтому
+                мы можем хранить гораздо больше данных. Большинство современных браузеров могут выделить как минимум
+                5 мегабайтов данных (или больше), и этот размер можно поменять в настройках.</p>
+            </li>
+            <li>
+                <p>Еще одно отличие от куки - сервер не может манипулировать объектами хранилища через HTTP-заголовки.
+                Все делается при помощи JavaScript.</p>
+            </li>
+            <li>
+                <p>Хранилище привязано к источнику (домен/протокол/порт). Это значит, что разные протоколы или поддомены
+                определяют разные объекты хранилища, и они не могут получить данные к данным друг друга.</p>
+            </li>
+        </ul>
+        <p>Объекты хранилища <code>localStorage</code> и <code>sessionStorage</code> предоставляют одинаковые методы
+        и свойства:</p>
+        <ul>
+            <li>
+                <p><code>setItem(key, value)</code> - сохранить пару ключ/значение.</p>
+            </li>
+            <li>
+                <p><code>getItem(key)</code> - получить данные по ключу <code>key</code>.</p>
+            </li>
+            <li>
+                <p><code>removeItem(key)</code> - удалить данные с ключом <code>key</code>.</p>
+            </li>
+            <li>
+                <p><code>clear()</code> - удалить все.</p>
+            </li>
+            <li>
+                <p><code>key(index)</code> - получить ключ на заданной позиции.</p>
+            </li>
+            <li>
+                <p><code>length</code> - количество элементов в хранилище.</p>
+            </li>
+        </ul>
+        <p>Как видим, интерфейс похож на <code>Map</code> (<code>setItem/getItem/removeItem</code>), но также позволяет
+        получить доступ к элементу по индексу - <code>key(index)</code>.</p>
+        <p>Давайте посмотрим как это работает.</p>
+    </article>
+
+    <article>
+        <h2>Демо localStorage</h2>
+        <p>Основные особенности <code>localStorage</code>:</p>
+        <ul>
+            <li>
+                <p>Этот объект один на все вкладки и окна в рамках источника (один и тот же домен/протокол/порт).</p>
+            </li>
+            <li>
+                <p>Данные не имеют срока давности, по которому истекают и удаляются. Сохраняются после перезапуска
+                браузера и даже ОС.</p>
+            </li>
+        </ul>
+        <p>Например, если запустить этот код...</p>
+<pre><code class="language-javascript">localStorage.setItem('test', 1);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                localStorage.setItem('test', '1');
+            });
+        </script>
+        <p>... И закрыть/открыть браузер или открыть ту же страницу в другом окне, то можно получить данные следующим
+        образом:</p>
+<pre><code class="language-javascript">alert(localStorage.getItem('test')); // 1</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                alert(localStorage.getItem('test'));
+            });
+        </script>
+        <p>Нам достаточно находиться на том же источнике (домен/протокол/порт), при этом URL-путь может быть разным.</p>
+        <p>Объект <code>localStorage</code> доступен всем окнам из одного источника, поэтому, если мы устанавливаем
+        данные в одном окне, изменения становятся видимыми в другому.</p>
+    </article>
+
+    <article>
+        <h2>Доступ как к обычному объекту</h2>
+        <p>Также можно получать/записывать данные, как в обычный объект:</p>
+<pre><code class="language-javascript">// Установить значение для ключа
+localStorage.test = 2;
+
+// Получить значение по ключу
+alert(localStorage.test); // 2
+
+// Удалить ключ
+delete localStorage.test;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                localStorage.test = 2;
+                alert(localStorage.test);
+                delete localStorage.test;
+            });
+        </script>
+        <p>Это возможно по историческим причинам и, как правило, работает, но обычно не рекомендуется, потому что:</p>
+        <ol>
+            <li>
+                <p>Если ключ генерируется пользователем, то он может быть каким угодно, включая <code>length</code>
+                или <code>toString</code> или другой встроенный метод <code>localStorage</code>. В этом случае
+                <code>getItem/setItem</code> сработают нормально, а вот чтение/запись как свойства объекта не пройдут:</p>
+<pre><code class="language-javascript">let key = 'length';
+localStorage[key] = 5; // Ошибка, невозможно установить length</code></pre>
+                <div style="margin: 0.5rem">
+                    <button>Запустить пример</button>
+                </div>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('click', function() {
+                        let key = 'length';
+                        localStorage[key] = 5;
+                    });
+                </script>
+            </li>
+            <li>
+                <p>Когда мы модифицируем данные, то срабатывает событие <code>storage</code>. Но это событие не происходит
+                при записи без <code>setItem</code>, как свойства объекта. Мы увидим это позже в этой главе.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Перебор ключей</h2>
+        <p>Методы, которые мы видим, позволяют читать/писать/удалять данные. А как получить все значения или ключи?</p>
+        <p>К сожалению, объекты веб-хранилища нельзя перебрать в цикле, они не итерируемы.</p>
+        <p>Но можно пройти по ним, как по обычным массивам:</p>
+<pre><code class="language-javascript">for (let i=0; i < localStorage.length; i++) {
+    let key = localStorage.key(i);
+    alert(`${key}: ${localStorage.getItem(key)}`);
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                for (let i = 0; i < localStorage.length; i++) {
+                    let key = localStorage.key(i);
+                    alert(`${key}: ${localStorage.getItem(key)}`);
+                }
+            });
+        </script>
+        <p>Другой способ - использовать цикл, как по обычному объекту <code>for key in localStorage</code>.</p>
+        <p>Здесь перебираются ключи, но вместе с этим выводятся несколько встроенных полей, которые нам не нужны:</p>
+<pre><code class="language-javascript">// Bad try
+for (let key in localStorage) {
+    alert(key); // Покажет getItem, setItem и другие встроенные свойства
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                for (let key in localStorage) {
+                    alert(key);
+                }
+            });
+        </script>
+        <p>... Поэтому нам нужно либо отфильтровать поля из прототипа проверкой <code>hasOwnProperty</code>:</p>
+<pre><code class="language-javascript">for (let key in localStorage) {
+    if (!localStorage.hasOwnProperty(key)) {
+        continue; // Пропустить такие ключи, как "setItem", "getItem" и так далее
+    }
+    alert(`${key}: ${localStorage.getItem(key)}`);
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                for (let key in localStorage) {
+                    if (localStorage.hasOwnProperty(key)) {
+                        alert(`${key}: ${localStorage.getItem(key)}`);
+                    }
+                }
+            });
+        </script>
+        <p>... Либо просто получить «собственные ключи» с помощью <code>Object.keys</code>, а затем при необходимости
+        вывести их при помощи цикла:</p>
+<pre><code class="language-javascript">let keys = Object.keys(localStorage);
+for (let key of keys) {
+    alert(`${key}: ${localStorage.getItem(key)}`);
+}</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                let keys = Object.keys(localStorage);
+                for (let key of keys) {
+                    alert(`${key}: ${localStorage.getItem(key)}`);
+                }
+            });
+        </script>
+        <p>Последнее работает, потому что <code>Object.keys</code> возвращает только ключи, принадлежащие объекту,
+        игнорируя прототип.</p>
+    </article>
+
+    <article>
+        <h2>Только строки</h2>
+        <p>Обратите внимание, что ключ и значение должны быть строками.</p>
+        <p>Если мы используем любой другой тип, например, число или объект, то он автоматически преобразуется в строку:</p>
+<pre><code class="language-javascript">localStorage.user = {name: 'John'};
+alert(localStorage.user); // [object Object]</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                localStorage.user = {name: 'John'};
+                alert(localStorage.user);
+            });
+        </script>
+        <p>Мы можем использовать <code>JSON</code> для хранения объектов:</p>
+<pre><code class="language-javascript">localStorage.user = JSON.stringify({name: 'John'});
+
+// Немного позже
+let user = JSON.parse(localStorage.user);
+alert(user.name);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                localStorage.user = JSON.stringify({name: 'John'});
+                let user = JSON.parse(localStorage.user);
+                alert(user.name);
+            });
+        </script>
+        <p>Также возможно привести к строке весь объект хранилища, например, для отладки:</p>
+<pre><code class="language-javascript">// Для JSON.stringify добавлены параметры форматирования, чтобы объект выглядел лучше
+alert(JSON.stringify(localStorage, null, 2));</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                alert(JSON.stringify(localStorage, null, 2));
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>sessionStorage</h2>
+        <p>Объект <code>sessionStorage</code> используется гораздо реже, чем <code>localStorage</code>.</p>
+        <p>Свойства и методы такие же, но есть существенные ограничения:</p>
+        <ul>
+            <li>
+                <p><code>sessionStorage</code> существует только в рамках текущей вкладки браузера.</p>
+                <ul>
+                    <li>
+                        <p>Другая вкладка с той же страницей будет иметь другое хранилище.</p>
+                    </li>
+                    <li>
+                        <p>Но оно разделяется между ифреймами на той же вкладке (при условии, что они из одного и того
+                        же источника).</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Данные продолжают существовать после перезагрузки страницы, но не после закрытия/открытия вкладки.</p>
+            </li>
+        </ul>
+        <p>Давайте посмотрим на это в действии.</p>
+        <p>Запустите этот код...</p>
+<pre><code class="language-javascript">sessionStorage.setItem('test', 1);</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                sessionStorage.setItem('test', '1');
+            });
+        </script>
+        <p>... И обновите страницу. Вы все еще можете получить данные:</p>
+<pre><code class="language-javascript">alert(sessionStorage.getItem('test')); // После обновления: 1</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                alert(sessionStorage.getItem('test'));
+            });
+        </script>
+        <p>... Но если вы откроете ту же страницу в другой вкладке и попробуете получить данные снова, то код выше
+        вернет <code>null</code>, что значит «ничего не найдено».</p>
+        <p>Так получилось, потому что <code>sessionStorage</code> привязан не только к источнику, то и к вкладке браузера.
+        Поэтому <code>sessionStorage</code> используется нечасто.</p>
+    </article>
+
+    <article>
+        <h2>Событие storage</h2>
+        <p>Когда обновляются данные в <code>localStorage</code> или <code>sessionStorage</code>, генерируется
+        событие <a target="_blank" href="https://html.spec.whatwg.org/multipage/webstorage.html#the-storageevent-interface">storage</a>
+        со следующими свойствами:</p>
+        <ul>
+            <li>
+                <p><code>key</code> - ключ, который обновился (<code>null</code>, если вызван <code>.clear()</code>).</p>
+            </li>
+            <li>
+                <p><code>oldValue</code> - старое значение (<code>null</code>, если ключ добавлен впервые).</p>
+            </li>
+            <li>
+                <p><code>newValue</code> - новое значение (<code>null</code>, если ключ был удален).</p>
+            </li>
+            <li>
+                <p><code>url</code> - url документа, где произошло обновление.</p>
+            </li>
+            <li>
+                <p><code>storageArea</code> - объект <code>localStorage</code> или <code>sessionStorage</code>, где
+                произошло обновление.</p>
+            </li>
+        </ul>
+        <p>Важно: событие срабатывает на всех остальных объектах <code>window</code>, где доступно хранилище, кроме того
+        окна, которое его вызвало.</p>
+        <p>Давайте уточним.</p>
+        <p>Представьте, что у вас есть два окна с одним и тем же сайтом. Хранилище <code>localStorage</code> разделяется
+        между ними.</p>
+        <p>Вы можете отрыть эту страницу в двух окнах браузера, чтобы проверить приведенный ниже код.</p>
+        <p>Теперь, если оба окна слушают <code>window.onstorage</code>, то каждое из них будет реагировать на обновления,
+        произошедшие в другом окне.</p>
+<pre><code class="language-javascript">// Срабатывает при обновлениях, сделанных в том же хранилище из других документов
+window.onstorage = event => { // Можно также использовать window.addEventListener('storage', event => {
+    if (event.key !== 'now') return;
+    alert(event.key + ': ' + event.newValue + '\nat ' + event.url);
+};
+
+localStorage(setItem('now', Date.now());</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function() {
+                window.addEventListener('storage', function(event) {
+                    if (event.key !== 'now') return;
+                    alert(event.key + ': ' + event.newValue + '\nat ' + event.url);
+                });
+
+                localStorage.setItem('now', Date.now().toString());
+            });
+        </script>
+        <p>Обратите внимание, что событие также содержит: <code>event.url</code> - url-адрес документа, в котором
+        данные обновились.</p>
+        <p>Также <code>event.storageArea</code> содержит объект хранилища - событие одно и то же для
+        <code>sessionStorage</code> и <code>localStorage</code>, поэтому <code>event.storageArea</code> ссылается
+        на то хранилище, которое было изменено. Мы можем захотеть что-то записать в ответ на изменения.</p>
+        <p><b>Это позволяет разным окнам одного источника обмениваться сообщениями.</b></p>
+        <p>Современные браузеры также поддерживают
+        <a target="_blank" href="https://developer.mozilla.org/en-US/docs/Web/API/Broadcast_Channel_API">Broadcast channel API</a>
+        специальный API для связи между окнами одного источника, он более полнофункциональный, но менее поддерживаемый.
+        Существуют библиотеки (полифилы), которые эмулируют это API на основе <code>localStorage</code> и делают
+        его доступным везде.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Объекты веб-хранилища <code>localStorage</code> и <code>sessionStorage</code> позволяют хранить пары
+        ключ/значение в браузере.</p>
+        <ul>
+            <li>
+                <p><code>key</code> и <code>value</code> должны быть строками.</p>
+            </li>
+            <li>
+                <p>Лимит 5 МБ+, зависит от браузера.</p>
+            </li>
+            <li>
+                <p>Данные не имеют «времени истечения».</p>
+            </li>
+            <li>
+                <p>Данные привязаны к источнику (домен/протокол/порт).</p>
+            </li>
+        </ul>
+        <table>
+            <thead>
+            <tr>
+                <th><code>localStorage</code></th>
+                <th><code>sessionStorage</code></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Совместно используется между всеми вкладками и окнами с одинаковым источником</td>
+                <td>Разделяется в рамках вкладки браузера, среди ифреймов из того же источника</td>
+            </tr>
+            <tr>
+                <td>«Переживает» перезапуск браузера</td>
+                <td>«Переживает» перезагрузку страницы (но не закрытие вкладки)</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>API:</p>
+        <ul>
+            <li>
+                <p><code>setItem(key, value)</code> - сохранить пару ключ/значение.</p>
+            </li>
+            <li>
+                <p><code>getItem(key)</code> - получить данные по ключу <code>key</code>.</p>
+            </li>
+            <li>
+                <p><code>removeItem(key)</code> - удалить значение по ключу <code>key</code>.</p>
+            </li>
+            <li>
+                <p><code>clear()</code> - удалить все.</p>
+            </li>
+            <li>
+                <p><code>key(index)</code> - получить ключ на заданной позиции.</p>
+            </li>
+            <li>
+                <p><code>length</code> - количество элементов в хранилище.</p>
+            </li>
+            <li>
+                <p>Используйте <code>Object.keys</code> для получения всех ключей.</p>
+            </li>
+            <li>
+                <p>Можно обращаться к ключам как к обычным свойствам объекта, в этом случае событие <code>storage</code>
+                не срабатывает.</p>
+            </li>
+        </ul>
+        <p>Событие <code>storage</code>:</p>
+        <ul>
+            <li>
+                <p>Срабатывает при вызове <code>setItem</code>, <code>removeItem</code>, <code>clear</code>.</p>
+            </li>
+            <li>
+                <p>Содержит все данные о произошедшем обновлении (<code>key/oldValue/newValue</code>),
+                <code>url</code> документа и объект хранилища <code>storageArea</code>.</p>
+            </li>
+            <li>
+                <p>Срабатывает на всех объектах <code>window</code>, которые имеют доступ к хранилищу, кроме того,
+                где оно было сгенерировано (внутри вкладки для <code>sessionStorage</code>, глобально для
+                <code>localStorage</code>).</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
