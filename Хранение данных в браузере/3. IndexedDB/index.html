@@ -134,7 +134,7 @@ openRequest.onupgradeneeded = function(event) {
 
     </article>
 
-    <article>
+    <article id="concurrentUpdateProblem">
         <h2>Проблема параллельного обновления</h2>
         <p>Раз уж мы говорим про версионирование, рассмотрим связанную с этим небольшую проблему.</p>
         <p>Допустим:</p>
@@ -580,6 +580,410 @@ books.getAllKeys(IDBKeyRange.lowerBound('js', true));</code></pre>
 
     <article>
         <h2>Поиск по индексированному полю</h2>
+        <p>Для поиска по другим полям объекта нам нужно создать дополнительную структуру данных, называемую «индекс»
+        (index).</p>
+        <p>Индекс является «расширением» к хранилищу, которое отслеживает данное поле объекта. Для каждого значения
+        этого поля хранится список ключей для объектов, которые имеют это значение. Ниже будет более подробная картина.</p>
+        <p>Синтаксис:</p>
+<pre><code class="language-javascript">objectStore.createIndex(name, keyPath, [options]);</code></pre>
+        <ul>
+            <li>
+                <p><code>name</code> - название индекса.</p>
+            </li>
+            <li>
+                <p><code>keyPath</code> - путь к полю объекта, которое индекс должен отслеживать (мы собираемся сделать
+                поиск по этому полю).</p>
+            </li>
+            <li>
+                <p><code>option</code> - необязательный объект со свойствами:</p>
+                <ul>
+                    <li>
+                        <p><code>unique</code> - если <code>true</code>, тогда в хранилище может быть только один
+                        объект с заданным значением в <code>keyPath</code>. Если мы попытаемся добавить дубликат,
+                        то индекс сгенерирует ошибку <code>ConstraintError</code>.</p>
+                    </li>
+                    <li>
+                        <p><code>multiEntry</code> - используется только, если <code>keyPath</code> является массивом.
+                        В этом случае, по умолчанию, индекс обрабатывает весь массив как ключ. Но если мы укажем
+                        <code>true</code> в <code>multiEntry</code>, тогда индекс будет хранить список объектов
+                        хранилища для каждого значения в этом массиве. Таким образом, элементы массива становятся
+                        ключами индекса.</p>
+                        <h3>Пример без <code>multiEntry</code></h3>
+<pre><code class="language-javascript">const store = db.createObjectStore('books', {keyPath: 'id'});
+
+// Индекс по тегам, но без multiEntry
+store.createIndex('tagsIndex', 'tags', {multiEntry: false});
+
+store.add({id: 1, title: 'CSS Mastery', tags: ['css', 'frontend']});
+store.add({id: 2, title: 'HTML Guide', tags: ['html', 'frontend']});</code></pre>
+                        <p>Теперь в индексе <code>tagsIndex</code> будет <b>2 записи</b>:</p>
+                        <ul>
+                            <li>
+                                <p>ключ = <code>['css', 'frontend']</code> → id=1</p>
+                            </li>
+                            <li>
+                                <p>ключ = <code>['html', 'frontend']</code> → id=2</p>
+                            </li>
+                        </ul>
+                        <p>Поиск по <code>'css'</code> <b>не найдет ничего</b>, потому что ключами индекса являются
+                        <b>массивы целиком</b>.</p>
+
+                        <h3>Пример с <code>multiEntry: true</code></h3>
+<pre><code class="language-javascript">store.createIndex('tagsIndex', 'tags', {multiEntry: true});</code></pre>
+                        <p>Теперь в индекс попадут <b>каждый элемент массива отдельно</b>:</p>
+                        <ul>
+                            <li>
+                                <p>ключ = <code>'css'</code> → id=1</p>
+                            </li>
+                            <li>
+                                <p>ключ = <code>'frontend'</code> → id=1</p>
+                            </li>
+                            <li>
+                                <p>ключ = <code>'html'</code> → id=2</p>
+                            </li>
+                            <li>
+                                <p>ключ = <code>'frontend'</code> → id=2</p>
+                            </li>
+                        </ul>
+                        <p>То есть поиск по <code>'css'</code> найдет книгу с id=1.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>В нашем примере мы храним книги с ключом <code>id</code>.</p>
+        <p>Допустим, мы хотим сделать поиск по полю <code>price</code>.</p>
+        <p>Сначала нам нужно создать индекс. Индексы должны создаваться в <code>upgradeneeded</code>, как и хранилище
+        объектов:</p>
+<pre><code class="language-javascript">openRequest.onupgradeneeded = function() {
+    // Мы должны создать индекс здесь, в versionchange транзакции
+    let books = db.createObjectStore('books', {keyPath: 'id'});
+    let index = books.createIndex('priceIndex', 'price');
+};</code></pre>
+        <ul>
+            <li>
+                <p>Индекс будет отслеживать поле <code>price</code>.</p>
+            </li>
+            <li>
+                <p>Поле <code>price</code> не уникальное, у нас может быть несколько книг с одинаковой ценой,
+                поэтому мы не устанавливаем опцию <code>unique</code>.</p>
+            </li>
+            <li>
+                <p>Поле <code>price</code> не является массивом, поэтому опция <code>multiEntry</code> не применима.</p>
+            </li>
+        </ul>
+        <p>Представим, что в нашем <code>books</code> есть 4 книги. Вот картинка, которая показывает что такое «индекс».</p>
+        <img src="images/indexeddb-index.svg" alt style="width: 40vw">
+        <p>Как уже говорилось, индекс для каждого значения <code>price</code> хранит список ключей, имеющих эту цену.</p>
+        <p>Индексы автоматически обновляются, нам не нужно об этом заботиться.</p>
+        <p>Сейчас, когда мы хотим найти объект по цене, мы просто применяем те же методы поиска к индексу:</p>
+<pre><code class="language-javascript">let transaction = db.transaction('books', 'readonly');
+let books = transaction.objectStore('books');
+let priceIndex = books.index('priceIndex');
+
+let request = priceIndex.getAll(10);
+
+request.onsuccess = function() {
+    if (request.result !== undefined) {
+        console.log('Книги: ', request.result); // Массив книг с ценой 10
+    } else {
+        console.log('Нет книг с такой ценой');
+    }
+};</code></pre>
+        <p>Мы также можем использовать <code>IDBKeyRange</code>, чтобы создать диапазон и найти дешевые/дорогие книги:</p>
+<pre><code class="language-javascript">// Найдем книги, где цена < 5
+let request = priceIndex.getAll(IDBKeyRange.upperBound(5, true));</code></pre>
+        <p>Индексы внутренне отсортированы по полю отслеживаемого объекта, в нашем случае по <code>price</code>.
+        Поэтому результат поиска будет уже отсортированный по полю <code>price</code>.</p>
+    </article>
+
+    <article>
+        <h2>Удаление из хранилища</h2>
+        <p>Метод <code>delete</code> удаляет значения по запросу, формат вызова такой же, как в <code>getAll</code>:</p>
+        <ul>
+            <li>
+                <p><code>delete(query)</code> - производит удаление соответствующих запросу значений.</p>
+            </li>
+        </ul>
+        <p>Например:</p>
+<pre><code class="language-javascript">// Удалить книгу с id='js'
+books.delete('js');</code></pre>
+        <p>Если нам нужно удалить книги, основываясь на цене или любом другом поле, сначала нам надо найти ключ в индексе,
+        а затем выполнить <code>delete</code>:</p>
+<pre><code class="language-javascript">// Найдем ключ, где цена = 5
+let request = priceIndex.getKey(5);
+
+request.onsuccess = function() {
+    let id = request.result;
+    let deleteRequest = books.delete(id);
+};</code></pre>
+        <p>Чтобы удалить все:</p>
+<pre><code class="language-javascript">books.clear(); // Очищаем хранилище</code></pre>
+    </article>
+
+    <article>
+        <h2>Курсоры</h2>
+        <p>Такие методы как <code>getAll/getAllKeys</code> возвращают массив ключей/значений.</p>
+        <p>Но хранилище объектов может быть огромным, больше, чем доступно памяти. Тогда метод <code>getAll</code>
+        вернет ошибку при попытке получить все записи в массиве.</p>
+        <p>Что делать?</p>
+        <p>Курсоры предоставляют возможности для работы в таких ситуациях.</p>
+        <p><b>Объект <i>cursor</i> идет по хранилищу объектов с заданным запросом (query) и возвращает пары
+        ключ/значение по очереди, а не все сразу. Это позволяет экономить память.</b></p>
+        <p>Так как хранилище объектов внутренне отсортировано по ключу, курсор проходит по хранилищу в порядке
+        хранения ключей (по возрастанию по умолчанию).</p>
+        <p>Синтаксис:</p>
+<pre><code class="language-javascript">// Как getAll, но с использованием курсора:
+let request = store.openCursor([query], [direction]);
+
+// Чтобы получить ключи, не значения (как getAllKeys): store.openKeyCursor</code></pre>
+        <ul>
+            <li>
+                <p><code>query</code> - ключ или диапазон ключей, как для <code>getAll</code>.</p>
+            </li>
+            <li>
+                <p><code>direction</code> - необязательный аргумент, доступные значения:</p>
+                <ul>
+                    <li>
+                        <p><code>'next'</code> - по умолчанию, курсор будет проходить от самого маленького ключа к большему.</p>
+                    </li>
+                    <li>
+                        <p><code>'prev'</code> - обратный порядок: от самого большого ключа к меньшему.</p>
+                    </li>
+                    <li>
+                        <p><code>'nextunique'</code>, <code>'prevunique'</code> - то же самое, но курсор пропускает
+                        записи с тем же ключом, что уже был (только для курсоров по индексам, например, для нескольких
+                        книг с <code>price=5</code>, будет возвращена только первая).</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p><b>Основным отличием курсора является то, что <code>request.onsuccess</code> генерируется многократно: один
+        раз для каждого результата.</b></p>
+        <p>Вот пример того, как использовать курсор:</p>
+<pre><code class="language-javascript">let transaction = db.transaction('books', 'readonly');
+let books = transaction.objectStore('books');
+
+let request = books.openCursor();
+
+// Вызывается для каждой найденной курсором книги
+request.onsuccess = function() {
+    let cursor = request.result;
+    if (cursor) {
+        let key = cursor.key; // Ключ книги (поле id)
+        let value = cursor.value; // Объект книги
+        console.log(key, value);
+        cursor.continue();
+    } else {
+        console.log('Книг больше нет');
+    }
+};</code></pre>
+        <p>Основные методы курсора:</p>
+        <ul>
+            <li>
+                <p><code>advance(count)</code> - продвинуть курсор на <code>count</code> позиций, пропустив значения.</p>
+            </li>
+            <li>
+                <p><code>continue([key])</code> - продвинуть курсор к следующему значению в диапазоне соответствия
+                (или для перехода к конкретному значению <code>key</code>, если указан).</p>
+            </li>
+        </ul>
+        <p>Независимо от того, есть ли еще значения, соответствующие курсору или нет - вызывается <code>onsuccess</code>,
+        затем в <code>result</code> мы можем получить курсор, указывающий на следующую запись или равны <code>undefined</code>.</p>
+        <p>В приведенном выше примере курсор был создан для хранилища объектов.</p>
+        <p>Но мы также можем создать курсор для индексов. Как мы помним, индексы позволяют искать по полю объекта.
+        Курсоры для индексов работают так же, как для хранилищ объектов - они позволяют экономить память, возвращая
+        одно значение в единицу времени.</p>
+        <p>Для курсоров по индексам <code>cursor.key</code> является ключом индекса (например <code>price</code>), нам
+        следует использовать свойство <code>cursor.primaryKey</code> как ключ объекта:</p>
+<pre><code class="language-javascript">let request = priceIndex.openCursor(IDBKeyRange.upperBound(5));
+
+// Вызывается для каждой записи
+request.onsuccess = function() {
+    let cursor = request.result;
+    if (cursor) {
+        let key = cursor.primaryKey; // Ключ в хранилище объектов (поле id)
+        let value = cursor.value; // Объект книги
+        let keyIndex = cursor.key; // Ключ индекса (поле price)
+        console.log(key, value);
+        cursor.continue();
+    } else {
+        console.log('Книг больше нет');
+    }
+};</code></pre>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>IndexedDB можно рассматривать как «localStorage на стероидах». Это простая база данных типа ключ-значение,
+        достаточно мощная для оффлайн приложений, но простая в использовании.</p>
+        <p>Основные этапы использования IndexedDB:</p>
+        <ol>
+            <li>
+                <p>Открыть (или создать) базу данных</p>
+<pre><code class="language-javascript">let openRequest = indexedDB.open('exampleDataBase', 1);</code></pre>
+            </li>
+            <li>
+                <p>Создать или обновить хранилища (и индексы)</p>
+<pre><code class="language-javascript">openRequest.onupgradeneeded = function(event) {
+    let db = openRequest.result;
+    let transaction = openRequest.transaction; // Транзакция апгрейда, типа versionchange
+    let oldVersion = event.oldVersion;
+
+    let store;
+    if (oldVersion < 1) {
+        store = db.createObjectStore('users', {keyPath: 'id'});
+    }
+    if (oldVersion < 2) {
+        store = transaction.objectStore('users');
+        store.createIndex('nameIndex', 'name', {unique: false, multiEntry: false});
+    }
+};</code></pre>
+            </li>
+            <li>
+                <p>Обработать успешное открытие</p>
+<pre><code class="language-javascript">openRequest.onsuccess = function() {
+    let db = openRequest.result;
+
+    db.onversionchange = function() {
+        db.close();
+        alert('База данных устарела, пожалуйста, перезагрузите страницу.');
+    }
+};
+
+openRequest.onblocked = function() {
+    // Это означает, что есть еще одно открытое соединение с той же базой данных
+    // и оно не было закрыто после того, как для него сработал db.onversionchange
+};</code></pre>
+            </li>
+            <li>
+                <p>Создать транзакцию</p>
+<pre><code class="language-javascript">let transaction = db.transaction('users', 'readwrite');
+let store = transaction.objectStore('users');</code></pre>
+            </li>
+            <li>
+                <p>Для поиска по ключу вызываем методы непосредственно у хранилища объектов.</p>
+                <ul>
+                    <li>
+                        <p>Для поиска по любому полю объекта создайте индекс.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Если данные не помещаются в памяти, то используйте курсор.</p>
+            </li>
+            <li>
+                <p>Обработать результат запроса</p>
+<pre><code class="language-javascript">let getRequest = store.get(1);
+getRequest.onsuccess = () => console.log(getRequest.result);</code></pre>
+            </li>
+            <li>
+                <p>Обработать завершение транзакции</p>
+<pre><code class="language-javascript">transaction.oncomplete = () => console.log('Транзакция завершена');
+transaction.onerror = () => console.log('Ошибка транзакции');
+transaction.onabort = () => console.log('Транзакция откатилась');</code></pre>
+            </li>
+        </ol>
+
+        <h3>Демо-приложение:</h3>
+        <div class="demoApp">
+            <button id="addBook">Добавить книгу</button>
+            <button id="clearStore">Очистить хранилище</button>
+            <p>Список книг:</p>
+            <ol id="booksList"></ol>
+        </div>
+        <script>
+            let addBookButton = document.querySelector('#addBook');
+            let clearStoreButton = document.querySelector('#clearStore');
+            let booksList = document.querySelector('#booksList');
+            //indexedDB.deleteDatabase('booksDB');
+
+            let db;
+            let openRequest = indexedDB.open('booksDB', 1);
+
+            function fillEmptyBookList() {
+                let li = document.createElement('li');
+                let p = document.createElement('p');
+                p.innerHTML = 'Книг пока нет. Пожалуйста, добавьте книги.'
+                li.append(p);
+                booksList.append(li);
+            }
+
+            openRequest.onupgradeneeded = function(event) {
+                db = openRequest.result;
+                let oldVersion = event.oldVersion;
+
+                if (oldVersion < 1) {
+                    db.createObjectStore('books', {keyPath: 'name'});
+                }
+            };
+
+            openRequest.onsuccess = function() {
+                db = openRequest.result;
+                let transaction = db.transaction('books', 'readonly');
+                let store = transaction.objectStore('books');
+
+                let countRequest = store.count();
+
+                countRequest.onsuccess = function() {
+                    if (!countRequest.result) {
+                        fillEmptyBookList();
+                    } else {
+                        let cursorRequest = store.openCursor();
+
+                        cursorRequest.onsuccess = function() {
+                        let cursor = cursorRequest.result;
+                        if (cursor) {
+                            let li = document.createElement('li');
+                            let p = document.createElement('p');
+                            p.innerHTML = `Название: ${cursor.primaryKey}<br>Цена: ${cursor.value.price}`;
+                            li.append(p);
+                            booksList.append(li);
+                            cursor.continue();
+                        }
+                        };
+                    }
+                };
+            };
+
+            addBookButton.addEventListener('click', function() {
+                let bookName = prompt('Название книги');
+                let bookPrice = prompt('Цена книги');
+
+                if (!bookName || !bookPrice) return;
+
+                let transaction = db.transaction('books', 'readwrite');
+                let store = transaction.objectStore('books');
+
+                let countRequest = store.count();
+                countRequest.onsuccess = function() {
+                    if (!countRequest.result) {
+                        booksList.firstElementChild.remove();
+                    }
+                    store.add({name: bookName, price: bookPrice});
+                    let li = document.createElement('li');
+                    let p = document.createElement('p');
+                    p.innerHTML = `Название: ${bookName}<br>Цена: ${bookPrice}`;
+                    li.append(p);
+                    booksList.append(li);
+                };
+                addBookButton.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+
+            clearStoreButton.addEventListener('click', function() {
+                let transaction = db.transaction('books', 'readwrite');
+                let store = transaction.objectStore('books');
+
+                let clearRequest = store.clear();
+
+                clearRequest.onsuccess = function() {
+                    booksList.innerHTML = '';
+                    fillEmptyBookList();
+                };
+            });
+        </script>
     </article>
 </body>
 </html>
