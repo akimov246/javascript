@@ -931,7 +931,7 @@ transaction.onabort = () => console.log('Транзакция откатилас
                         let cursorRequest = store.openCursor();
 
                         cursorRequest.onsuccess = function() {
-                            let cursor = cursorRequest.result;
+                        let cursor = cursorRequest.result;
                             if (cursor) {
                                 let li = document.createElement('li');
                                 let p = document.createElement('p');
