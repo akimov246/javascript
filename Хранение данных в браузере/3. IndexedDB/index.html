@@ -931,15 +931,15 @@ transaction.onabort = () => console.log('Транзакция откатилас
                         let cursorRequest = store.openCursor();
 
                         cursorRequest.onsuccess = function() {
-                        let cursor = cursorRequest.result;
-                        if (cursor) {
-                            let li = document.createElement('li');
-                            let p = document.createElement('p');
-                            p.innerHTML = `Название: ${cursor.primaryKey}<br>Цена: ${cursor.value.price}`;
-                            li.append(p);
-                            booksList.append(li);
-                            cursor.continue();
-                        }
+                            let cursor = cursorRequest.result;
+                            if (cursor) {
+                                let li = document.createElement('li');
+                                let p = document.createElement('p');
+                                p.innerHTML = `Название: ${cursor.primaryKey}<br>Цена: ${cursor.value.price}`;
+                                li.append(p);
+                                booksList.append(li);
+                                cursor.continue();
+                            }
                         };
                     }
                 };
