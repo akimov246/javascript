@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Кривые Безье</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        span.t {
+            font-size: 2rem;
+            position: relative;
+            top: -0.5rem;
+            left: 0.5rem;
+        }
+
+        button.play {
+            height: 3rem;
+            width: 3rem;
+            background: url("./icons/icons8-воспроизведение-50.png") no-repeat center center;
+            margin-left: 0.5rem;
+            transition: background 0.2s ease;
+        }
+
+        .container {
+            padding: 0;
+            width: max-content;
+            height: max-content;
+            box-sizing: border-box;
+            position: relative;
+            margin-left: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        canvas {
+            margin: 0;
+            padding: 0;
+            display: block;
+        }
+
+        .point {
+            display: flex;
+            width: 1rem;
+            height: 1rem;
+            border: 1px solid orange;
+            border-radius: 50%;
+            background-color: white;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            cursor: pointer;
+            user-select: none;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Кривые Безье</h2>
+        <p>Кривые Безье используются в компьютерной графике для рисования плавных изгибов, в CSS-анимации и много где
+        еще.</p>
+        <p>Это очень простая вещь, которую стоит изучить один раз, а затем чувствовать себя комфортно в мире векторной
+        графики и продвинутых анимаций.</p>
+
+        <article class="note">
+            <h3>Немного теории</h3>
+            <p>Эта статья дает теоретическое, но очень необходимое представление о том, что такое кривые Безье, в то
+            время как <a target="_blank" href="https://learn.javascript.ru/css-animations#bezier-curve">следующая</a>
+            показывает, как мы можем использовать их для CSS-анимаций.</p>
+            <p>Пожалуйста, найдите время, чтобы почитать и поменять концепцию, это сослужит вам хорошую службу.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Опорные точки</h2>
+        <p><a target="_blank" href="https://ru.wikipedia.org/wiki/%D0%9A%D1%80%D0%B8%D0%B2%D0%B0%D1%8F_%D0%91%D0%B5%D0%B7%D1%8C%D0%B5">Кривая Безье</a>
+        задается опорными точками.</p>
+        <p>Их может быть две, три, четыре или больше. Например:</p>
+        <p>По двум точкам:</p>
+        <img src="images/bezier2.svg" alt style="width: 10vw">
+        <p>По трем точкам:</p>
+        <img src="images/bezier3.svg" alt style="width: 10vw">
+        <p>По четырем точкам:</p>
+        <img src="images/bezier4.svg" alt style="width: 10vw">
+        <p>Если вы посмотрите внимательно на эти кривые, то «на глазок» заметите:</p>
+        <ol>
+            <li>
+                <p><b>Точки не всегда лежат на кривой.</b> Это совершенно нормально, как именно строится кривая
+                мы рассмотрим чуть позже.</p>
+            </li>
+            <li>
+                <p><b>Степень кривой равна числу точек минус один.</b> Для двух точек - это линейная кривая (т.е. первая),
+                для трех точек - квадратическая кривая (парабола), для четырех - кубическая.</p>
+            </li>
+            <li>
+                <p><b>Кривая всегда находится внутри
+                <a target="_blank" href="https://ru.wikipedia.org/wiki/%D0%92%D1%8B%D0%BF%D1%83%D0%BA%D0%BB%D0%B0%D1%8F_%D0%BE%D0%B1%D0%BE%D0%BB%D0%BE%D1%87%D0%BA%D0%B0">выпуклой оболочки</a>,
+                образованной опорными точками:</b></p>
+                <img src="images/bezier4-e.svg" alt style="width: 10vw">
+                <img src="images/bezier3-e.svg" alt style="width: 10vw">
+            </li>
+        </ol>
+        <p>Благодаря последнему свойству в компьютерной графике можно оптимизировать проверку пересечения двух кривых.
+        Если их выпуклые оболочки не пересекаются, то и кривые тоже не пересекутся. Таким образом, проверка
+        пересечения выпуклых оболочек в первую очередь может дать быстрый ответ на вопрос о наличии пересечения.
+        Проверить пересечение или выпуклые оболочки гораздо проще, потому что это прямоугольники, треугольники и т.д.,
+        гораздо более простые фигуры, чем кривая.</p>
+        <p><b>Основная ценность кривых Безье для рисования в том, что, двигая точки, кривую можно менять, причем
+        кривая при этом меняется интуитивно понятным образом.</b></p>
+        <p>Попробуйте двигать точки мышью в примере ниже:</p>
+        <div class="container" id="example1">
+            <canvas width="300" height="300"></canvas>
+            <div class="point" id="11">1</div>
+            <div class="point" id="12">2</div>
+            <div class="point" id="13">3</div>
+            <div class="point" id="14">4</div>
+        </div>
+        <script type="module">
+            import * as Bezier from './script.js';
+
+            const container1 = document.getElementById('example1');
+            const canvas1 = container1.querySelector('canvas');
+
+            let point11 = document.getElementById('11');
+            let point12 = document.getElementById('12');
+            let point13 = document.getElementById('13');
+            let point14 = document.getElementById('14');
+            let containerCoords = container1.getBoundingClientRect();
+            point11.style.left = 0 + 'px';
+            point11.style.top = containerCoords.height + 'px';
+            point12.style.left = containerCoords.width / 2 + 'px';
+            point12.style.top = containerCoords.height + 'px';
+            point13.style.left = containerCoords.width / 2 + 'px';
+            point13.style.top = 0 + 'px';
+            point14.style.left = containerCoords.width + 'px';
+            point14.style.top = 0 + 'px';
+
+            Bezier.drawGrid(canvas1);
+            Bezier.drawBezier(canvas1, [
+                parseInt(point11.style.left),
+                parseInt(point11.style.top),
+                parseInt(point12.style.left),
+                parseInt(point12.style.top),
+                parseInt(point13.style.left),
+                parseInt(point13.style.top),
+                parseInt(point14.style.left),
+                parseInt(point14.style.top),
+            ]);
+        </script>
+        <p><b>Как можно заметить, кривая натянута по касательным 1 → 2 и 3 → 4.</b></p>
+        <p>После небольшой практики становится понятно, как расположить точки, чтобы получить нужную форму. А соединяя
+        несколько кривых, можно получить практически что угодно.</p>
+        <p>Вот некоторые примеры:</p>
+        <img src="images/bezier-car.svg" alt style="width: 15vw">
+        <img src="images/bezier-letter.svg" alt style="width: 10vw">
+        <img src="images/bezier-vase.svg" alt style="width: 7vw">
+    </article>
+
+    <article>
+        <h2>Алгоритм «де Кастельжо»</h2>
+        <p>Есть математическая формула для кривых Безье, но давайте рассмотрим ее чуть позже, потому что
+        <a target="_blank" href="https://ru.wikipedia.org/wiki/%D0%90%D0%BB%D0%B3%D0%BE%D1%80%D0%B8%D1%82%D0%BC_%D0%B4%D0%B5_%D0%9A%D0%B0%D1%81%D1%82%D0%B5%D0%BB%D1%8C%D0%B6%D0%BE">Алгоритм де Кастельжо</a>
+        идентичен математическому определению кривой и наглядно показывает, как она строится.</p>
+        <p>Рассмотрим его на примере трех точек (точки 1, 2 и 3 можно двигать). Нажатие на кнопку «play» запустит демонстрацию.</p>
+        <button class="play"></button>
+        <span class="t">t = 0</span>
+        <div class="container" id="example2">
+            <canvas width="300" height="300"></canvas>
+            <div class="point" id="21">1</div>
+            <div class="point" id="22">2</div>
+            <div class="point" id="23">3</div>
+        </div>
+        <script type="module">
+            import * as Bezier from './script.js';
+
+            const container2 = document.getElementById('example2');
+            const canvas2 = container2.querySelector('canvas');
+
+            let point21 = document.getElementById('21');
+            let point22 = document.getElementById('22');
+            let point23 = document.getElementById('23');
+
+            let containerCoords = container2.getBoundingClientRect();
+            point21.style.left = 0 + 'px';
+            point21.style.top = containerCoords.height + 'px';
+            point22.style.left = containerCoords.width / 2 + 'px';
+            point22.style.top = 0 + 'px';
+            point23.style.left = containerCoords.width + 'px';
+            point23.style.top = containerCoords.height + 'px';
+
+            Bezier.drawGrid(canvas2);
+            Bezier.drawBezier(canvas2, [
+                parseInt(point21.style.left),
+                parseInt(point21.style.top),
+                parseInt(point22.style.left),
+                parseInt(point22.style.top),
+                parseInt(point23.style.left),
+                parseInt(point23.style.top),
+            ]);
+
+            container2.previousElementSibling.previousElementSibling.addEventListener('click', async function(event) {
+                    Bezier.animatedDraw(canvas2, true);
+            });
+        </script>
+        <p><b>Построение кривой Безье с 3 точками по «алгоритму де Кастельжо».</b></p>
+        <ol>
+            <li>
+                <p>Рисуются опорные точки. В примере это <code>1</code>, <code>2</code>, <code>3</code>.</p>
+            </li>
+            <li>
+                <p>Строятся отрезки между опорными точками в следующем порядке 1 → 2 → 3. На рисунке они
+                <span style="color: orange">оранжевые</span>.</p>
+            </li>
+            <li>
+                <p>Параметр <code>t</code> «пробегает» значения от <code>0</code> до <code>1</code>.
+                <p>Для каждого из этих значений <code>t</code>:</p>
+                <ul>
+                    <li>
+                        <p>На каждом из <span>оранжевых</span> отрезков берется точка, находящаяся на расстоянии,
+                        пропорциональном <code>t</code>, от его начала. Так как отрезков два, то и точек две.</p>
+                        <p>Например, при <code>t = 0</code> - точки будут в начале, при <code>t = 0.25</code> - на
+                        расстоянии в 25% от начала отрезка, при <code>t = 0.5</code> - 50% (на середине), при
+                        <code>t = 1</code> - в конце отрезков.</p>
+                    </li>
+                    <li>
+                        <p>Эти точки соединяются. На рисунке ниже соединяющий их отрезок изображен
+                        <span style="color: blue">синим</span>.</p>
+                    </li>
+                </ul>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>При <code>t = 0.25</code></th>
+                        <th>При <code>t = 0.5</code></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td><img src="images/bezier3-draw1.svg" alt></td>
+                        <td><img src="images/bezier3-draw2.svg" alt></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </li>
+            <li>
+                <p>На получившемся <span style="color: blue">синем</span> отрезке берется точка на расстоянии,
+                соответствующем <code>t</code>. То есть, для <code>t = 0.25</code> (левый рисунок) получаем точку
+                в конце первой четверти отрезка, для <code>t = 0.5</code> (правый рисунок) - в середине отрезка.
+                На рисунках выше эта точка отмечена <span style="color: red">красным</span>.</p>
+            </li>
+            <li>
+                <p>По мере того, как <code>t</code> «пробегает» последовательность от <code>0</code> до <code>1</code>,
+                каждое значение <code>t</code> добавляет к кривой точку. Совокупность таких точек для всех
+                значений образует кривую Безье. Она <span style="color: red">красная</span> и имеет параболическую
+                форму на картинках выше.</p>
+            </li>
+        </ol>
+        <p>Был описан процесс для построения по трем точкам. Но то же самое происходит и с четырьмя точками.</p>
+        <p>Демо для четырех точек (точки можно двигать):</p>
+        <button class="play"></button>
+        <span class="t">t = 0</span>
+        <div class="container" id="example3">
+            <canvas width="300" height="300"></canvas>
+            <div class="point" id="31">1</div>
+            <div class="point" id="32">2</div>
+            <div class="point" id="33">3</div>
+            <div class="point" id="34">4</div>
+        </div>
+        <script type="module">
+            import * as Bezier from './script.js';
+
+            const container = document.getElementById('example3');
+            const canvas = container.querySelector('canvas');
+
+            let point1 = document.getElementById('31');
+            let point2 = document.getElementById('32');
+            let point3 = document.getElementById('33');
+            let point4 = document.getElementById('34');
+
+            let containerCoords = container.getBoundingClientRect();
+            point1.style.left = 0 + 'px';
+            point1.style.top = containerCoords.height + 'px';
+            point2.style.left = containerCoords.width / 2 + 'px';
+            point2.style.top = containerCoords.height + 'px';
+            point3.style.left = containerCoords.width / 2 + 'px';
+            point3.style.top = 0 + 'px';
+            point4.style.left = containerCoords.width + 'px';
+            point4.style.top = 0 + 'px';
+
+            Bezier.drawGrid(canvas);
+            Bezier.drawBezier(canvas, [
+                parseInt(point1.style.left),
+                parseInt(point1.style.top),
+                parseInt(point2.style.left),
+                parseInt(point2.style.top),
+                parseInt(point3.style.left),
+                parseInt(point3.style.top),
+                parseInt(point4.style.left),
+                parseInt(point4.style.top),
+            ]);
+
+            container.previousElementSibling.previousElementSibling.addEventListener('click', async function(event) {
+                Bezier.animatedDraw(canvas, true);
+            });
+        </script>
+        <p>Алгоритм для 4 точек:</p>
+        <ul>
+            <li>
+                <p>Точки по порядку соединяются отрезками: 1 → 2, 2 → 3, 3 → 4. Получается три
+                <span style="color: orange">оранжевых</span> отрезка.</p>
+            </li>
+            <li>
+                <p>Для <code>t</code> на отрезке от <code>0</code> до <code>1</code>"</p>
+                <ul>
+                    <li>
+                        <p>На отрезках берутся точки, соответствующие текущему <code>t</code>, соединяются.
+                        Получается два <span style="color: green">зеленых</span> отрезка.</p>
+                    </li>
+                    <li>
+                        <p>На этих отрезках берутся точки, соответствующие текущему <code>t</code>, соединяются.
+                        Получается один <span style="color: blue">синий</span> отрезок.</p>
+                    </li>
+                    <li>
+                        <p>На синем отрезке берется точка, соответствующая текущему <code>t</code>. При запуске
+                        примера выше она <span style="color: red">красная</span>.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p>Эти точки вместе описывают кривую.</p>
+            </li>
+        </ul>
+        <p>Алгоритм является рекурсивным и может быть обобщен на любое количество опорных точек.</p>
+        <p>Дано N опорных точек:</p>
+        <ol>
+            <li>
+                <p>Соединяем их, чтобы получить N-1 отрезков.</p>
+            </li>
+            <li>
+                <p>Затем для каждого <code>t</code> от <code>0</code> до <code>1</code> берем точку на каждом отрезке
+                на расстоянии пропорциональном <code>t</code> и соединяем их. Там будет N-2 отрезков.</p>
+            </li>
+            <li>
+                <p>Повторяем 2 шаг, пока не останется одна точка.</p>
+            </li>
+        </ol>
+        <p>Эти точки образуют кривую.</p>
+        <p><b>Запускайте примеры, чтобы ясно увидеть отрезки и то, как строится кривая.</b></p>
+        <p>Кривая, которая выглядит как <code>y = 1 / t</code>:</p>
+        <button class="play"></button>
+        <span class="t">t = 0</span>
+        <div class="container" id="example4">
+            <canvas width="300" height="300"></canvas>
+            <div class="point" id="41">1</div>
+            <div class="point" id="42">2</div>
+            <div class="point" id="43">3</div>
+            <div class="point" id="44">4</div>
+        </div>
+        <script type="module">
+            import * as Bezier from './script.js';
+
+            const container = document.getElementById('example4');
+            const canvas = container.querySelector('canvas');
+
+            let point1 = document.getElementById('41');
+            let point2 = document.getElementById('42');
+            let point3 = document.getElementById('43');
+            let point4 = document.getElementById('44');
+
+            let containerCoords = container.getBoundingClientRect();
+            point1.style.left = 0 + 'px';
+            point1.style.top = containerCoords.height + 'px';
+            point2.style.left = 0 + 'px';
+            point2.style.top = containerCoords.height * 0.25 + 'px';
+            point3.style.left = containerCoords.width * 0.25 + 'px';
+            point3.style.top = 0 + 'px';
+            point4.style.left = containerCoords.width + 'px';
+            point4.style.top = 0 + 'px';
+
+            Bezier.drawGrid(canvas);
+            Bezier.drawBezier(canvas, [
+                parseInt(point1.style.left),
+                parseInt(point1.style.top),
+                parseInt(point2.style.left),
+                parseInt(point2.style.top),
+                parseInt(point3.style.left),
+                parseInt(point3.style.top),
+                parseInt(point4.style.left),
+                parseInt(point4.style.top),
+            ]);
+
+            container.previousElementSibling.previousElementSibling.addEventListener('click', async function(event) {
+                Bezier.animatedDraw(canvas, true);
+            });
+        </script>
+        <p>Зигзагообразные опорные точки тоже работают нормально:</p>
+        <button class="play"></button>
+        <span class="t">t = 0</span>
+        <div class="container" id="example5">
+            <canvas width="300" height="300"></canvas>
+            <div class="point" id="51">1</div>
+            <div class="point" id="52">2</div>
+            <div class="point" id="53">3</div>
+            <div class="point" id="54">4</div>
+        </div>
+        <script type="module">
+            import * as Bezier from './script.js';
+
+            const container = document.getElementById('example5');
+            const canvas = container.querySelector('canvas');
+
+            let point1 = document.getElementById('51');
+            let point2 = document.getElementById('52');
+            let point3 = document.getElementById('53');
+            let point4 = document.getElementById('54');
+
+            let containerCoords = container.getBoundingClientRect();
+            point1.style.left = 0 + 'px';
+            point1.style.top = containerCoords.height + 'px';
+            point2.style.left = containerCoords.width + 'px';
+            point2.style.top = containerCoords.height / 2+ 'px';
+            point3.style.left = 0 + 'px';
+            point3.style.top = containerCoords.height / 2 + 'px';
+            point4.style.left = containerCoords.width + 'px';
+            point4.style.top = 0 + 'px';
+
+            Bezier.drawGrid(canvas);
+            Bezier.drawBezier(canvas, [
+                parseInt(point1.style.left),
+                parseInt(point1.style.top),
+                parseInt(point2.style.left),
+                parseInt(point2.style.top),
+                parseInt(point3.style.left),
+                parseInt(point3.style.top),
+                parseInt(point4.style.left),
+                parseInt(point4.style.top),
+            ]);
+
+            container.previousElementSibling.previousElementSibling.addEventListener('click', async function(event) {
+                Bezier.animatedDraw(canvas, true);
+            });
+        </script>
+        <p>Создание петли возможно:</p>
+        <button class="play"></button>
+        <span class="t">t = 0</span>
+        <div class="container" id="example6">
+            <canvas width="300" height="300"></canvas>
+            <div class="point" id="61">1</div>
+            <div class="point" id="62">2</div>
+            <div class="point" id="63">3</div>
+            <div class="point" id="64">4</div>
+        </div>
+        <script type="module">
+            import * as Bezier from './script.js';
+
+            const container = document.getElementById('example6');
+            const canvas = container.querySelector('canvas');
+
+            let point1 = document.getElementById('61');
+            let point2 = document.getElementById('62');
+            let point3 = document.getElementById('63');
+            let point4 = document.getElementById('64');
+
+            let containerCoords = container.getBoundingClientRect();
+            point1.style.left = 0 + 'px';
+            point1.style.top = containerCoords.height + 'px';
+            point2.style.left = containerCoords.width + 'px';
+            point2.style.top = containerCoords.height / 2 + 'px';
+            point3.style.left = 0 + 'px';
+            point3.style.top = 0 + 'px';
+            point4.style.left = containerCoords.width / 2+ 'px';
+            point4.style.top = containerCoords.height + 'px';
+
+            Bezier.drawGrid(canvas);
+            Bezier.drawBezier(canvas, [
+                parseInt(point1.style.left),
+                parseInt(point1.style.top),
+                parseInt(point2.style.left),
+                parseInt(point2.style.top),
+                parseInt(point3.style.left),
+                parseInt(point3.style.top),
+                parseInt(point4.style.left),
+                parseInt(point4.style.top),
+            ]);
+
+            container.previousElementSibling.previousElementSibling.addEventListener('click', async function(event) {
+                Bezier.animatedDraw(canvas, true);
+            });
+        </script>
+        <p>Негладка кривая Безье (да, это тоже возможно):</p>
+        <button class="play"></button>
+        <span class="t">t = 0</span>
+        <div class="container" id="example7">
+            <canvas width="300" height="300"></canvas>
+            <div class="point" id="71">1</div>
+            <div class="point" id="72">2</div>
+            <div class="point" id="73">3</div>
+            <div class="point" id="74">4</div>
+        </div>
+        <script type="module">
+            import * as Bezier from './script.js';
+
+            const container = document.getElementById('example7');
+            const canvas = container.querySelector('canvas');
+
+            let point1 = document.getElementById('71');
+            let point2 = document.getElementById('72');
+            let point3 = document.getElementById('73');
+            let point4 = document.getElementById('74');
+
+            let containerCoords = container.getBoundingClientRect();
+            point1.style.left = 0 + 'px';
+            point1.style.top = containerCoords.height + 'px';
+            point2.style.left = containerCoords.width + 'px';
+            point2.style.top = 0 + 'px';
+            point3.style.left = 0 + 'px';
+            point3.style.top = 0 + 'px';
+            point4.style.left = containerCoords.width + 'px';
+            point4.style.top = containerCoords.height + 'px';
+
+            Bezier.drawGrid(canvas);
+            Bezier.drawBezier(canvas, [
+                parseInt(point1.style.left),
+                parseInt(point1.style.top),
+                parseInt(point2.style.left),
+                parseInt(point2.style.top),
+                parseInt(point3.style.left),
+                parseInt(point3.style.top),
+                parseInt(point4.style.left),
+                parseInt(point4.style.top),
+            ]);
+
+            container.previousElementSibling.previousElementSibling.addEventListener('click', async function(event) {
+                Bezier.animatedDraw(canvas, true);
+            });
+        </script>
+        <p>Если в описании алгоритма есть что-то непонятное, посмотрите «живые» примеры выше, они наглядно показывают,
+        как строится кривая.</p>
+        <p>Поскольку алгоритм является рекурсивным, мы можем построить кривые безье любого порядка, используя
+        5, 6 или более опорных точек. Но на практике много точек не так полезны. Обычно, мы берем 2-3 точки, а для
+        сложных линий склеиваем несколько кривых. Это проще для разработки и расчета.</p>
+
+        <article class="note">
+            <h3>Для задания кривой Безье используются опорные точки. Как видим, они не находятся на кривой, кроме
+            первой и последней.</h3>
+            <p>Иногда перед нами стоит другая задача: нарисовать кривую <i>через</i> несколько точек, чтобы все они
+            были на одной гладкой кривой. Эта задача называется
+            <a target="_blank" href="https://en.wikipedia.org/wiki/Interpolation">интерполяцией</a>, а она за рамками
+            нашего изложения.</p>
+            <p>Для таких кривых существуют математические формулы, например,
+            <a target="_blank" href="https://ru.wikipedia.org/wiki/%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%BF%D0%BE%D0%BB%D1%8F%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D1%8B%D0%B9_%D0%BC%D0%BD%D0%BE%D0%B3%D0%BE%D1%87%D0%BB%D0%B5%D0%BD_%D0%9B%D0%B0%D0%B3%D1%80%D0%B0%D0%BD%D0%B6%D0%B0">полином Лагранжа</a>.
+            В компьютерной графике <a target="_blank" href="https://ru.wikipedia.org/wiki/%D0%9A%D1%83%D0%B1%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%B8%D0%B9_%D1%81%D0%BF%D0%BB%D0%B0%D0%B9%D0%BD">сплайн-интерполяция</a>
+            часто используется для построения плавных кривых, соединяющих множество точек.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Математика</h2>
+        <p>Кривая Безье может быть описана с помощью математической формулы.</p>
+        <p>Как мы видели, на самом деле нет необходимости ее знать, большинство людей просто рисуют кривую,
+        перемещая точки с помощью мыши. Но если вы увлекаетесь математикой - вот она.</p>
+        <p>Координаты кривой с опорными точками <code>Pᵢ</code>: первая опорная точка имеет координаты
+        <code>P₁ = (x₁, y₁)</code>, вторая: <code>P₂ = (x₂, y₂)</code> и т.д., описываются уравнением, зависящим от
+        параметра <code>t</code> на отрезке <code>[0, 1]</code>.</p>
+        <ul>
+            <li>
+                <p>Формула для 2-х точечной кривой:</p>
+                <code>P = (1 - t)P₁ + tP₂</code>
+            </li>
+            <li>
+                <p>Для 3 опорных точек:</p>
+                <code>P = (1 - t)²P₁ + 2(1 - t)tP₂ + t²P₃</code>
+            </li>
+            <li>
+                <p>Для 4 опорных точек:</p>
+                <code>P = (1 - t)³P₁ + 3(1 - t)²tP₂ + 3(1 - t)t²P₃ + t³P₄</code>
+            </li>
+        </ul>
+        <p>Это векторные уравнения. Другими словами, мы можем поставить <code>x</code> и <code>y</code> вместо
+        <code>P</code>, чтобы получить соответствующие координаты.</p>
+        <p>Например, 3-точечная кривая образована точками <code>(x, y)</code>, рассчитанными как:</p>
+        <ul>
+            <li>
+                <p><code>x = (1 - t)²x₁ + 2(1 - t)tx₂ + t²x₃</code></p>
+            </li>
+            <li>
+                <p><code>x = (1 - t)²y₁ + 2(1 - t)ty₂ + t²y₃</code></p>
+            </li>
+        </ul>
+        <p>Вместо <code>x₁</code>, <code>y₁</code>, <code>x₂</code>, <code>y₂</code>, <code>x₃</code>, <code>y₃</code>
+        мы должны поместить координаты 3 опорных точек, а затем при перемещении <code>t</code> от <code>0</code>
+        до <code>1</code>, мы получим <code>(x, y)</code> кривой.</p>
+        <p>Например, если опорными точками являются <code>(0, 0)</code>, <code>(0.5, 1)</code> и <code>(1, 0)</code>,
+        уравнения становятся:</p>
+        <ul>
+            <li>
+                <p><code>x = (1 - t)² * 0 + 2(1 - t)t * 0.5 + t² * 1 = (1 - t)t + t² = t</code></p>
+            </li>
+            <li>
+                <p><code>y = (1 - t)² * 0 + 2(1 - t)t * 1 + t² * 0 = 2(1 - t)t = -2t² + 2t</code></p>
+            </li>
+        </ul>
+        <p>Теперь в то время как <code>t</code> «пробегает» от <code>0</code> до <code>1</code>, набор значений
+        <code>(x, y)</code> для каждого <code>t</code> образует кривую для таких опорных точек.</p>
+    </article>
+
+    <article>
+        <h2>Кривые Безье задаются опорными точками.</h2>
+        <p>Мы рассмотрели два определения кривых:</p>
+        <ol>
+            <li>
+                <p>Через математическую формулу.</p>
+            </li>
+            <li>
+                <p>Использование процесса рисования: алгоритм де Кастельжо.</p>
+            </li>
+        </ol>
+        <p>Их удобство в том, что:</p>
+        <ul>
+            <li>
+                <p>Можно рисовать плавные линии с помощью мыши, перемещая опорные точки.</p>
+            </li>
+            <li>
+                <p>Сложные формы могут быть сделаны из нескольких кривых Безье.</p>
+            </li>
+        </ul>
+        <p>Применение:</p>
+        <ul>
+            <li>
+                <p>В компьютерной графике, моделировании, в графических редакторах. Шрифты описываются с помощью кривых
+                Безье.</p>
+            </li>
+            <li>
+                <p>В веб-разработке - для графики на Canvas или в формате SVG.</p>
+            </li>
+            <li>
+                <p>В CSS-анимации для задания траектории или скорости передвижения.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
