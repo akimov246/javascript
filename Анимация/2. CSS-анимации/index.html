@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSS-анимации</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .color {
+            transition-property: background-color;
+            transition-duration: 3s;
+        }
+
+        .growing {
+            transition: font-size 3s, color 2s;
+        }
+
+        .animate {
+            transform: translateX(-90%);
+            transition-property: transform;
+            transition-duration: 9s;
+            transition-timing-function: linear;
+            user-select: none;
+        }
+
+        .animate_steps_start {
+            transform: translateX(-90%);
+            transition: transform 9s steps(9, start);
+            user-select: none;
+        }
+
+        .animate_steps_end {
+            transform: translateX(-90%);
+            transition: transform 9s steps(9, end);
+            user-select: none;
+        }
+
+        .train{
+            position: relative;
+            left: 0;
+            cursor: pointer;
+        }
+
+        .linear {
+            transition: left 5s cubic-bezier(0, 0, 1, 1);
+        }
+
+        .easy_out {
+            transition: left 5s cubic-bezier(0, 0.5, 0.5, 1);
+        }
+
+        .outbound {
+            transition: left 5s cubic-bezier(0.5, -1, 0.5, 2);
+        }
+
+        .boat {
+            cursor: pointer;
+            transition: margin-left 5s ease-in-out, transform 1s;
+        }
+
+        .boat.scale {
+            transform: scaleX(-1);
+        }
+
+        @keyframes go-left-right {
+            from {left: 0;}
+            to {left: calc(100% - 50px);}
+        }
+
+        .progress {
+            cursor: pointer;
+            position: relative;
+            width: 50px;
+            height: 20px;
+            border: 2px solid green;
+            background: lime;
+            animation: go-left-right 3s ease-in-out infinite alternate;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>CSS-анимации</h2>
+        <p>CSS позволяет создавать простые анимации без использования JavaScript.</p>
+        <p>JavaScript может быть использован для управления такими CSS-анимациями. Это позволяет делать более сложные
+        анимации, используя небольшие кусочки кода.</p>
+    </article>
+
+    <article>
+        <h2>CSS-переходы</h2>
+        <p>Идея CSS-переходов проста: мы указываем, что некоторое свойство должно быть анимировано, и как оно должно
+        быть анимировано. А когда свойство меняется, браузер сам обработает это изменение и отрисует анимацию.</p>
+        <p>Все что нам нужно, чтобы начать анимацию - это изменить свойство, а дальше браузер сделает плавный переход
+        сам.</p>
+        <p>Например, CSS-код ниже анимирует трехсекундное изменение <code>background-color</code>:</p>
+<pre><code class="language-css">.animated {
+    transition-property: background-color;
+    transition-duration: 3s;
+}</code></pre>
+        <p>Теперь, если элементу присвоен класс <code>.animated</code>, любое изменение свойства <code>background-color</code>
+        будет анимироваться в течение трех секунд.</p>
+        <p>Нажмите кнопку ниже, чтобы анимировать фон:</p>
+<pre><code class="language-html">&lt;button id="color"&gt;Нажми меня&lt;/button&gt;
+
+&lt;style&gt;</code><code class="language-css">
+    #color {
+        transition-property: background-color;
+        transition-duration: 3s;
+    }</code>
+<code class="language-html">&lt;/style&gt;</code>
+
+<code class="language-html">&lt;script&gt;</code>
+    <code class="language-javascript">color.onclick = function() {
+        this.style.backgroundColor = 'red';
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Нажми меня</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.querySelector('button').addEventListener('click', function(event) {
+                if (event.target.classList.toggle('color')) {
+                    event.target.style.backgroundColor = 'red';
+                } else {
+                    event.target.style.backgroundColor = '';
+                }
+            });
+        </script>
+        <p>Существует 4 свойства для описания CSS-переходов:</p>
+        <ul>
+            <li>
+                <p><code>transition-property</code> - свойство перехода.</p>
+            </li>
+            <li>
+                <p><code>transition-duration</code> - продолжительность перехода.</p>
+            </li>
+            <li>
+                <p><code>transition-timing-function</code> - временная функция перехода</p>
+            </li>
+            <li>
+                <p><code>transition-delay</code> - задержка начала перехода</p>
+            </li>
+        </ul>
+        <p>Далее мы рассмотрим их все, а сейчас еще заметим, что есть также общее свойство <code>transition</code>,
+        которое позволяет задать их одновременно в последовательности: <code>property duration timing-function delay</code>,
+        а также анимировать несколько свойств одновременно.</p>
+        <p>Например, у этой кнопки анимируются два свойства <code>color</code> и <code>font-size</code> одновременно:</p>
+<pre><code class="language-html">&lt;button id="growing"&gt;Нажми меня&lt;/button&gt;</code>
+
+<code class="language-html">&lt;style&gt;</code>
+    <code class="language-css">#growing {
+        transition: font-size 3s, color 2s;
+    }</code>
+<code class="language-html">&lt;/style&gt;</code>
+
+<code class="language-html">&lt;script&gt;</code>
+    <code class="language-javascript">growing.onclick = function() {
+        this.style.fontSize = '36px';
+        this.style.color = 'red';
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Нажми меня</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.querySelector('button').addEventListener('click', function(event) {
+                if (event.target.classList.toggle('growing')) {
+                    event.target.style.fontSize = '2rem';
+                    event.target.style.color = 'red';
+                } else {
+                    event.target.style.fontSize = '';
+                    event.target.style.color = '';
+                }
+            });
+        </script>
+        <p>Теперь рассмотрим каждое свойство анимации по отдельности.</p>
+    </article>
+
+    <article>
+        <h2>transition-property</h2>
+        <p>В <code>transition-property</code> записывается список свойств, изменения в которых необходимо анимировать,
+        например: <code>left</code>, <code>margin-left</code>, <code>height</code>, <code>color</code>.</p>
+        <p>Анимировать можно не все свойства, но
+        <a target="_blank" href="https://www.w3.org/TR/css3-transitions/#animatable-properties-">многие из них</a>.
+        Значение свойства <code>all</code> означает «анимируй все свойства».</p>
+    </article>
+
+    <article>
+        <h2>transition-duration</h2>
+        <p>В <code>transition-duration</code> можно определить сколько времени займет анимация. Время должно быть
+        задано в <a target="_blank" href="https://www.w3.org/TR/css3-values/#time">формате времени CSS</a>:
+        в секундах <code>s</code> или миллисекундах <code>ms</code>.</p>
+    </article>
+
+    <article>
+        <h2>transition-delay</h2>
+        <p>В <code>transition-delay</code> можно определить задержку <i>перед</i> началом анимации. Например, если
+        <code>transition-delay: 1s</code>, тогда анимация начнется через 1 секунды после изменения свойства.</p>
+        <p>Отрицательные значения также допустимы. В таком случае анимация начнется с середины. Например, если
+        <code>transition-duration</code> равно <code>2s</code>, а <code>transition-delay</code> - <code>-1s</code>,
+        тогда анимация займет одну секунду и начнется с середины.</p>
+        <p>Здесь приведен пример анимации, сдвигающей цифры от <code>0</code> до <code>9</code> с использованием
+        CSS-свойства <code>transform</code> со значением <code>translate</code>:</p>
+        <div style="margin: 0.5rem; border: 3px solid #f5f2f0; padding-left: 1rem; border-radius: 0.5rem; width: 50vw">
+            Кликните на цифру для начала анимации:
+            <div style="width: 1ch; overflow: hidden; font-size: 3rem;">
+                <div style="display: inline-block; font-weight: bold; cursor: pointer; ">0123456789</div>
+            </div>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.firstElementChild.addEventListener('click', function(event) {
+                event.target.classList.remove('animate');
+                void event.target.offsetWidth;
+                event.target.classList.add('animate');
+            });
+        </script>
+        <p>Свойство <code>transform</code> анимируется следующим образом:</p>
+<pre><code class="language-css">#stripe.animate {
+    transform: translate(-90%);
+    transition-property: transform;
+    transition-duration: 9s;
+}</code></pre>
+        <p>В примере выше JavaScript-код добавляет класс <code>.animate</code> к элементу, после чего начинается анимация:</p>
+<pre><code class="language-javascript">stripe.classList.add('animate');</code></pre>
+        <p>Можно начать анимацию «с середины», с определенного числа, например, используя отрицательное значение
+        <code>transition-delay</code>, соответствующий необходимому числу.</p>
+        <p>Если вы нажмете цифру ниже, то анимация начнется с последней секунды:</p>
+        <div style="margin: 0.5rem; border: 3px solid #f5f2f0; padding-left: 1rem; border-radius: 0.5rem; width: 50vw">
+            Кликните на цифру для начала анимации:
+            <div style="width: 1ch; overflow: hidden; font-size: 3rem">
+                <div style="display: inline-block; font-weight: bold; cursor: pointer;">0123456789</div>
+            </div>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.firstElementChild.addEventListener('click', function(event) {
+                event.target.classList.remove('animate');
+                void event.target.offsetWidth;
+                let sec = new Date().getSeconds() % 10;
+                event.target.style.transitionDelay = `-${sec}s`;
+                event.target.classList.add('animate');
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>transition-timing-function</h2>
+        <p>Временная функция описывает, как процесс анимации будет распределен во времени. Будет ли она начата медленно
+        и затем ускорится или наоборот.</p>
+        <p>На первый взгляд это очень сложное свойство, но оно становится понятным, если уделить ему немного времени.</p>
+        <p>Это свойство может принимать два вида значений: кривую Безье или количество шагов. Давайте начнем с кривой
+        Безье, как с наиболее часто используемой.</p>
+
+        <h3>Кривая Безье</h3>
+        <p>Временная функция может быть задана, как <a target="_blank" href="../1.%20Кривые%20Безье/index.html">Кривая безье</a>
+        с 4 контрольными точками, удовлетворяющими условиям:</p>
+        <ol>
+            <li>
+                <p>Первая контрольная точка: <code>(0, 0)</code>.</p>
+            </li>
+            <li>
+                <p>Последняя контрольная точка: <code>(1, 1)</code>.</p>
+            </li>
+            <li>
+                <p>Для промежуточных точек значение <code>x</code> должно быть <code>0...1</code>, значение <code>y</code>
+                может принимать любое значение.</p>
+            </li>
+        </ol>
+        <p>Синтаксис для кривых Безье в CSS: <code>cubic-bezier(x2, y2, x3, y3)</code>. Нам необходимо задать только
+        вторую и третью контрольные точки, потому что первая зафиксирована со значением <code>(0, 0)</code> и четвертая
+        - <code>(1, 1)</code>.</p>
+        <p>Временная функция описывает то, насколько быстро происходит анимация во времени.</p>
+        <ul>
+            <li>
+                <p>Ось <code>x</code> - это время: <code>0</code> - начальный момент, <code>1</code> - последний момент
+                <code>transition-duration</code>.</p>
+            </li>
+            <li>
+                <p>Ось <code>y</code> указывает на завершение процесса: <code>0</code> - начальное значение свойства,
+                <code>1</code> - конечное значение.</p>
+            </li>
+        </ul>
+        <p>Самым простым примером анимации является равномерная анимация с линейной скоростью. Она может быть задана
+        с помощью кривой <code>cubic-bezier(0, 0, 1, 1)</code>.</p>
+        <p>Вот как выглядит эта «кривая»:</p>
+        <img src="images/bezier-linear.svg" alt style="width: 10vw">
+        <p>Как мы видим, это прямая линия. Значению времени (<code>x</code>) соответствует значение завершенности
+        анимации (<code>y</code>), которое равномерно изменяется от <code>0</code> до <code>1</code>.</p>
+        <p>В примере нижу поезд «едет» слева направо с одинаковой скоростью (нажмите на поезд):</p>
+        <img class="train linear" src="images/train.gif" alt style="width: 10vw">
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                let parentElement = event.target.parentElement;
+                let x = parentElement.getBoundingClientRect().width - parseInt(window.getComputedStyle(parentElement).padding) * 2 - event.target.getBoundingClientRect().width;
+                event.target.style.left = parseInt(event.target.style.left) ? '' : `${x}px`;
+            });
+        </script>
+        <p>В свойстве <code>transition</code> указана следующая кривая Безье:</p>
+<pre><code class="language-css">.train {
+    left: 0;
+    transition: left 5s cubic-bezier(0, 0, 1, 1);
+    /* JavaScript устанавливает свойство left */
+}</code></pre>
+        <p>А как показать замедляющийся поезд?</p>
+        <p>Мы можем использовать другую кривую Безье: <code>cubic-bezier(0, 0.5, 0.5, 1)</code>.</p>
+        <p>Ее график:</p>
+        <img src="images/train-curve.svg" alt style="width: 10vw">
+        <p>Как мы видим, анимация начинается быстро: кривая поднимается вверх, и затем все медленнее и медленнее.</p>
+        <p>Ниже временная функция в действии (нажмите на поезд):</p>
+        <img class="train easy_out" src="images/train.gif" alt style="width: 10vw">
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                let parentElement = event.target.parentElement;
+                let x = parentElement.getBoundingClientRect().width - parseInt(window.getComputedStyle(parentElement).padding) * 2 - event.target.getBoundingClientRect().width;
+                event.target.style.left = parseInt(event.target.style.left) ? '' : `${x}px`;
+            });
+        </script>
+        <p>CSS:</p>
+<pre><code class="language-css">.train {
+    left: 0;
+    transition: left 5s cubic-bezier(0, 0.5, 0.5, 0);
+    /* JavaScript устанавливает свойство left */
+}</code></pre>
+        <p>Есть несколько встроенных обозначений кривых Безье: <code>linear</code>, <code>ease</code>, <code>easy-in</code>,
+        <code>easy-out</code>, <code>easy-in-out</code>.</p>
+        <p><code>linear</code> это короткая запись для <code>cubic-bezier(0, 0, 1, 1)</code> - прямой линии, которую
+        мы видели раньше.</p>
+        <p>Другие названия - это также сокращения для других <code>cubic-bezier</code>:</p>
+        <table>
+            <thead>
+            <tr>
+                <th><code>easy</code>*</th>
+                <th><code>easy-in</code></th>
+                <th><code>easy-out</code></th>
+                <th><code>easy-in-out</code></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>(0.25, 0.1, 0.25, 1)</code></td>
+                <td><code>(0.42, 0, 1, 1)</code></td>
+                <td><code>(0, 0, 0.58, 1)</code></td>
+                <td><code>(0.42, 0, 0.58, 1)</code></td>
+            </tr>
+            <tr>
+                <td><img src="images/ease.svg" alt></td>
+                <td><img src="images/ease-in.svg" alt></td>
+                <td><img src="images/ease-out.svg" alt></td>
+                <td><img src="images/ease-in-out.svg" alt></td>
+            </tr>
+            </tbody>
+        </table>
+        <p><code>*</code> - используется по умолчанию, если не задана временная функция.</p>
+        <p>Для того, чтобы замедлить поезд, мы можем использовать <code>easy-out</code>:</p>
+<pre><code class="language-css">.train {
+    left: 0;
+    transition: left 5s easy-out;
+    /* transition: left 5s cubic-bezier(0. 0.5, 0.5, 1); */
+}</code></pre>
+        <p>Но получившийся результат немного отличается.</p>
+        <p><b>Кривая Безье может заставить анимацию «выпрыгивать» за пределы диапазона.</b></p>
+        <p>Контрольные точки могут иметь любые значения по оси <code>y</code>: отрицательные или сколько угодно большие.
+        В таком случае кривая Безье будет скакать очень высоко или очень низко, заставляя анимацию выходить за ее
+        нормальные пределы.</p>
+        <p>В приведенном ниже примере код анимации:</p>
+<pre><code class="language-css">.train {
+    left: 100px;
+    transition: left 5s cubic-bezier(0.5, -1, 0.5, 2);
+}</code></pre>
+        <p>Свойство <code>left</code> будет анимироваться от <code>100px</code> до <code>400px</code>.</p>
+        <p>Но когда вы нажмете на поезд, вы увидите следующее:</p>
+        <ul>
+            <li>
+                <p>Сначала поезд едет <i>назад</i>: <code>left</code> станет меньше, чем <code>100px</code>.</p>
+            </li>
+            <li>
+                <p>Затем он поедет вперед, немного дальше, чем <code>400px</code>.</p>
+            </li>
+            <li>
+                <p>И затем вернется назад в значение <code>400px</code>.</p>
+            </li>
+        </ul>
+        <img class="train outbound" src="images/train.gif" alt style="width: 10vw">
+        <script>
+            let train = document.currentScript.previousElementSibling
+            train.style.left = '100px';
+            train.addEventListener('click', function(event) {
+                event.target.style.left = parseInt(event.target.style.left) === 400 ? '100px' : `400px`;
+            });
+        </script>
+        <p>Если мы взглянем на кривую Безье из примера, становится понятно поведение поезда.</p>
+        <img src="images/bezier-train-over.svg" alt style="width: 20vw">
+        <p>Мы вынесли координату <code>y</code> для первой опорной точки ниже нуля и выше единицы для третьей опорной
+        точки, поэтому кривая вышла за пределы «обычного» квадрата. Значения <code>y</code> вышла из «стандартного»
+        диапазона <code>0...1</code>.</p>
+        <p>Как мы знаем, ось <code>y</code> измеряет «завершенность процесса анимации». Значение <code>y = 0</code>
+        соответствует начальному значению анимируемого свойства и <code>y = 1</code> - конечному значению. Таким
+        образом, <code>y < 0</code> делает значение свойства <code>left</code> меньше начального значения и
+        <code>y > 1</code> - больше конечного.</p>
+        <p>Это, конечно, «мягкий» вариант. Если значение <code>y</code> будут <code>-99</code> и <code>99</code>, то
+        поезд будет гораздо сильнее «выпрыгивать» за пределы.</p>
+        <p>Как сделать кривую Безье необходимую для конкретной задачи? Существует множество инструментов.</p>
+        <ul>
+           <li>
+               <p>К примеру, мы можем сделать это на сайте
+               <a target="_blank" href="https://cubic-bezier.com/">https://cubic-bezier.com/</a>.</p>
+           </li>
+            <li>
+                <p>Браузерные инструменты разработчика также имеют специальную поддержку для создания кривых Безье в CSS:</p>
+                <ol>
+                    <li>
+                        <p>Откройте инструменты разработчика при помощи <kbd>F12</kbd>.</p>
+                    </li>
+                    <li>
+                        <p>Выберите вкладку <code>Elements</code>, затем обратите внимание на под-панель <code>Styles</code>
+                        в правой стороне.</p>
+                    </li>
+                    <li>
+                        <p>Свойство CSS со словом <code>cubic-bezier</code> будут иметь иконку перед этим словом.</p>
+                    </li>
+                    <li>
+                        <p>Кликните по иконке, чтобы отредактировать кривую.</p>
+                    </li>
+                </ol>
+            </li>
+        </ul>
+
+        <h3>Шаги</h3>
+        <p>Временная функция <code>steps(количество шагов, [start/end])</code> позволяет разделить анимацию на шаги.</p>
+        <p>Давайте рассмотрим это на уже знакомом нам примере с цифрами.</p>
+        <p>Ниже представлен список цифр, без какой-либо анимации, которые мы будем использовать в качестве основы.</p>
+        <p style="font-size: 3rem"><span style="border: 1px solid red">0</span>123456789</p>
+        <p>В HTML вереница цифр заключена в <code>&lt;div id="digits"&gt;</code> фиксированной длины:</p>
+<pre><code class="language-html">&lt;div id="digits"&gt;
+    &lt;div id="stripe"&gt;0123456789&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <p>Div-элемент <code>#digits</code> имеет фиксированную ширину и границу, поэтому он выглядит как красное окно.</p>
+        <p>Мы сделаем таймер: цифры будут появляться одна за другой, дискретно.</p>
+        <p>Чтобы добиться этого, мы скроем <code>#stripe</code> за пределами <code>#digits</code>, используя
+        <code>overflow: hidden</code>, а затем, шаг за шагом будем двигать <code>#stripe</code> влево.</p>
+        <p>Всегда будет 9 шагов, один шаг для каждой цифры:</p>
+<pre><code class="language-css">#stripe.animate {
+    transform: translate(-90%);
+    transition: transform 9s steps(9, start);
+}</code></pre>
+        <p>Первый аргумент временной функции <code>steps(9, start)</code> - количество шагов. Трансформация будет
+        разделена на 9 частей (10% каждая). Временной интервал также будет разделен на 9 частей, таким образом
+        свойство <code>transition: 9s</code> обеспечивает нам 9 секунд анимации, что дает по 1 секунде на цифру.</p>
+        <p>Вторым аргументом является одно из ключевых слов: <code>start</code> или <code>end</code>.</p>
+        <p><code>start</code> - означает, что в начале анимации нам необходимо перейти на первый шаг немедленно.</p>
+        <p>В действии:</p>
+        <div style="margin: 0.5rem; border: 3px solid #f5f2f0; padding-left: 1rem; border-radius: 0.5rem; width: 50vw">
+            Кликните на цифру для начала анимации:
+            <div style="width: 1ch; overflow: hidden; font-size: 3rem;">
+                <div style="display: inline-block; font-weight: bold; cursor: pointer; ">0123456789</div>
+            </div>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.firstElementChild.addEventListener('click', function(event) {
+                event.target.classList.add('animate_steps_start');
+
+                event.target.addEventListener('transitionend', function() {
+                    event.target.classList.remove('animate_steps_start');
+                }, {once: true});
+            });
+        </script>
+        <p>Щелчок по цифре немедленно изменяет ее на <code>1</code> (первый шаг), а затем изменяется в начале следующей
+        секунды.</p>
+        <p>Анимация будет происходить так:</p>
+        <ul>
+            <li>
+                <p><code>0s</code> - <code>-10%</code> (первое изменение в начале первой секунды, сразу после нажатия).</p>
+            </li>
+            <li>
+                <p><code>1s</code> - <code>-20%</code>.</p>
+            </li>
+            <li>
+                <p>...</p>
+            </li>
+            <li>
+                <p><code>8s</code> - <code>-90%</code>.</p>
+            </li>
+            <li>
+                <p>(На протяжении последней секунды отображается последнее значение).</p>
+            </li>
+        </ul>
+        <p>Здесь первое изменение было немедленным из-за <code>start</code> в <code>steps</code>.</p>
+        <p>Альтернативное значение <code>end</code> означало бы, что изменения нужно применять не в начале, а в конце
+        каждой секунды.</p>
+        <p>Анимация будет происходить так:</p>
+        <ul>
+            <li>
+                <p><code>0s</code> - <code>0</code>.</p>
+            </li>
+            <li>
+                <p><code>1s</code> - <code>-10%</code> (первое изменение произойдет в конце первой секунды).</p>
+            </li>
+            <li>
+                <p><code>2s</code> - <code>-20%</code>.</p>
+            </li>
+            <li>
+                <p>...</p>
+            </li>
+            <li>
+                <p><code>9s</code> - <code>-90%</code></p>
+            </li>
+        </ul>
+        <p>Пример <code>step(9, end)</code> в действии (обратите внимание на паузу перед первым изменением цифры):</p>
+        <div style="margin: 0.5rem; border: 3px solid #f5f2f0; padding-left: 1rem; border-radius: 0.5rem; width: 50vw">
+            Кликните на цифру для начала анимации:
+            <div style="width: 1ch; overflow: hidden; font-size: 3rem;">
+                <div style="display: inline-block; font-weight: bold; cursor: pointer; ">0123456789</div>
+            </div>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.firstElementChild.addEventListener('click', function(event) {
+                event.target.classList.add('animate_steps_end');
+
+                event.target.addEventListener('transitionend', function() {
+                    setTimeout(() => event.target.classList.remove('animate_steps_end'), 1000);
+                }, {once: true});
+            });
+        </script>
+        <p>Существуют также некоторые заранее определенные сокращения для <code>steps(...)</code>:</p>
+        <ul>
+            <li>
+                <p><code>step-start</code> - то же самое, что <code>steps(1, start)</code>. Оно означает, что анимация
+                начнется сразу и произойдет в один шаг. Таким образом, она начнется и завершится сразу, как будто и нет
+                никакой анимации.</p>
+            </li>
+            <li>
+                <p><code>step-end</code> - то же самое, что <code>steps(1, end)</code>: выполнит анимацию за 1 шаг
+                в конце <code>transition-duration</code>.</p>
+            </li>
+        </ul>
+        <p>Таким значения используются редко, потому что это не совсем анимация, а точнее будет сказать одношаговые
+        изменения. Мы упоминаем их здесь для полноты картины.</p>
+    </article>
+
+    <article>
+        <h2>Событие: «transitionend»</h2>
+        <p>Когда завершается анимация, срабатывает событие <code>transitionend</code>.</p>
+        <p>Оно широко используется для выполнения действий после завершения анимации, а также для создания
+        последовательности анимаций.</p>
+        <p>Например, корабль в приведенном ниже примере начинает плавать туда и обратно по клику, каждый раз все дальше
+        и дальше вправо:</p>
+        <img class="boat" src="images/boat.png" alt style="width: 10vw">
+        <script>
+            let boat = document.currentScript.previousElementSibling;
+            boat.addEventListener('click', function() {
+                let times = 1;
+
+                function go() {
+                    if (times % 2) {
+                        boat.classList.remove('scale');
+                        boat.style.marginLeft = `${times * boat.getBoundingClientRect().width}px`
+                    } else {
+                        boat.classList.add('scale');
+                        boat.style.marginLeft = `0px`;
+                    }
+                }
+
+                go();
+
+                boat.addEventListener('transitionend', function(event) {
+                    if (event.propertyName === 'margin-left') {
+                        times++;
+                        go();
+                    }
+                });
+            });
+        </script>
+        <p>Анимация начинается с помощью функции <code>go</code>, которая вызывается каждый раз снова, когда переход
+        заканчивается и меняется направление.</p>
+<pre><code class="language-javascript">boat.onclick = function() {
+    let times = 1;
+
+    function go() {
+        if (times % 2) {
+            // Плыть вправо
+            boat.classList.remove('scale');
+            boat.style.marginLeft = `${times * boat.getBoundingClientRect().width}px`;
+        else {
+            // Плыть влево
+            boat.classList.add('scale');
+            boat.style.marginLeft = `0px`;
+        }
+    }
+
+    go();
+
+    boat.addEventListener('transitionend', function(event) {
+        if (event.propertyName === 'margin-left') {
+            times++;
+            go();
+        }
+    });
+};</code></pre>
+        <p>Объект события <code>transitionend</code> содержит ряд полезных свойств:</p>
+        <ul>
+            <li>
+                <p><code>event.propertyName</code> - имя свойства, анимация которого завершилась. Может быть полезным,
+                если мы афишируем несколько свойств.</p>
+            </li>
+            <li>
+                <p><code>event.elapsedTime</code> - время (в секундах), которое заняла анимация, без учета
+                <code>transition-delay</code>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Ключевые кадры</h2>
+        <p>Мы можем объединить несколько простых анимаций вместе, используя CSS-правило <code>@keyframes</code>.</p>
+        <p>Оно определяет «имя» анимации и правила: что, когда и где анимировать. После этого можно использовать
+        свойство <code>animation</code>, чтобы назначить анимацию на элемент и определить ее дополнительные параметры.</p>
+        <p>Ниже приведен пример с пояснениями:</p>
+<pre><code class="language-html">&lt;div class="progress"&gt;&lt;/div&gt;
+
+&lt;style&gt;</code>
+    <code class="language-css">@keyframes go-left-right {        /* Объявляем имя анимации: "go-left-right" */
+        from {left: 0px;}             /* От: left: 0px */
+        to {left: calc(100% - 50px);} /* До: left: 100% - 50px */
+    }
+
+    .progress {
+        animation: go-left-right 3s infinite alternate;
+        /* Применить анимацию "go-left-right" на элементе
+           Продолжительностью 3 секунды
+           Количество раз: бесконечно (infinite)
+           Менять направление анимации каждый раз (alternate)
+        */
+
+        position: relative;
+        border: 2px solid green;
+        width: 50px;
+        height: 20px;
+        background: lime;
+    }</code>
+<code class="language-html">&lt;/style&gt;</code></pre>
+        <div class="progress"></div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                event.target.style.animationPlayState = event.target.style.animationPlayState === 'paused' ? 'running' : 'paused';
+            });
+        </script>
+        <p>Существует множество статей про <code>@keyframes</code>, а также
+        <a target="_blank" href="https://drafts.csswg.org/css-animations/">детальная спецификация</a>.</p>
+        <p>Скорее всего, вам нечасто понадобится <code>@keyframes</code>, разве что на вашем сайте все постоянно
+        в движении.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>CSS-анимации позволяют плавно, или не очень, менять одно или несколько свойств.</p>
+        <p>Они хорошо решают большинство задач по анимации. Также мы можем реализовать анимации через JavaScript,
+        более подробно об этом - в следующей главе.</p>
+        <p>Ограничения CSS-анимаций в сравнении с JavaScript-анимациями:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Достоинства</th>
+                <th>Недостатки</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>
+                    <ul>
+                        <li>
+                            <p>Простые анимации делаются просто.</p>
+                        </li>
+                        <li>
+                            <p>Быстрые и не создают нагрузку на CPU.</p>
+                        </li>
+                    </ul>
+                </td>
+                <td>
+                    <ul>
+                        <li>
+                            <p>JavaScript-анимации более гибкие. В них может присутствовать любая анимационная логика,
+                            как, например, «взорвать» элемент.</p>
+                        </li>
+                        <li>
+                            <p>Можно изменять не только свойства. Мы можем создавать новые элементы с помощью JavaScript
+                            для анимации.</p>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Большинство анимаций может быть реализовано с использованием CSS, как описано в этой главе. А событие
+        <code>transitionend</code> позволяет запускать JavaScript после анимации, поэтому CSS-анимации прекрасно
+        интегрируются с кодом.</p>
+        <p>Но в следующей главе мы рассмотрим некоторые JavaScript-анимации, которые позволяют решать более сложные
+        задачи.</p>
+    </article>
+</body>
+</html>

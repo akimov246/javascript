@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Анимированный самолет с перелетом (CSS)</title>
+    <style>
+        .plane {
+            cursor: pointer;
+            width: 5%;
+            transition: width 3s cubic-bezier(0, 0, 0.5, 2);
+        }
+    </style>
+</head>
+<body>
+<img class="plane" src="../../images/flyjet.jpg" alt>
+<script>
+    document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+        event.target.style.width = '50%';
+        event.target.addEventListener('transitionend', function() {
+            alert('Анимация закончилась!');
+        }, {once: true});
+    });
+</script>
+</body>
+</html>
