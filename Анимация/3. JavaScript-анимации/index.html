@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JavaScript-анимации</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        progress {
+            height: 1rem;
+            width: 5%;
+            cursor: pointer;
+        }
+
+        .container {
+            box-sizing: border-box;
+            border: 2px solid orange;
+            border-radius: 1rem;
+            height: 2rem;
+            width: 100%;
+            position: relative;
+        }
+
+        .runner {
+            cursor: pointer;
+            position: absolute;
+            background-color: orange;
+            height: 100%;
+            width: 10%;
+            border-radius: 1rem;
+            box-shadow: 0 0 5px orange;
+        }
+
+        textarea {
+            display: block;
+            margin-top: 0.5rem;
+            width: 50%;
+            height: 5rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>JavaScript-анимации</h2>
+        <p>С помощью JavaScript-анимаций можно делать вещи, которые нельзя реализовать на CSS.</p>
+        <p>Например, движение по сложному пути с временной функцией, отличной от кривой Безье, или canvas-анимации.</p>
+    </article>
+
+    <article>
+        <h2>Использование setInterval</h2>
+        <p>Анимация реализуется через последовательность кадров, каждый из которых немного меняет HTML/CSS-свойства.</p>
+        <p>Например, изменение <code>style.left</code> от <code>0px</code> до <code>100px</code> - двигает элемент.
+        И если мы будем делать это с помощью <code>setInterval</code>, изменяя на <code>2px</code> с небольшими интервалами
+        времени, например, 50 раз в секунду, тогда изменения будут выглядеть плавными. Принцип такой же, как в кино:
+        24 кадров в секунду достаточно, чтобы создать эффект плавности.</p>
+        <p>Псевдокод мог бы выглядеть так:</p>
+<pre><code class="language-javascript">let timer = setInterval(function() {
+    if (animation complete) clearInterval(timer);
+    else increase style.left by 2px;
+}, 20); // Изменять на 2px каждые 20ms, это около 50 кадров в секунду</code></pre>
+        <p>Более детальная реализация этой анимации:</p>
+<pre><code class="language-javascript">let start = Date.now(); // Запомнить время начала
+
+let timer = setInterval(function() {
+    // Сколько времени прошло с начала анимации?
+    let timePassed = Date.now() - start;
+
+    if (timePassed >= 2000) {
+        clearInterval(timer); // Закончить анимацию через 2 секунды
+        return;
+    }
+
+    // Отрисовать анимацию на момент timePassed, прошедший с начала анимации
+    draw(timePassed);
+}, 20);
+
+// В то время как timePassed идет от 0 до 2000
+// left изменяет значение от 0px до 400px
+function draw(timePassed) {
+    train.style.left = timePassed / 5 + 'px';
+}</code></pre>
+        <p>Для просмотра примера кликните на него:</p>
+        <img src="images/train.gif" alt style="width: 10vw; position:relative;">
+        <script>
+            let timer;
+            document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                if (parseInt(window.getComputedStyle(event.target).left)) {
+                    clearInterval(timer);
+                    event.target.style.left = '0px';
+                    return;
+                }
+
+                let start = Date.now();
+
+                timer = setInterval(function() {
+                    let timePassed = Date.now() - start;
+
+                    if (timePassed >= 2000) {
+                        clearInterval(timer);
+                        return;
+                    }
+
+                    draw(timePassed);
+                }, 20);
+
+                function draw(timePassed) {
+                    event.target.style.left = timePassed / 5 + 'px';
+                }
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Использование requestAnimationFrame</h2>
+        <p>Теперь давайте представим, что у нас есть несколько анимаций, работающих одновременно.</p>
+        <p>Если мы запустим их независимо с помощью <code>setInterval(..., 20)</code>, тогда браузеру будет необходимо
+        выполнять отрисовку гораздо чаще, чем раз в <code>20ms</code>.</p>
+        <p>Это происходит из-за того, что каждая анимация имеет свое собственное время старта и «каждые 20 миллисекунд»
+        для разных анимаций - разные. Интервалы не выравнены и у нас будет несколько независимых срабатываний в течение
+        <code>20ms</code>.</p>
+        <p>Другими словами:</p>
+<pre><code class="language-javascript">setInterval(function() {
+    animate1();
+    animate2();
+    animate3();
+}, 20);</code></pre>
+        <p>Меньше нагружают систему, чем три независимые функции:</p>
+<pre><code class="language-javascript">setInterval(animate1, 20); // Независимые анимации
+setInterval(animate2, 20); // В разных местах кода
+setInterval(animate3, 20);</code></pre>
+        <p>Эти независимые перерисовки лучше сгруппировать вместе, тогда они будут легче для браузера, а значит -
+        не грузить процессор и более плавно выглядеть.</p>
+        <p>Существует еще одна вещь, про которую надо помнить: когда CPU перегружен или есть другие причины делать
+        перерисовку реже (например, когда вкладка браузера скрыта), нам не следует делать ее каждые <code>20ms</code>.</p>
+        <p>Но как нам узнать об этом в JavaScript? Спецификация
+        <a target="_blank" href="https://www.w3.org/TR/animation-timing/">Animation timing</a> описывает функцию
+        <code>requestAnimationFrame</code>, которая решает все описанные проблемы и делает даже больше.</p>
+        <p>Синтаксис:</p>
+<pre><code class="language-javascript">let requestId = requestAnimationFrame(callback);</code></pre>
+        <p>Такой вызов планирует запуск функции <code>callback</code> на ближайшее время, когда браузер сочтет возможным
+        осуществить анимацию.</p>
+        <p>Если в <code>callback</code> происходит изменение элемента, тогда оно будет сгруппировано с другими
+        <code>requestAnimationFrame</code> и CSS-анимациями. Таким образом браузер выполнит один геометрический
+        пересчет и отрисовку, вместо нескольких.</p>
+        <p>Значение <code>requestId</code> может быть использовано для отмены анимации:</p>
+<pre><code class="language-javascript">// Отмена запланированного запуска callback
+cancelAnimationFrame(requestId);</code></pre>
+        <p>Функция <code>callback</code> имеет один аргумент - время прошедшее с момента начала загрузки страницы
+        в миллисекундах. Это значение может быть получено с помощью вызова
+        <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/API/Performance/now">performance.now()</a>.</p>
+        <p>Как правило, <code>callback</code> запускается очень скоро, если только не перегружен CPU или не разряжена
+        батарея ноутбука, или у браузера нет какой-то еще причины замедлиться.</p>
+        <p>Код ниже показывает время между первыми 10 запусками <code>requestAnimationFrame</code>. Обычно оно 10-20мс:</p>
+<pre><code class="language-html">&lt;script&gt;</code>
+    <code class="language-javascript">let prev = performance.now();
+    let times = 0;
+
+    requestAnimationFrame(function measure(time) {
+        document.body.insertAdjacentHTML('beforeend', Math.floor(time - prev) + ' ');
+        prev = time;
+
+        if (times++ < 10) requestAnimationFrame(measure);
+    });</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+            <div style="margin-top: 0.5rem"></div>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function(event) {
+                event.target.nextElementSibling.innerHTML = '';
+
+                let prev = performance.now();
+                let times = 0;
+
+                requestAnimationFrame(function measure(time) {
+                    event.target.nextElementSibling.insertAdjacentHTML('beforeend', Math.floor(time - prev) + ' ');
+                    prev = time;
+
+                    if (times++ < 10) requestAnimationFrame(measure);
+                });
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Структура анимации</h2>
+        <p>Теперь мы можем создать более сложную функции анимации с помощью <code>requestAnimationFrame</code>:</p>
+<pre><code class="language-javascript">function animate({timing, draw, duration}) {
+
+    let start = performance.now();
+
+    requestAnimationFrame(function animate(time) {
+        // timeFraction изменяется от 0 до 1
+        let timeFraction = (time - start) / duration;
+        if (timeFraction > 1) timeFraction = 1;
+
+        // Вычисление текущего состояния анимации
+        let progress = timing(timeFraction);
+
+        draw(progress); // Отрисовать ее
+
+        if (timeFraction < 1) {
+            requestAnimationFrame(animate);
+        }
+    });
+}</code></pre>
+        <p>Функция <code>animate</code> имеет три аргумента, которые описывают анимацию:</p>
+        <ul>
+            <li>
+                <p><code>duration</code></p>
+                <p>Продолжительность анимации. Например, <code>1000</code>.</p>
+            </li>
+            <li>
+                <p><code>timing(timeFraction)</code></p>
+                <p>Функция расчета времени, как CSS-свойство <code>transition-timing-function</code>, которая будет
+                вычислять прогресс анимации (как ось <code>y</code> у кривой Безье) в зависимости от прошедшего времени
+                (<code>0</code> в начале, <code>1</code> в конце).</p>
+                <p>Например, линейная функция значит, что анимация идет с одной и той же скоростью:</p>
+<pre><code class="language-javascript">function linear(timeFraction) {
+    return timeFraction;
+}</code></pre>
+                <p>График функции:</p>
+                <img src="images/linear.svg" alt style="width: 20vw">
+                <p>Это как если бы в <code>transition-timing-function</code> передать значение <code>linear</code>.
+                Ниже будут представлены более интересные примеры.</p>
+            </li>
+            <li>
+                <p><code>draw(progress)</code></p>
+                <p>Функция отрисовки, которая получает аргументом значение прогресса анимации и отрисовывает его.
+                Значение <code>progress=0</code> означает, что анимация находится в начале, и значение <code>progress=1</code> -
+                в конце.</p>
+                <p>Это так функция, которая на самом деле и рисует анимацию.</p>
+                <p>Вот как она могла бы двигать элемент:</p>
+<pre><code class="language-javascript">function draw(progress) {
+    train.style.left = progress + 'px';
+}</code></pre>
+                <p>Или делать что-нибудь еще. Мы можем анимировать что угодно, как захотим.</p>
+            </li>
+        </ul>
+        <p>Теперь давайте используем нашу функцию, чтобы анимировать свойство <code>width</code> от <code>5</code>
+        до <code>100%</code>.</p>
+        <p>Нажмите на элемент для того, чтобы посмотреть пример:</p>
+        <progress></progress>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                function animate({timing, draw, duration}) {
+                    let start = performance.now();
+
+                    requestAnimationFrame(function animate(time) {
+                        let timeFraction = (time - start) / duration;
+                        if (timeFraction > 1) timeFraction = 1;
+
+                        let progress = timing(timeFraction);
+
+                        draw(progress);
+
+                        if (timeFraction < 1) {
+                            requestAnimationFrame(animate);
+                        }
+                    });
+                }
+                if (Math.round(parseFloat(window.getComputedStyle(event.target).width) / parseFloat(window.getComputedStyle(event.target.parentElement).width) * 100) > 5) {
+                    animate({
+                        duration: 1000,
+                        timing: function(timeFraction) {
+                            return timeFraction;
+                        },
+                        draw: function(progress) {
+                            event.target.style.width = Math.max(5, 100 - progress * 100) + '%';
+                        }
+                    });
+                } else {
+                    animate({
+                        duration: 2000,
+                        timing: function(timeFraction) {
+                            return timeFraction;
+                        },
+                        draw: function(progress) {
+                            event.target.style.width = Math.max(5, progress * 100) + '%';
+                        }
+                    });
+                }
+            });
+        </script>
+        <p>Код:</p>
+<pre><code class="language-javascript">animate({
+    duration: 1000,
+    timing: function(timeFraction) {
+        return timeFraction;
+    },
+    draw: function(progress) {
+        elem.style.width = Math.max(5, progress * 100) + '%';
+    }
+});</code></pre>
+        <p>В отличие от CSS-анимаций, можно создать любую функцию расчета времени и любую функцию отрисовки.
+        Функция расчета времени не будет ограничена только кривой Безье, а функция <code>draw</code> может менять
+        не только свойства, но и создавать новые элементы (например, для создания анимации фейерверка).</p>
+    </article>
+
+    <article>
+        <h2>Функции расчета времени</h2>
+        <p>Мы уже рассмотрели самый простой пример линейной функции расчета времени выше.</p>
+        <p>Давайте посмотрим другие. Мы попробуем выполнить анимации с разными функциями расчета времени, чтобы
+        посмотреть как они работают.</p>
+
+        <h3>Степень n</h3>
+        <p>Если мы хотим ускорить анимацию, мы можем возвести <code>progress</code> в степень <code>n</code>.</p>
+        <p>Например, параболическая кривая:</p>
+<pre><code class="language-javascript">function quad(timeFraction) {
+    return Math.pow(timeFraction, 2);
+}</code></pre>
+        <p>График:</p>
+        <img src="images/quad.svg" alt style="width: 20vw">
+        <p>Посмотрим в движении (нажмите для активации):</p>
+        <div class="container">
+            <div class="runner" id="runner1"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner1').addEventListener('click', function(event) {
+                let options = {
+                    duration: 2000,
+                    timing: function(timeFraction) {
+                        return Math.pow(timeFraction, 2);
+                    }
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+        <p>Или кубическая кривая, или любой другой множитель <code>n</code>. Повышение степени увеличивает скорость
+        анимации.</p>
+        <p>Вот график для функции <code>progress</code> в степени <code>5</code>:</p>
+        <img src="images/quint.svg" alt style="width: 20vw">
+        <p>В действии:</p>
+        <div class="container">
+            <div class="runner" id="runner2"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner2').addEventListener('click', function(event) {
+                let options = {
+                    duration: 2000,
+                    timing: function(timeFraction) {
+                        return Math.pow(timeFraction, 5);
+                    }
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+
+        <h3>Дуга</h3>
+        <p>Функция:</p>
+<pre><code class="language-javascript">function circ(timeFraction) {
+    return 1 - Math.sin(Math.acos(timeFraction));
+}</code></pre>
+        <p>График:</p>
+        <img src="images/circ.svg" alt style="width: 20vw">
+        <div class="container">
+            <div class="runner" id="runner3"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner3').addEventListener('click', function(event) {
+                let options = {
+                    duration: 2000,
+                    timing: function(timeFraction) {
+                        return 1 - Math.sin(Math.acos(timeFraction));
+                    }
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+
+        <h3>Обратно: выстрел из лука</h3>
+        <p>Эта функция совершает «выстрел из лука». В начале «натягивается тетива», а затем «выстрел».</p>
+        <p>В отличие от предыдущей функции, теперь все зависит от дополнительного параметра <code>x</code> -
+        «коэффициента эластичности». Он определяет силу «натяжения тетивы».</p>
+        <p>Код:</p>
+<pre><code class="language-javascript">function back(timeFraction, x) {
+    return Math.pow(timeFraction, 2) * ((x + 1) * timeFraction - x);
+}</code></pre>
+        <p><b>График для <code>x = 1.5</code>:</b></p>
+        <img src="images/back.svg" alt style="width: 20vw">
+        <p>Для анимации мы используем <code>x</code> с определенным значением. Пример для <code>x</code> со значением
+        <code>1.5</code>:</p>
+        <div class="container">
+            <div class="runner" id="runner4"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner4').addEventListener('click', function(event) {
+                let options = {
+                    duration: 2000,
+                    timing: function(timeFraction, x=1.5) {
+                        return Math.pow(timeFraction, 2) * ((x + 1) * timeFraction - x);
+                    }
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+
+        <h3>Отскоки</h3>
+        <p>Представьте, что мы бросили мяч вниз. Он падает, ударяется о землю, подскакивает несколько раз и останавливается.</p>
+        <p>Функция <code>bounce</code> делает то же самое, но в обратном порядке: «отскоки» начинаются сразу. Для этого
+        заданы специальные коэффициенты:</p>
+<pre><code class="language-javascript">function bounce(timeFraction) {
+    for (let a = 0, b = 1; 1; a += b, b /= 2) {
+        if (timeFraction >= (7 - 4 * a) / 11) {
+            return -Math.pow((11 - 6 * a - 11 * timeFraction) / 4, 2) + Math.pow(b, 2);
+        }
+    }
+}</code></pre>
+        <p>В действии:</p>
+        <div class="container">
+            <div class="runner" id="runner5"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner5').addEventListener('click', function(event) {
+                let options = {
+                    duration: 2000,
+                    timing: function(timeFraction) {
+                        for (let a = 0, b = 1; 1; a += b, b /= 2) {
+                            if (timeFraction >= (7 - 4 * a) / 11) {
+                                return -Math.pow((11 - 6 * a - 11 * timeFraction) / 4, 2) + Math.pow(b, 2);
+                            }
+                        }
+                    }
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+
+        <h3>Эластичная анимация</h3>
+        <p>Еще одна «эластичная» функция, которая принимает дополнительный параметр <code>x</code> для
+        «начального отрезка».</p>
+<pre><code class="language-javascript">function elastic(timeFraction, x) {
+    return Math.pow(2, 10 * (timeFraction - 1)) * Math.cos(20 * Math.PI * x / 3 * timeFraction);
+}</code></pre>
+        <p><b>График для <code>x = 1.5</code>:</b></p>
+        <img src="images/elastic.svg" alt style="width: 20vw">
+        <p>В действии со значением <code>x = 1.5</code>:</p>
+        <div class="container">
+            <div class="runner" id="runner6"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner6').addEventListener('click', function(event) {
+                let options = {
+                    duration: 2000,
+                    timing: function(timeFraction, x=1.5) {
+                        return Math.pow(2, 10 * (timeFraction - 1)) * Math.cos(20 * Math.PI * x / 3 * timeFraction);
+                    }
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Реверсивные функции: easy*</h2>
+        <p>Итак, у нас получилась коллекция функций расчета времени. Их прямое использование называется «easyIn».</p>
+        <p>Иногда нужно показать анимацию в обратном режиме. Преобразование функции, которое дает такой эффект,
+        называется «easyOut».</p>
+
+        <h3>easyOut</h3>
+        <p>В режиме «easyOut» <code>timing</code> функции оборачиваются функцией <code>timingEasyOut</code>:</p>
+<pre><code class="language-javascript">timingEasyOut(timeFraction) = 1 - timing(1 - timeFraction);</code></pre>
+        <p>Другими словами, мы имеем функцию «преобразования» - <code>makeEasyOut</code>, которая берет «обычную»
+        функцию расчета времени и возвращает обертку над ней:</p>
+<pre><code class="language-javascript">// Принимает функцию расчета времени и возвращает преобразованный вариант
+function makeEasyOut(timing) {
+    return function(timeFraction) {
+        return 1 - timing(1 - timeFraction);
+    }
+}</code></pre>
+        <p>Например, мы можем взять функцию <code>bounce</code> описанную выше:</p>
+<pre><code class="language-javascript">let bounceEasyOut = makeEasyOut(bounce);</code></pre>
+        <p>Таким образом, отскоки будут не в начале функции, а в конце. Смотрится гораздо лучше:</p>
+        <div class="container">
+            <div class="runner" id="runner7"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner7').addEventListener('click', function(event) {
+                function bounce(timeFraction) {
+                    for (let a = 0, b = 1; 1; a += b, b /= 2) {
+                        if (timeFraction >= (7 - 4 * a) / 11) {
+                            return -Math.pow((11 - 6 * a - 11 * timeFraction) / 4, 2) + Math.pow(b, 2);
+                        }
+                    }
+                }
+
+                function makeEasyOut(timing) {
+                    return function (timeFraction) {
+                        return 1 - timing(1 - timeFraction);
+                    }
+                }
+
+                let bounceEasyOut = makeEasyOut(bounce);
+
+                let options = {
+                    duration: 2000,
+                    timing: bounceEasyOut
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+        <p>Ниже мы можем увидеть, как трансформации изменяют поведение функции:</p>
+        <img src="images/bounce-inout.svg" alt style="width: 20vw">
+        <p>Если раньше анимационный эффект, такой как отскоки, был в начале, то после трансформации он будет
+        показан в конце.</p>
+        <p>На графике выше красным цветом обозначена <span style="color: red">обычная функция</span> и синим -
+        <span style="color: blue">после easyOut</span>.</p>
+        <ul>
+            <li>
+                <p>Обычный скачок - объект сначала медленно скачет внизу, а затем резко подпрыгивает вверх.</p>
+            </li>
+            <li>
+                <p>Обратный <code>easyOut</code> - объект вначале прыгает вверх, и затем там.</p>
+            </li>
+        </ul>
+
+        <h3>easyInOut</h3>
+        <p>Мы можем применить эффект дважды - в начале и конце анимации. Такая трансформация называется «easyInOut».</p>
+        <p>Для функции расчета времени, анимация будет вычисляться следующим образом:</p>
+<pre><code class="language-javascript">if (timeFraction <= 0.5) { // Первая половина анимации
+    return timing(2 * timeFraction) / 2;
+} else { // Вторая половина анимации
+    return (2 - timing(2 * (1 - timeFraction))) / 2;
+}</code></pre>
+        <p>Код функции-обертки:</p>
+<pre><code class="language-javascript">function makeEasyInOut(timing) {
+    return function(timeFraction) {
+        if (timeFraction <= 0.5) {
+            return timing(2 * timeFraction) / 2;
+        } else {
+            return (2 - timing(2 * (1 - timeFraction))) / 2;
+        }
+    }
+}
+
+bounceEasyInOut = makeEasyInOut(bounce);</code></pre>
+        <p>В действии, <code>bounceEasyInOut</code>:</p>
+        <div class="container">
+            <div class="runner" id="runner8"></div>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+            let launched = false;
+
+            document.getElementById('runner8').addEventListener('click', function(event) {
+                function bounce(timeFraction) {
+                    for (let a = 0, b = 1; 1; a += b, b /= 2) {
+                        if (timeFraction >= (7 - 4 * a) / 11) {
+                            return -Math.pow((11 - 6 * a - 11 * timeFraction) / 4, 2) + Math.pow(b, 2);
+                        }
+                    }
+                }
+
+                function makeEasyInOut(timing) {
+                    return function (timeFraction) {
+                        if (timeFraction <= 0.5) {
+                            return timing(2 * timeFraction) / 2;
+                        } else {
+                            return (2 - timing(2 * (1 - timeFraction))) / 2;
+                        }
+                    }
+                }
+
+                let bounceEasyInOut = makeEasyInOut(bounce);
+
+                let options = {
+                    duration: 2000,
+                    timing: bounceEasyInOut
+                };
+                if (!launched) {
+                    options.draw = function(progress) {
+                        event.target.style.left = progress * 90 + '%';
+                    }
+                    launched = true;
+                    animate(options);
+                } else {
+                    options.draw = function(progress) {
+                        event.target.style.left = (1 - progress) * 90 + '%';
+                    }
+                    launched = false;
+                    animate(options);
+                }
+            });
+        </script>
+        <p>Функция «easyInOut» объединяет два графика в один: <code>easyIn</code> (обычный) для первой половины анимации
+        и <code>easyOut</code> (обратный) - для второй половины.</p>
+        <p>Разница хорошо заметна, если сравнивать графики <code>easyIn</code>, <code>easyOut</code> и
+        <code>easyInOut</code> для функции <code>circ</code>:</p>
+        <img src="images/circ-ease.svg" alt style="width: 20vw">
+        <ul>
+            <li>
+                <p><span style="color: red">Красный</span> обычный вариант <code>circ</code> (<code>easyIn</code>).</p>
+            </li>
+            <li>
+                <p><span style="color: green">Зеленый</span> - <code>easyOut</code>.</p>
+            </li>
+            <li>
+                <p><span style="color: blue">Синий</span> - <code>easyInOut</code>.</p>
+            </li>
+        </ul>
+        <p>Как видно, график первой половины анимации представляет собой уменьшенный <code>easyIn</code>, а второй -
+        уменьшенный <code>easyOut</code>. В результате, анимация начинается и заканчивается одинаковым эффектом.</p>
+    </article>
+
+    <article>
+        <h2>Более интересная функция «draw»</h2>
+        <p>Вместо передвижения элемента мы можем делать что-нибудь еще. Все, что нам нужно - это правильно
+        написать функцию <code>draw</code>.</p>
+        <p>Вот пример «скачущей» анимации набирающегося текста:</p>
+        <div style="margin: 0.5rem">
+            <button id="animateTextAreaButton">Запустить пример</button>
+            <textarea id="animateTextArea"></textarea>
+        </div>
+        <script type="module">
+            import {animate} from "./animate.js";
+
+let text = `Но взял он меч, и взял он щит,
+Высоких полон дум.
+В глущобу путь его лежит
+Под дерево Тумтум.`;
+
+            let textarea = document.getElementById('animateTextArea');
+            let launched = false;
+
+            document.getElementById('animateTextAreaButton').addEventListener('click', function() {
+                function bounce(timeFraction) {
+                    for (let a = 0, b = 1; 1; a += b, b /= 2) {
+                        if (timeFraction >= (7 - 4 * a) / 11) {
+                            return -Math.pow((11 - 6 * a - 11 * timeFraction) / 4, 2) + Math.pow(b, 2);
+                        }
+                    }
+                }
+
+                function makeEasyOut(timing) {
+                    return function(timeFraction) {
+                        return 1 - timing(1 - timeFraction);
+                    }
+                }
+
+                let bounceEasyOut = makeEasyOut(bounce);
+
+                if (!launched) {
+                    launched = true;
+                    animate({
+                        duration: 3000,
+                        timing: bounce,
+                        draw: function(progress) {
+                            textarea.value = text.slice(0, Math.round(text.length * progress));
+                        }
+                    });
+                } else {
+                    launched = false;
+                    animate({
+                        duration: 3000,
+                        timing: bounceEasyOut,
+                        draw: function(progress) {
+                            textarea.value = text.slice(0, text.length - Math.round(text.length * progress));
+                        }
+                    });
+                }
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>JavaScript может помочь в тех случаях, когда CSS не справляется или нужен жесткий контроль над анимацией.
+        JavaScript-анимации должны быть сделаны с помощью <code>requestAnimationFrame</code>. Это встроенный метод
+        браузера, который вызывает переданную в него функцию в тот момент, когда браузер готовится совершить
+        перерисовку (обычно это происходит быстро, но конкретные задержки зависят от браузера).</p>
+        <p>Когда вкладка скрыта, на ней совсем не происходит перерисовок, и функция не будет вызвана: анимация будет
+        приостановлена и не потратит ресурсы. Это хорошо.</p>
+        <p>Вспомогательная функция <code>animate</code> для создания анимации:</p>
+<pre><code class="language-javascript">function animate({duration, timing, draw}) {
+
+    let start = performance.now();
+
+    requestAnimationFrame(function animate(time) {
+        // timeFraction изменяется от 0 до 1
+        let timeFraction = (time - start) / duration;
+        if (timeFraction > 1) timeFraction = 1;
+
+        // Вычисление текущего состояния анимации
+        let progress = timing(timeFraction);
+
+        draw(progress); // Отрисовать ее
+
+        if (timeFraction < 1) {
+            requestAnimationFrame(animate);
+        }
+    });
+}</code></pre>
+        <p>Опции:</p>
+        <ul>
+            <li>
+                <p><code>duration</code> - общая продолжительность анимации в миллисекундах.</p>
+            </li>
+            <li>
+                <p><code>timing</code> - функция вычисления прогресса анимации. Получается момент времени от 0 до 1,
+                возвращает прогресс анимации, обычно тоже от 0 до 1.</p>
+            </li>
+            <li>
+                <p><code>draw</code> - функция отрисовки анимации.</p>
+            </li>
+        </ul>
+        <p>Конечно, мы могли бы улучшить вспомогательную функцию и добавить в нее больше наворотов. Но JavaScript-анимации
+        не каждый день используются, а только когда хотят сделать что-то интересное и необычное. Не стоит усложнять
+        функцию до тех пор, пока это вам не понадобится.</p>
+        <p>JavaScript-анимации могут использовать любые функции расчета времени. Мы рассмотрели множество примеров
+        и их вариаций, чтобы сделать их еще более универсальными. В отличие от CSS, мы здесь не ограничены только
+        кривой Безье.</p>
+        <p>То же самое и с <code>draw</code>: мы можем анимировать все что угодно, не только CSS-свойства.</p>
+    </article>
+</body>
+</html>

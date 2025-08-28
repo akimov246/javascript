@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Анимируйте прыгающий мячик</title>
+    <style>
+        .container {
+            height: 95vh;
+            border-bottom: 1rem solid green;
+            border-radius: 1rem;
+            position: relative;
+        }
+
+        .ball {
+            position: absolute;
+            left: 50%;
+            top: 10%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img class="ball" src="images/ball.svg" alt>
+    </div>
+    <script>
+        let ball = document.querySelector('.ball');
+        let container = document.querySelector('.container');
+
+        let floor = container.clientHeight - ball.clientHeight;
+        let startTop = parseFloat(getComputedStyle(ball).top);
+
+        function animate({duration, timing, draw}) {
+
+            let start = performance.now();
+
+            requestAnimationFrame(function animate(time) {
+                let timeFraction = (time - start) / duration;
+                if (timeFraction > 1) timeFraction = 1;
+
+                let progress = timing(timeFraction);
+                draw(progress);
+
+                if (timeFraction < 1) {
+                    requestAnimationFrame(animate);
+                }
+            });
+        }
+
+        function bounce(timeFraction) {
+            for (let a = 0, b = 1; 1; a += b, b /= 2) {
+                if (timeFraction >= (7 - 4 * a) / 11) {
+                    return -Math.pow((11 - 6 * a - 11 * timeFraction) / 4, 2) + Math.pow(b, 2);
+                }
+            }
+        }
+
+        function makeEasyOut(timing) {
+            return function(timeFraction) {
+                return 1 - timing(1 - timeFraction);
+            }
+        }
+
+        animate({
+            duration: 5000,
+            timing: makeEasyOut(bounce),
+            draw: function(progress) {
+                ball.style.top = startTop + (floor - startTop) * progress + 'px';
+            }
+        });
+    </script>
+</body>
+</html>
