@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>filledInnerHTML</title>
+</head>
+<body>
+    <script>
+        customElements.define('user-info', class extends HTMLElement {
+            connectedCallback() {
+                setTimeout(() => alert(this.innerHTML));
+            }
+        });
+    </script>
+    <user-info>Джон</user-info>
+</body>
+</html>

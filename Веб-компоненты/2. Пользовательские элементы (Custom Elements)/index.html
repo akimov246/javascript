@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользовательские элементы (Custom Elements)</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        time-formatted, time-formatted-updated {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Пользовательские элементы (Custom Elements)</h2>
+        <p>Мы можем создавать пользовательские HTML-элементы, описываемые нашим классом, со своими методами и свойствами,
+        событиями и так далее.</p>
+        <p>Как только пользовательский элемент определен, мы можем использовать его наравне со встроенными HTML-элементами.</p>
+        <p>Это замечательно, ведь словарь HTML-тегов богат, но не бесконечен. Не существует <code>&lt;easy-tabs&gt;</code>,
+        <code>&lt;sliding-carousel&gt;</code>, &lt;beautiful-uplod&gt;... Просто подумайте о любом другом теге,
+        который мог бы нам понадобиться.</p>
+        <p>Мы можем определить их с помощью специального класса, а затем использовать, как если бы они всегда были
+        частью HTML.</p>
+        <p>Существует два вида пользовательских элементов:</p>
+        <ol>
+            <li>
+                <p><b>Автономные пользовательские элементы</b> - «полностью новые» элементы, расширяющие абстрактный
+                класс <code>HTMLElement</code>.</p>
+            </li>
+            <li>
+                <p><b>Пользовательские встроенные элементы</b> - элементы, расширяющие встроенные, например, кнопку
+                <code>HTMLButtonElement</code> и т.п.</p>
+            </li>
+        </ol>
+        <p>Сначала мы разберемся с автономными элементами, а затем перейдем к пользовательским встроенным.</p>
+        <p>Чтобы создать пользовательский элемент, нам нужно сообщить браузеру ряд деталей о нем: как его показать,
+        что делать, когда элемент добавляется или удаляется со страницы и т.д.</p>
+        <p>Это делается путем создания класса со специальными методами. Это просто, так как существует всего несколько
+        методов, и все они являются необязательными.</p>
+        <p>Вот набросок с полным списком:</p>
+<pre><code class="language-javascript">class MyElement extends HTMLElement {
+    constructor() {
+        super();
+        // Элемент создан
+    }
+
+    connectedCallback() {
+        // Браузер вызывает этот метод при добавлении элемента в документ
+        // (может вызываться много раз, если элемент многократно добавляется/удаляется)
+    }
+
+    disconnectedCallback() {
+        // Браузер вызывает этот метод при удалении элемента из документа
+        // (может вызываться много раз, если элемент многократно добавляется/удаляется)
+    }
+
+    static get observedAttributes() {
+        return [/* Массив имен атрибутов для отслеживания их изменений */];
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        // Вызывается при изменении одного из перечисленных выше атрибутов
+    }
+
+    adoptedCallback() {
+        // Вызывается, когда элемент перемещается в новый документ
+        // (происходит в document.adoptNode, используется очень редко)
+    }
+
+    // У элемента могут быть еще другие методы и свойства
+}</code></pre>
+        <p>После этого нам нужно зарегистрировать элемент:</p>
+<pre><code class="language-javascript">// Сообщим браузеру, что &lt;my-element&gt; обслуживается нашим новым классом
+customElements.define('my-element', MyElement);</code></pre>
+        <p>Теперь для любых HTML-элементов с тегом <code>&lt;my-element&gt;</code> создается экземпляр <code>MyElement</code>
+        и вызываются вышеупомянутые методы. Также мы можем использовать <code>document.createElement('my-element')</code>
+        в JavaScript.</p>
+
+        <article class="note">
+            <h3>Имя пользовательского элемента должно содержать дефис <code>-</code></h3>
+            <p>Имя пользовательского элемента должно содержать дефис <code>-</code>, например, <code>my-element</code>
+            и <code>super-button</code> - валидные имена, а <code>myelement</code> - нет.</p>
+            <p>Это, чтобы гарантировать отсутствие конфликтов имен между встроенными и пользовательскими элементами HTML.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Пример: «time-formatted»</h2>
+        <p>Например, элемент <code>&lt;time&gt;</code> уже существует в HTML для даты/времени. Но сам по себе он не
+        выполняет никакого форматирования. Давайте создадим элемент <code>&lt;time-formatted&gt;</code>, который
+        отображает время в удобном формате с учетом языка:</p>
+<pre><code class="language-html">&lt;script&gt;</code>
+<code class="language-javascript">class TimeFormatted extends HTMLElement { // (1)
+
+    connectedCallback() {
+        let date = new Date(this.getAttribute('datetime') || Date.now());
+
+        this.innerHTML = new Intl.DateTimeFormat('default', {
+            year: this.getAttribute('year') || undefined,
+            month: this.getAttribute('month') || undefined,
+            day: this.getAttribute('day') || undefined,
+            hour: this.getAttribute('hour') || undefined,
+            minute: this.getAttribute('minute') || undefined,
+            second: this.getAttribute('second') || undefined,
+            timeZoneName: this.getAttribute('time-zone-name') || undefined,
+        }).format(date);
+    }
+}
+
+customElements.define('time-formatted', TimeFormatted); // (2)</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;!-- (3) -->
+&lt;time-formatted datetime="2019-12-01"
+    year="numeric" month="long" day="numeric"
+    hour="numeric" minute="numeric" second="numeric"
+    time-zone-name="short"
+&gt;&lt;/time-formatted&gt;</code></pre>
+        <div style="margin: 0.5rem"></div>
+        <script>
+            /**
+             * @element time-formatted
+             * @attr {string} datetime
+             * @attr {string} year
+             */
+            class TimeFormatted extends HTMLElement {
+                connectedCallback() {
+                    let date = new Date(this.getAttribute('datetime') || Date.now());
+
+                    this.innerHTML = new Intl.DateTimeFormat('default', {
+                        year: this.getAttribute('year') || undefined,
+                        month: this.getAttribute('month') || undefined,
+                        day: this.getAttribute('day') || undefined,
+                        hour: this.getAttribute('hour') || undefined,
+                        minute: this.getAttribute('minute') || undefined,
+                        second: this.getAttribute('second') || undefined,
+                        timeZoneName: this.getAttribute('time-zone-name') || undefined,
+                    }).format(date);
+                }
+            }
+
+            customElements.define('time-formatted', TimeFormatted);
+        </script>
+        <time-formatted year="numeric" month="long" day="numeric"
+                        hour="numeric" minute="numeric" second="numeric"
+                        time-zone-name="short"></time-formatted>
+        <ol>
+            <li>
+                <p>Класс имеет только один метод <code>connectedCallback()</code> - браузер вызывает его, когда
+                элемент <code>&lt;time-formatted&gt;</code> добавляется на страницу (или когда HTML-парсер обнаруживает
+                его), и он использует встроенный форматировщик данных
+                <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat">Intl.DateTimeFormat</a>,
+                хорошо поддерживаемый в браузерах, чтобы показать красиво отформатированное время.</p>
+            </li>
+            <li>
+                <p>Нам нужно зарегистрировать наш новый элемент, используя <code>customElements.define(tag, class)</code>.</p>
+            </li>
+            <li>
+                <p>И тогда мы сможем использовать его везде.</p>
+            </li>
+        </ol>
+
+        <article class="note">
+            <h3>Обновление пользовательских элементов</h3>
+            <p>Если браузер сталкивается с элементами <code>&lt;time-formatted&gt;</code> до <code>customElements.define</code>,
+            то это не ошибка. Но элемент пока неизвестен, как и любой нестандартный тег.</p>
+            <p>Такие «неопределенные» элементы могут быть стилизованы с помощью CSS селектора <code>:not(:defined)</code>.</p>
+            <p>Когда вызывается <code>customElements.define</code>, они «обновляются»: для каждого создается новый
+            экземпляр <code>TimeFormatted</code> и вызывается <code>connectedCallback</code>. Они становятся
+            <code>:defined</code>.</p>
+            <p>Чтобы получить информацию о пользовательских элементах, есть следующие методы:</p>
+            <ul>
+                <li>
+                    <p><code>customElements.get(name)</code> - возвращает класс пользовательского элемента с указанным
+                    именем <code>name</code>.</p>
+                </li>
+                <li>
+                    <p><code>customElements.whenDefined(name)</code> - возвращает промис, который переходит в состояние
+                    «успешно выполнен» со значением конструктора пользовательского элемента, когда определен пользовательский
+                    элемент с указанным именем <code>name</code>.</p>
+                </li>
+            </ul>
+        </article>
+
+        <article class="note">
+            <h3>Рендеринг происходит в <code>connectedCallback</code>, не в <code>constructor</code></h3>
+            <p>В приведенном выше примере содержимое элемента рендерится (создается) в <code>connectedCallback</code>.</p>
+            <p>Почему не в <code>constructor</code>?</p>
+            <p>Причина проста: когда вызывается <code>constructor</code>, делать это слишком рано. Экземпляр элемента
+            создан, но на этом этапе браузер еще не обработал/назначил атрибуты: вызовы <code>getAttribute</code>
+            вернули бы <code>null</code>. Так что мы не можем рендерить здесь.</p>
+            <p>Кроме того, если подумать, это лучше с точки зрения производительности - отложить работу до тех пор,
+            пока она действительно не понадобится.</p>
+            <p><code>connectedCallback</code> срабатывает, когда элемент добавляется в документ. Не просто добавляется
+            к другому элементу как дочерний, но фактически становится частью страницы. Таким образом, мы можем
+            построить отдельный DOM, создать элементы и подготовить их для последующего использования.
+            Они будут рендериться только тогда, когда попадут на страницу.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Наблюдение за атрибутами</h2>
+        <p>В текущей реализации <code>&lt;time-formatted&gt;</code> после того, как элемент отрендерился, дальнейшие
+        изменения атрибутов не дают никакого эффекта. Это странно для HTML-элемента. Обычно, когда мы изменяем атрибут,
+        например <code>a.href</code>, мы ожидаем, что изменение будет видно сразу. Так что давайте исправим это.</p>
+        <p>Мы можем наблюдать за атрибутами, поместив их список в статический геттер <code>observedAttributes()</code>.
+        При изменении этих атрибутов вызывается <code>attributeChangedCallback</code>. Он срабатывает не для любого
+        атрибута по соображениям производительности.</p>
+        <p>Вот новый <code>&lt;time-formatted&gt;</code>, который автоматически обновляется при изменении атрибутов:</p>
+<pre><code class="language-html">&lt;script&gt;</code>
+<code class="language-javascript">class TimeFormatted extends HTMLElement {
+
+    render() { // (1)
+        let date = new Date(this.getAttribute('datetime') || Date.now());
+
+        this.innerHTML = new Intl.DateTimeFormat('default', {
+            year: this.getAttribute('year') || undefined,
+            month: this.getAttribute('month') || undefined,
+            day: this.getAttribute('day') || undefined,
+            hour: this.getAttribute('hour') || undefined,
+            minute: this.getAttribute('minute') || undefined,
+            second: this.getAttribute('second') || undefined,
+            timeZoneName: this.getAttribute('time-zone-name') || undefined,
+        }).format(date);
+    }
+
+    connectedCallback() { // (2)
+        if (!this.rendered) {
+            this.render();
+            this.rendered = true;
+        }
+    }
+
+    static get observedAttributes() { // (3)
+        return ['datetime', 'year', 'month', 'day', 'hour', 'minute', 'second', 'time-zone-name']
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) { // (4)
+        this.render();
+    }
+}
+
+customElements.define('time-formatted', TimeFormatted);</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;time-formatted id="elem" hour="numeric" minute="numeric" second="numeric"&gt;&lt;/time-formatted&gt;
+
+&lt;script&gt;</code>
+<code class="language-javascript">setInterval(() => elem.setAttribute('datetime', new Date()), 1000); // (5)</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <script>
+            class TimeFormattedUpdated extends HTMLElement {
+
+                render() {
+
+                    let date = new Date(this.getAttribute('datetime') || Date.now());
+
+                    this.innerHTML = new Intl.DateTimeFormat('default', {
+                        year: this.getAttribute('year') || undefined,
+                        month: this.getAttribute('month') || undefined,
+                        day: this.getAttribute('day') || undefined,
+                        hour: this.getAttribute('hour') || undefined,
+                        minute: this.getAttribute('minute') || undefined,
+                        second: this.getAttribute('second') || undefined,
+                        timeZoneName: this.getAttribute('time-zone-name') || undefined,
+                    }).format(date);
+                }
+
+                connectedCallback() {
+                    this.render();
+                }
+
+                static get observedAttributes() {
+                    return ['datetime', 'year', 'month', 'day', 'hour', 'minute', 'second', 'time-zone-name'];
+                }
+
+                attributeChangedCallback(name, oldValue, newValue) {
+                    this.render();
+                }
+            }
+
+            customElements.define('time-formatted-updated', TimeFormattedUpdated);
+        </script>
+        <time-formatted-updated hour="numeric" minute="numeric" second="numeric"></time-formatted-updated>
+        <script>
+            let tf = document.currentScript.previousElementSibling;
+            setInterval(() => tf.setAttribute('datetime', new Date()), 1000);
+        </script>
+        <ol>
+            <li>
+                <p>Логика рендеринга перенесена во вспомогательный метод <code>render()</code>.</p>
+            </li>
+            <li>
+                <p>Мы вызываем его один раз, когда элемент вставляется в страницу.</p>
+            </li>
+            <li>
+                <p>При изменении атрибута, указанного в <code>observedAttributes()</code>, вызывается
+                <code>attributeChangedCallback</code>.</p>
+            </li>
+            <li>
+                <p>... И проходит рендеринг элемента.</p>
+            </li>
+            <li>
+                <p>В конце мы легко создаем живой таймер.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Порядок рендеринга</h2>
+        <p>Когда HTML-парсер строит DOM, элементы обрабатываются друг за другом, родители до детей. Например, если у
+        нас есть <code>&lt;outer&gt;&lt;inner&gt;&lt;/inner&gt;&lt;/outer&gt;</code>, то элемент <code>&lt;outer&gt;</code>
+        создается и включается в DOM первым, а затем <code>&lt;inner&gt;</code>.</p>
+        <p>Это приводит к важным последствиям для пользовательских элементов.</p>
+        <p>Например, если пользовательский элемент пытается получить доступ к <code>innerHTML</code> в
+        <code>connectedCallback</code>, он ничего не получает.</p>
+<pre><code class="language-html">&lt;script&gt;</code>
+<code class="language-javascript">customElements.define('user-info', class extends HTMLElements {
+
+    connectedCallback() {
+        alert(this.innerHTML); // Пусто (*)
+    }
+});</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;user-info&gt;Джон&lt;/user-info&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                while (event.target.parentElement.children.length > 1) {
+                    event.target.parentElement.lastElementChild.remove();
+                }
+                let iframe = document.createElement('iframe');
+                iframe.src = 'iframes/emptyInnerHTML.html';
+                event.target.parentElement.append(iframe);
+            });
+        </script>
+        <p>Если вы запустите это, <code>alert</code> будет пуст.</p>
+        <p>Это происходит именно потому, что на этой стадии еще не существуют дочерние элементы, DOM не завершен.
+        HTML-парсер подключил пользовательский элемент <code>&lt;user-info&gt;</code> и теперь собирается перейти
+        к его дочерним элементам, но пока не сделал этого.</p>
+        <p>Если мы хотим передать информацию в пользовательский элемент, мы можем использовать атрибуты.
+        Они доступны сразу.</p>
+        <p>Или, если нам действительно нужны дочерние элементы, мы можем отложить доступ к ним, используя
+        <code>setTimeout</code> с нулевой задержкой.</p>
+        <p>Это работает:</p>
+        <pre><code class="language-html">&lt;script&gt;</code>
+<code class="language-javascript">customElements.define('user-info', class extends HTMLElements {
+
+    connectedCallback() {
+        setTimeout(() => alert(this.innerHTML)); // Джон (*)
+    }
+});</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;user-info&gt;Джон&lt;/user-info&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('click', function(event) {
+                while (event.target.parentElement.children.length > 1) {
+                    event.target.parentElement.lastElementChild.remove();
+                }
+                let iframe = document.createElement('iframe');
+                iframe.src = 'iframes/filledInnerHTML.html';
+                event.target.parentElement.append(iframe);
+            });
+        </script>
+        <p>Теперь <code>alert</code> в строке <code>(*)</code> показывает «Джон», поскольку мы запускаем его асинхронно,
+        после завершения парсинга HTML. Мы можем обработать дочерние элементы при необходимости и завершить инициализацию.</p>
+        <p>С другой стороны, это решение также не идеально. Если вложенные пользовательские элементы тоже используют
+        <code>setTimeout</code> для инициализации, то они встают в очередь: первым запускается внешний <code>setTimeout</code>,
+        а затем внутренний.</p>
+        <p>Так что внешний элемент завершит инициализацию раньше внутреннего.</p>
+        <p>Продемонстрируем это на примере:</p>
+<pre><code class="language-html">&lt;script&gt;</code>
+<code class="language-javascript">customElements.define('user-info', class extends HTMLElement {
+    connectedCallback() {
+        alert(`${this.id} connected.`);
+        setTimeout(() => alert(`${this.id} initialized`));
+    }
+});</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;user-info id="outer"&gt;
+    &lt;user-info id="inner"&gt;&lt;/user-info&gt;
+&lt;/user-info&gt;</code></pre>
+        <p>Порядок вывода:</p>
+        <ol>
+            <li>
+                <p>outer connected.</p>
+            </li>
+            <li>
+                <p>inner connected.</p>
+            </li>
+            <li>
+                <p>outer initialized.</p>
+            </li>
+            <li>
+                <p>inner initialized.</p>
+            </li>
+        </ol>
+        <p>Мы ясно видим, что внешний элемент <code>outer</code> завершает инициализацию <code>(3)</code> до
+        внутреннего <code>inner</code> <code>(4)</code>.</p>
+        <p>Нет встроенного колбэка, который срабатывает после того, как вложенные элементы готовы. Если нужно,
+        мы можем реализовать подобное самостоятельно. Например, внутренние элементы могут отправлять события
+        наподобие <code>initialized</code>, а внешние могут слушать и реагировать на них.</p>
+    </article>
+
+    <article>
+        <h2>Модифицированные встроенные элементы</h2>
+    </article>
+</body>
+</html>
