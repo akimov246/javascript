@@ -415,6 +415,123 @@ customElements.define('time-formatted', TimeFormatted);</code>
 
     <article>
         <h2>Модифицированные встроенные элементы</h2>
+        <p>Новые элементы, которые мы создаем, такие как <code>&lt;time-formatted&gt;</code>, не имеют связанной с ними
+        семантики. Они не известны поисковым системам, а устройства для людей с ограниченными возможностями
+        не могут справиться с ними.</p>
+        <p>Но такие вещи могут быть важны. Например, поисковой системе было бы интересно узнать, что мы показываем
+        именно время. А если мы делаем специальный вид кнопки, почему не использовать существующую функциональность
+        <code>&lt;button&gt;</code>?</p>
+        <p>Мы можем расширять и модифицировать встроенные HTML-элементы, наследуя их классы.</p>
+        <p>Например, кнопки <code>&lt;button&gt;</code> являются экземплярами класса <code>HTMLButtonElement</code>,
+        давайте построим элемент на его основе.</p>
+        <ol>
+            <li>
+                <p>Унаследуем <code>HTMLButtonElement</code> нашим классом:</p>
+<pre><code class="language-javascript">class HelloButton extends HTMLButtonElement { /* Методы пользовательского элемента */ }</code></pre>
+            </li>
+            <li>
+                <p>Предоставим третий аргумент в <code>customElements.define</code>, указывающий тег:</p>
+<pre><code class="language-javascript">customElements.define('hello-button', HelloButton, {extends: 'button'});</code></pre>
+                <p>Бывает, что разные теги имеют одинаковы DOM-класс, поэтому указание тега необходимо.</p>
+            </li>
+            <li>
+                <p>В конце, чтобы использовать наш пользовательский элемент, вставим обычный тег <code>&lt;button&gt;</code>,
+                но добавим к нему <code>is="hello-button"</code>:</p>
+<pre><code class="language-html">&lt;button is="hello-button"&gt;...&lt;/button&gt;</code></pre>
+            </li>
+        </ol>
+        <p>Вот полный пример:</p>
+<pre><code class="language-http">&lt;script&gt;</code>
+<code class="language-javascript">// Кнопка, говорящая "привет" по клику
+class HelloButton extends HTMLButtonElement {
+
+    _onClick() {
+        alert('Привет!');
+    }
+
+    connectedCallback() {
+        this.addEventListener('click', _onClick);
+    }
+
+    disconnectedCallback() {
+        this.removeEventListener('click', _onClick);
+    }
+}
+
+customElements.define('hello-button', HelloButton, {extends: 'button'});</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;button is="hello-button"&gt;Нажми меня&lt;/button&gt;
+
+&lt;button is="hello-button" disabled&gt;Отключена&lt;/button&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button is="hello-button">Нажми меня</button>
+            <button is="hello-button" disabled>Отключена</button>
+        </div>
+        <script>
+            class HelloButton extends HTMLButtonElement {
+
+                _onClick() {
+                    alert('Привет!');
+                }
+
+                connectedCallback() {
+                    this.addEventListener('click', this._onClick);
+                }
+
+                disconnectedCallback() {
+                    this.removeEventListener('click', this._onClick);
+                }
+            }
+
+            customElements.define('hello-button', HelloButton, {extends: 'button'});
+        </script>
+        <p>Наша новая кнопка расширяет встроенную. Так что она сохраняет те же стили и стандартные возможности,
+        наподобие атрибута <code>disable</code>.</p>
+    </article>
+
+    <article>
+        <h2>Ссылки</h2>
+        <ul>
+            <li>
+                <p>HTML Living Standard: <a target="_blank" href="https://html.spec.whatwg.org/#custom-elements">https://html.spec.whatwg.org/#custom-elements</a>.</p>
+            </li>
+            <li>
+                <p>Совместимость: <a target="_blank" href="https://caniuse.com/#feat=custom-elementsv1">https://caniuse.com/#feat=custom-elementsv1</a>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Есть два типа пользовательских элементов:</p>
+        <ol>
+            <li>
+                <p>«Автономные» - новые теги, расширяющие <code>HTMLElement</code>.</p>
+                <p>Схема определения:</p>
+<pre><code class="language-javascript">class MyElement extends HTMLElement {
+    constructor() { super(); /* ... */ }
+    connectedCallback() { /* ... */ }
+    disconnectedCallback() { /* ... */ }
+    static get observedAttributes() { return [/* ... */]; }
+    attributeChangedCallback(name, oldValue, newValue) { /* ... */ }
+    adoptedCallback() { /* ... */ }
+}
+
+customElements.define('my-element', MyElement);
+/* &lt;my-element&gt; */</code></pre>
+            </li>
+            <li>
+                <p>«Модифицированные встроенные элементы» - расширения существующих элементов.</p>
+                <p>Требуют еще один аргумент в <code>.define</code> и атрибут <code>is="..."</code> в HTML.</p>
+<pre><code class="language-javascript">class MyButton extends HTMLButtonElement { /* ... */ }
+
+customElements.define('my-button', MyButton, {extends: 'button'});
+/* &lt;button is="my-button"&gt;&lt;/button&gt; */</code></pre>
+            </li>
+        </ol>
+        <p>Пользовательские элементы широко поддерживаются среди браузеров. Существует полифил:
+        <a target="_blank" href="https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs">https://github.com/webcomponents/polyfills/tree/master/packages/webcomponentsjs</a>.</p>
     </article>
 </body>
 </html>
