@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>iframe Инкапсуляция</title>
+    <style>
+        p {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div id="elem"></div>
+
+    <script>
+        elem.attachShadow({mode: 'open'});
+        elem.shadowRoot.innerHTML = '<style>p {font-weight: bold}</style> <p>Hello, John!</p>'
+
+        alert(`document.querySelectorAll('p').length: ${document.querySelectorAll('p').length}`);
+        alert(`elem.shadowRoot.querySelectorAll('p').length: ${elem.shadowRoot.querySelectorAll('p').length}`);
+    </script>
+</body>
+</html>

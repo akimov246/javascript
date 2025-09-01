@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shadow DOM</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        input.red::-webkit-slider-runnable-track {
+            background: red;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Shadow DOM</h2>
+        <p>Теневой DOM («Shadow DOM») используется для инкапсуляции. Благодаря ему в компоненте есть собственное
+        «теневое» DOM-дерево, к которому нельзя просто так обратиться из главного документа, у него могут быть
+        изолированные CSS-правила и т.д.</p>
+    </article>
+
+    <article>
+        <h2>Встроенный теневой DOM</h2>
+        <p>Задумывались ли вы о том, как устроены и стилизованы сложные браузерные элементы управления?</p>
+        <p>Например, <code>&lt;input type="range"&gt;</code>:</p>
+        <input type="range">
+        <p>Браузер рисует их своими силами и по своему усмотрению. Их DOM-структура обычно нам не видна, но в
+        инструментах разработчика можно ее посмотреть. К примеру, в Chrome для этого нужно активировать пункт
+        «Show user agent shadow DOM».</p>
+        <p>После этого <code>&lt;input type="range"&gt;</code> выглядит так:</p>'
+        <img src="images/shadow-dom-range@2x.png" alt style="width: 50vw">
+        <p>То, что находится под <code>#shadow-root</code> - и называется «shadow DOM» (теневой DOM).</p>
+        <p>Мы не можем получить доступ к теневому DOM встроенных элементов с помощью обычных JavaScript-вызовов
+        или с помощью селекторов. Это не просто обычные потомки, это мощное средство инкапсуляции.</p>
+        <p>В примере выше можно увидеть полезный атрибут <code>pseudo</code>. Он нестандартный и существует по
+        историческим причинам. С его помощью можно стилизовать подэлементы через CSS, например, так:</p>
+<pre><code class="language-html">&lt;style&gt;
+    /* Делаем цвет шкалы ползунка красным */
+    input::-webkit-slider-runnable-track {
+        background: red;
+    }
+&lt;/style&gt;
+
+&lt;unput type="range"&gt;</code></pre>
+        <input class="red" type="range">
+        <p>Еще раз заметим, что <code>pseudo</code> - нестандартный атрибут. Если говорить хронологически, то сначала
+        браузеры начали экспериментировать с инкапсуляцией внутренних DOM-структур для элементов, а уже потом, через
+        некоторое время, появился стандарт Shadow DOM, который позволяет делать то же самое, нам, разработчикам.</p>
+        <p>Далее мы воспользуемся современным стандартом Shadow DOM, описанным в спецификации
+        <a target="_blank" href="https://dom.spec.whatwg.org/#shadow-trees">DOM spec</a> и других спецификациях.</p>
+    </article>
+
+    <article>
+        <h2>Теневое дерево</h2>
+        <p>Каждый DOM-элемент может иметь 2 типа поддеревьев DOM:</p>
+        <ol>
+            <li>
+                <p><b>Light tree</b> - обычное, «светлое» DOM-поддерево, состоящее из HTML-потомков. Все поддеревья,
+                о которых мы говорили в предыдущих главах, были «light».</p>
+            </li>
+            <li>
+                <p><b>Shadow tree</b> - скрытое, «теневое» DOM-поддерево, не отраженное в HTML, скрытое от посторонних
+                глаз.</p>
+            </li>
+        </ol>
+        <p>Если у элемента имеются оба поддерева, браузер отрисовывает только теневое дерево. Также мы все же
+        можем задать «композицию» теневого и обычного деревьев. Позже в главе
+        <a target="_blank" href="https://learn.javascript.ru/slots-composition">Слоты теневого DOM, композиция</a>
+        мы рассмотрим детали.</p>
+        <p>Теневое дерево можно использовать в пользовательских элементах (Custom Elements), чтобы спрятать внутренности
+        компонента и применить к ним локальные стили.</p>
+        <p>Например, этот <code>&lt;show-hello&gt;</code> элемент прячет свой внутренний DOM в теневом дереве:</p>
+<pre><code class="language-html">&lt;script&gt;</code>
+<code class="language-javascript">customElements.define('show-hello', class extends HTMLElement {
+    connectedCallback() {
+        const shadow = this.attachShadow({mode: 'open'});
+        shadow.innerHTML = `&lt;p&gt;Hello, ${this.getAttribute('name')}&lt;/p&gt;`;
+    }</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;show-hello name="John"&gt;&lt;/show-hello&gt;</code></pre>
+        <script>
+            customElements.define('show-hello', class extends HTMLElement {
+                connectedCallback() {
+                    const shadow = this.attachShadow({mode: 'open'});
+                    shadow.innerHTML = `<p>Hello, ${this.getAttribute('name')}</p>`;
+                }
+            });
+        </script>
+        <show-hello name="John"></show-hello>
+        <p>А вот как получившийся DOM выглядит в инструментах разработчика в Chrome, весь контент внутри «#shadow-root»:</p>
+        <img src="images/shadow-dom-say-hello@2x.png" alt style="width: 30vw">
+        <p>Итак, вызов <code>elem.attachShadow({mode: ...})</code> создает теневое дерево.</p>
+        <p>Есть два ограничения:</p>
+        <ol>
+            <li>
+                <p>Для каждого элемента мы можем создать только один shadow root.</p>
+            </li>
+            <li>
+                <p>В качестве <code>elem</code> может быть использован пользовательский элемент (Custom Element),
+                либо один из следующих элементов: <code>article</code>, <code>aside</code>, <code>blockquote</code>,
+                <code>body</code>, <code>div</code>, <code>footer</code>, <code>h1...h6</code>, <code>header</code>,
+                <code>main</code>, <code>nav</code>, <code>p</code>, <code>section</code> или <code>span</code>.
+                Остальные, например, <code>&lt;img&gt;</code>, не могут содержать теневое дерево.</p>
+            </li>
+        </ol>
+        <p>Свойство <code>mode</code> задает уровень инкапсуляции. У него может быть только два значения:</p>
+        <ul>
+            <li>
+                <p><code>"open"</code> - корень теневого дерева («shadow root») доступен как <code>elem.shadowRoot</code>.</p>
+                <p>Любой код может получить теневое дерево <code>elem</code>.</p>
+            </li>
+            <li>
+                <p><code>"closed"</code> - <code>elem.shadowRoot</code> всегда возвращает <code>null</code>.</p>
+                <p>До теневого DOM в таком случае мы сможем добраться только по ссылке, которую возвращает
+                <code>attachShadow</code> (и, скорее всего, она будет спрятана внутри класса). Встроенные браузерные
+                теневые деревья, такие как у <code>&lt;input type="range"&gt;</code>, закрыты. До них не добраться.</p>
+            </li>
+        </ul>
+        <p>С возвращаемым методом <code>attachShadow</code> объектом
+        <a target="_blank" href="https://dom.spec.whatwg.org/#shadowroot">корнем теневого дерева</a>, можно работать
+        как с обычным DOM-элементом: менять его <code>innerHTML</code> или использовать методы DOM, такие как
+        <code>append</code>, чтобы заполнить его.</p>
+        <p>Элемент с корнем теневого дерева называется - «хозяин» (host) теневого дерева, и он доступен в качестве
+        свойства <code>host</code> у shadow root:</p>
+<pre><code class="language-javascript">// При условии, что {mode: 'open'}, иначе elem.shadowRoot равен null
+alert(elem.shadowRoot.host === elem); // true</code></pre>
+    </article>
+
+    <article>
+        <h2>Инкапсуляция</h2>
+        <p>Теневой DOM отделен от главного документа:</p>
+        <ol>
+            <li>
+                <p>Элементы теневого DOM не видны из обычного DOM через <code>querySelector</code>. В частности, элементы
+                теневого DOM могут иметь такие же идентификаторы, как у элементов в обычном DOM (light DOM). Они должны
+                быть уникальными только внутри теневого дерева.</p>
+            </li>
+            <li>
+                <p>У теневого DOM свои стили. Стили из внешнего DOM не применятся.</p>
+            </li>
+        </ol>
+        <p>Например:</p>
+<pre><code class="language-html">&lt;style&gt;
+    /* Стили документа не применятся в теневом дереве внутри #elem (1) */
+    p {color: red}
+&lt;/style&gt;
+
+&lt;div id="elem"&gt;&lt;/div&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">elem.attachShadow({mode: 'open'});
+    // У теневого дерева свои стили (2)
+    elem.shadowRoot.innerHTML = '&lt;style&gt; p {font-weight: bold;} &lt;/style&gt;
+                                &lt;p&gt;Hello, John!&lt;/p&gt;';
+
+    // &lt;p&gt; виден только запросам внутри теневого дерева (3)
+    alert(document.querySelectorAll('p').length); // 0
+    alert(elem.shadowRoot.querySelectorAll('p').length); // 1</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function(event) {
+                while (event.target.parentElement.children.length > 1) {
+                    event.target.parentElement.lastElementChild.remove();
+                }
+                let iframe = document.createElement('iframe');
+                iframe.src = 'iframes/iframe.html';
+                event.target.parentElement.append(iframe);
+            });
+        </script>
+        <ol>
+            <li>
+                <p>Стили главного документа не влияют на теневое дерево.</p>
+            </li>
+            <li>
+                <p>... Но свои внутренние стили работают.</p>
+            </li>
+            <li>
+                <p>Чтобы добраться до элементов в теневом дереве, нам нужно искать их изнутри самого дерева.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Ссылки</h2>
+        <ul>
+            <li>
+                <p>DOM: <a target="_blank" href="https://dom.spec.whatwg.org/#shadow-trees">https://dom.spec.whatwg.org/#shadow-trees</a></p>
+            </li>
+            <li>
+                <p>Совместимость: <a target="_blank" href="https://dom.spec.whatwg.org/#shadow-trees">https://dom.spec.whatwg.org/#shadow-trees</a></p>
+            </li>
+            <li>
+                <p>Теневой DOM упоминается во многих других спецификациях, например,
+                <a target="_blank" href="https://w3c.github.io/DOM-Parsing/#the-innerhtml-mixin">DOM Parsing</a> указывает,
+                что у shadow root есть <code>innerHTML</code>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Теневой DOM - это способ создать свой изолированный DOM для компонента.</p>
+        <ol>
+            <li>
+                <p><code>shadowRoot = elem.attachShadow({mode: 'open' | 'closed'});</code> - создает теневой DOM для
+                <code>elem</code>. Если <code>mode: 'open'</code>, он доступен через свойство <code>elem.shadowRoot</code>.</p>
+            </li>
+            <li>
+                <p>Мы можем создать подэлементы внутри <code>shadowRoot</code> с помощью <code>innerHTML</code>
+                или других методов DOM.</p>
+            </li>
+        </ol>
+        <p>Элементы теневого DOM:</p>
+        <ul>
+            <li>
+                <p>Обладают собственной областью видимости идентификаторов.</p>
+            </li>
+            <li>
+                <p>Невидимы JavaScript селекторам из главного документа, таким как <code>querySelector</code>.</p>
+            </li>
+            <li>
+                <p>Стилизуются своими стилями из теневого дерева, не из главного документа.</p>
+            </li>
+        </ul>
+        <p>Теневой DOM, если имеется, отрисовывается браузером вместо обычных потомков (light DOM). В главе
+        <a target="_blank" href="https://learn.javascript.ru/slots-composition">Слоты теневого DOM, композиция</a>
+        мы разберем, как делать их композицию.</p>
+    </article>
+</body>
+</html>
