@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Элемент «template»</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .message {
+            margin-top: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        #elem {
+            cursor: pointer;
+        }
+
+        #elem.clicked {
+            cursor: auto;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Элемент «template»</h2>
+        <p>Встроенный элемент <code>&lt;template&gt;</code> предназначен для хранения шаблона HTML. Браузер полностью
+        игнорирует его содержимое, проверяя лишь синтаксис, но мы можем использовать этот элемент в JavaScript,
+        чтобы создать другие элементы.</p>
+        <p>В теории, для хранения разметки мы могли бы создать невидимый элемент в любом месте HTML. Что такого особенного
+        в <code>&lt;tamplate&gt;</code>?</p>
+        <p>Во-первых, его содержимым может быть любой корректный HTML-код, даже такой, который обычно нуждается в
+        специальном родителе.</p>
+        <p>К примеру, мы можем поместить сюда строку таблицы <code>&lt;tr&gt;</code>:</p>
+<pre><code class="language-html">&lt;template&gt;
+    &lt;tr&gt;
+        &lt;td&gt;Содержимое&lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/template&gt;</code></pre>
+        <p>Обычно, если элемент <code>&lt;tr&gt;</code> мы поместим, скажем, в <code>&lt;div&gt;</code>, браузер обнаружит
+        неправильную структуру DOM и «исправит ее», добавив снаружи <code>&lt;table&gt;</code>. Это может оказаться
+        не тем, что мы хотели. <code>&lt;tempalte&gt;</code> же оставит разметку ровно такой, какой мы ее туда поместили.</p>
+        <p>Также внутри <code>&lt;template&gt;</code> можно поместить стили и скрипты:</p>
+<pre><code class="language-html">&lt;template&gt;
+    &lt;style&gt;
+        p { font-weight: bold; }
+    &lt;/style&gt;
+    &lt;script&gt;
+        alert('Привет');
+    &lt;/script&gt;
+&lt;/template&gt;</code></pre>
+        <p>Браузер рассматривает содержимое <code>&lt;template&gt;</code> как находящееся «вне документа»: стили,
+        определенные в нем, не применяются, скрипты не выполнятся, <code>&lt;video autoplay&gt;</code> не запустится и т.д.</p>
+        <p>Содержимое оживет (скрипт запустится), когда мы поместим его в нужное нам место.</p>
+    </article>
+
+    <article>
+        <h2>Использование template</h2>
+        <p>Содержимое шаблона доступно по его свойству <code>content</code> в качестве
+        <a target="_blank" href="../../Браузер.%20Документ,%20события,%20интерфейсы/1.%20Документ/7.%20Изменение%20документа/index.html#documentFragment">DocumentFragment</a> -
+        особый тип DOM-узла.</p>
+        <p>Можно обращаться с ним так же, как и с любыми другими DOM-узлами, за исключением одной особенности:
+        когда мы его куда-то вставляем, то в это место вставляется не он сам, а его дети.</p>
+        <p>Пример:</p>
+<pre><code class="language-html">&lt;template id="tmpl"&gt;
+    &lt;script&gt;</code>
+        <code class="language-javascript">alert('Привет!');</code>
+    <code class="language-html">&lt;/script&gt;
+    &lt;div class="message"&gt;Привет, мир!&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">let elem = document.createElement('div');
+
+    // Клонируем содержимое шаблона для того, чтобы переиспользовать его несколько раз
+    elem.append(tmpl.content.cloneNode(true));
+
+    document.body.append(elem);
+    // Сейчас скрипт из &lt;template&gt; выполнится</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <template id="template1">
+            <script>
+                alert('Привет!');
+            </script>
+            <div class="message">Привет, мир!</div>
+        </template>
+        <div style="margin: 0.5rem">
+            <button>Запустить пример</button>
+        </div>
+        <script>
+            document.currentScript.previousElementSibling.firstElementChild.addEventListener('click', function(event) {
+                while (event.target.parentElement.children.length > 1) {
+                    event.target.parentElement.lastElementChild.remove();
+                }
+
+                let elem = document.createElement('div');
+
+                elem.append(document.getElementById('template1').content.cloneNode(true));
+                event.target.parentElement.append(elem);
+            });
+        </script>
+        <p>Давайте перепишем пример Shadow DOM из прошлой главы учебника с помощью <code>&lt;template&gt;</code>:</p>
+<pre><code class="language-html">&lt;template id="tmpl"&gt;
+    &lt;style&gt; p { font-weight: bold; } &lt;/style&gt;
+    &lt;p id="message"&gt;&lt;/p&gt;
+&lt;/template&gt;
+
+&lt;div id="elem"&gt;Нажми на меня&lt;/div&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">elem.onclick = function() {
+        elem.attachShadow({mode: 'open'});
+
+        elem.shadowRoot.append(tmpl.content.cloneNode(true)); // (*)
+
+        elem.shadowRoot.getElementById('message').innerHTML = 'Привет из теней!';
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <template id="template2">
+            <style>
+                p#message {
+                    font-weight: bold;
+                }
+            </style>
+            <p id="message"></p>
+        </template>
+        <div id="elem">Нажми на меня</div>
+        <script>
+            let elem = document.getElementById('elem');
+            elem.addEventListener('click', function() {
+                elem.attachShadow({mode: 'open'});
+
+                elem.shadowRoot.append(document.getElementById('template2').content.cloneNode(true));
+                elem.shadowRoot.getElementById('message').innerHTML = 'Привет из теней!';
+                elem.classList.add('clicked');
+            }, {once: true});
+        </script>
+        <p>Когда мы клонируем и вставляем <code>tmpl.content</code> в строке <code>(*)</code>, то, так как это
+        <code>DocumentFragment</code>, вместо него вставляются его потомки (<code>&lt;style&gt;</code>, <code>&lt;p&gt;</code>).</p>
+        <p>Именно они и формируют теневой DOM:</p>
+<pre><code class="language-html">&lt;div id="elem"&gt;
+    #shadow-root
+        &lt;style&gt;p { font-weight: bold; }&lt;/style&gt;
+        &lt;p id="message"&gt;&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Подводим итоги:</p>
+        <ul>
+            <li>
+                <p>Содержимым <code>&lt;template&gt;</code> может быть любой синтаксически корректный HTML.</p>
+            </li>
+            <li>
+                <p>Содержимое <code>&lt;template&gt;</code> считается находящимся «вне документа», поэтому оно ни на
+                что не влияет.</p>
+            </li>
+            <li>
+                <p>Мы можем получить доступ к <code>template.content</code> из JavaScript, клонировать его и переиспользовать
+                в новом компоненте.</p>
+            </li>
+        </ul>
+        <p>Элемент <code>&lt;template&gt;</code> уникальный по следующим причинам:</p>
+        <ul>
+            <li>
+                <p>Браузер проверяет правильность HTML-синтаксиса в нем (в отличие от строк в скриптах).</p>
+            </li>
+            <li>
+                <p>... При этом позволяет использовать любые HTML-теги, даже те, которые без соответствующей обертки
+                не используются (например, <code>&lt;tr&gt;</code>).</p>
+            </li>
+            <li>
+                <p>Его содержимое оживает (скрипты выполняются, <code>&lt;video autoplay&gt;</code> проигрывается и т.д.),
+                когда помещается в документ.</p>
+            </li>
+        </ul>
+        <p>Элемент <code>&lt;template&gt;</code> не поддерживает итерацию, связывания данных или подстановки переменных.
+        Однако, эти возможности можно реализовать поверх него.</p>
+    </article>
+</body>
+</html>
