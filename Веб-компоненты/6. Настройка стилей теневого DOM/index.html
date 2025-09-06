@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Настройка стилей теневого DOM</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        user-card-4 {
+            --user-card-field-color: green;
+        }
+
+        span.example {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Настройка стилей теневого DOM</h2>
+        <p>Теневой DOM может содержать теги <code>&lt;style&gt;</code> и <code>&lt;link rel="stylesheet" href="..."&gt;</code>.
+        В последнем случае таблицы стилей кешируются по протоколу HTTP, так что они не будут загружаться повторно
+        при использовании одного шаблона для многих компонентов.</p>
+        <p>Как правило, локальный стили работают только внутри теневого DOM, а стили документа - вне его. Но есть
+        несколько исключений.</p>
+    </article>
+
+    <article>
+        <h2>:host</h2>
+        <p>Селектор <code>:host</code> позволяет выбрать элемент-хозяин (элемент, содержащий теневое дерево).</p>
+        <p>Например, мы создаем элемент <code>&lt;custom-dialog&gt;</code>, который нужно расположить по-центру.
+        Для этого нам необходимо стилизовать сам элемент <code>&lt;custom-dialog&gt;</code>.</p>
+        <p>Это именно то, что делает <code>:host</code>:</p>
+<pre><code class="language-html">&lt;template id="tmpl"&gt;
+    &lt;style&gt;
+        /* Стиль будет применен изнутри к элементу &lt;custom-dialog&gt; */
+        :host {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            display: inline-block;
+            border: 1px solid red;
+            padding: 10px;
+        }
+    &lt;/style&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+&lt;/template&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">customElements.define('custom-dialog', class extends HTMLElement {
+        connectedCallback() {
+            this.attachShadow({mode: 'open'}).append(tmpl.content.clonedNode(true));
+        }
+    });</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;custom-dialog&gt;
+    Hello!
+&lt;/custom-dialog&gt;</code></pre>
+        <template id="template-custom-dialog">
+            <style>
+                :host {
+                    position: relative;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    display: inline-block;
+                    border: 1px solid red;
+                    padding: 0.5rem;
+                    margin: 1rem;
+                }
+            </style>
+            <slot></slot>
+        </template>
+        <script>
+            customElements.define('custom-dialog', class extends HTMLElement {
+                connectedCallback() {
+                    this.attachShadow({mode: 'open'}).append(document.getElementById('template-custom-dialog').content.cloneNode(true));
+                }
+            });
+        </script>
+        <custom-dialog>
+            Hello!
+        </custom-dialog>
+    </article>
+
+    <article>
+        <h2>Каскадирование</h2>
+        <p>Элемент-хозяин (элемент <code>&lt;custom-dialog&gt;</code>) находится в светлом DOM, поэтому к нему применяются
+        CSS-стили документа.</p>
+        <p>Если есть некоторое свойство, стилизованное как в <code>:host</code> локально, так и в документе, то стиль
+        документа будет приоритетным.</p>
+        <p>Например, если в документе из примера поставить:</p>
+<pre><code class="language-html">&lt;style&gt;
+    custom-dialog {
+        padding: 0;
+    }
+&lt;/style&gt;</code></pre>
+        <p>... То <code>&lt;custom-dialog&gt;</code> будет без <code>padding</code>.</p>
+        <p>Это очень удобно, поскольку мы можем задать стили «по умолчанию» в компоненте в его правиле <code>:host</code>,
+        а затем, при желании, легко переопределить их в документе.</p>
+        <p>Исключение составляет тот случай, когда локальное свойство помечено как <code>!important</code>, для таких
+        свойств приоритет имеют локальные стили.</p>
+    </article>
+
+    <article>
+        <h2>:host(selector)</h2>
+        <p>То же, что и <code>:host</code>, но применяется только в случае, если элемент подходит под селектор
+        <code>selector</code>.</p>
+        <p>Например, мы бы хотели выровнять по центру <code>&lt;custom-dialog&gt;</code>, только если он содержит
+        атрибут <code>centered</code>:</p>
+<pre><code class="language-html">&lt;template id="tmpl"&gt;
+    &lt;style&gt;
+        :host([centered]) {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            border-color: blue;
+        }
+
+        :host {
+            display: inline-block;
+            border:  1px solid red;
+            padding: 10px;
+        }
+    &lt;/style&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+&lt;/template&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">customElements.define('custom-dialog', class extends HTMLElement {
+        connectedCallback() {
+            this.attachShadow({mode: 'open'}).append(tmpl.content.cloneNode(true));
+        }
+    });</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;custom-dialog centered&gt;
+    Centered!
+&lt;/custom-dialog&gt;
+
+&lt;custom-dialog&gt;
+    Not centered.
+&lt;/custom-dialog&gt;</code></pre>
+        <template id="template-custom-dialog-host-selector">
+            <style>
+                :host {
+                    display: inline-block;
+                    border: 1px solid red;
+                    padding: 0.5rem;
+                    margin: 1rem;
+                }
+
+                :host([centered]) {
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border-color: blue;
+                }
+            </style>
+            <slot></slot>
+        </template>
+        <script>
+            customElements.define('custom-dialog-host-selector', class extends HTMLElement {
+                connectedCallback() {
+                    this.attachShadow({mode: 'open'}).append(document.getElementById('template-custom-dialog-host-selector').content.cloneNode(true));
+                }
+            });
+        </script>
+        <custom-dialog-host-selector centered>
+            Centered!
+        </custom-dialog-host-selector>
+        <custom-dialog-host-selector>
+            Not centered.
+        </custom-dialog-host-selector>
+        <p>Теперь дополнительные стили для выравнивания по центру применяются только к первому элементу:
+        <code>&lt;custom-dialog centered&gt;</code>.</p>
+        <p>Подводя итог, мы можем использовать семейство селекторов <code>:host</code> для стилизации основного элемента
+        компонента. Эти стили (только если не стоит <code>!important</code>) могут быть переопределены документом.</p>
+    </article>
+
+    <article>
+        <h2>Применение стилей к содержимому слотов</h2>
+        <p>Теперь давайте рассмотрим ситуацию со слотами.</p>
+        <p>Элементы слотов происходят из светлого DOM, поэтому они используют стили документа. Локальные стили не
+        влияют на содержимое слотов.</p>
+        <p>В примере ниже текст в <code>&lt;span&gt;</code> жирный в соответствии со стилями документа, но не берет
+        <code>color</code> из локальных стилей:</p>
+<pre><code class="language-html">&lt;style&gt;
+    span { font-weight: bold; }
+&lt;/style&gt;
+
+&lt;user-card&gt;
+    &lt;div slot="username"&gt;&lt;span&gt;John Smith&lt;/span&gt;&lt;/div&gt;
+&lt;/user-card&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">customElements.define('user-card', class extends HTMLElement {
+        connectedCallback() {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.innerHTML = `
+                &lt;style&gt;
+                    span { color: red; }
+                &lt;/style&gt;
+                Имя: &lt;slot name="username"&gt;&lt;/slot&gt;
+            `;
+        }
+    });</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <script>
+            customElements.define('user-card-1', class extends HTMLElement {
+                connectedCallback() {
+                    this.attachShadow({mode: 'open'});
+                    this.shadowRoot.innerHTML = `
+                        <style>
+                            span {
+                                color: red;
+                            }
+                        </style>
+                        <div style="border: 3px solid var(--border-color-grey); border-radius: 0.5rem; width: max-content; padding: 0.5rem">
+                            Имя: <slot name="username"></slot>
+                        </div>
+                    `;
+                }
+            });
+        </script>
+        <user-card-1>
+            <div slot="username"><span class="example">John Smith</span></div>
+        </user-card-1>
+        <p>В результате текст жирный, но не красный.</p>
+        <p>Если мы хотим стилизовать слотовые элементы в нашем компоненте, то есть два варианта.</p>
+        <p>Первое - можно стилизовать сам <code>&lt;slot&gt;</code> и полагаться на наследование CSS:</p>
+<pre><code class="language-html">&lt;user-card&gt;
+    &lt;div slot="username"&gt;&lt;span&gt;John Smith&lt;/span&gt;&lt;/div&gt;
+&lt;/user-card&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">customElements.define('user-card', class extends HTMLElement {
+        connectedCallback() {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.innerHTML = `
+                &lt;style&gt;
+                    slot[name="username"] {
+                        color: red;
+                    }
+                &lt;/style&gt;
+                Имя: &lt;slot name="username"&gt;&lt;/slot&gt;
+            `;
+        }
+    });</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <script>
+            customElements.define('user-card-2', class extends HTMLElement {
+                connectedCallback() {
+                    this.attachShadow({mode: 'open'});
+                    this.shadowRoot.innerHTML = `
+                        <style>
+                            slot[name="username"] {
+                                color: red;
+                            }
+                        </style>
+                        <div style="border: 3px solid var(--border-color-grey); border-radius: 0.5rem; width: max-content; padding: 0.5rem">
+                            Имя: <slot name="username"></slot>
+                        </div>
+                    `;
+                }
+            });
+        </script>
+        <user-card-2>
+            <div slot="username"><span class="example">John Smith</span></div>
+        </user-card-2>
+        <p>Здесь <code>&lt;span&gt;John Smith&lt;/span&gt;</code> имеет красный цвет шрифта, потому что наследование
+        CSS действует между <code>&lt;slot&gt;</code> и его содержимым. Но в CSS как таковом не все свойства наследуются.</p>
+        <p>Другой вариант - использовать псевдокласс <code>::slotted(селектор)</code>. Соответствует элементам, если
+        выполняются два условия:</p>
+        <ol>
+            <li>
+                <p>Это слотовый элемент, пришедший из светлого DOM. Имя слота не имеет значения. Просто любой элемент,
+                вставленный в <code>&lt;slot&gt;</code>, но только сам элемент, а не его потомки.</p>
+            </li>
+            <li>
+                <p>Элемент соответствует <code>селектору</code>.</p>
+            </li>
+        </ol>
+        <p>В нашем примере <code>::slotted(div)</code> выбирает в точности <code>&lt;div slot="username"&gt;</code>,
+        но не его дочерние элементы:</p>
+<pre><code class="language-html">&lt;user-card&gt;
+    &lt;div slot="username"&gt;
+        &lt;div&gt;John Smith&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/user-card&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">customElements.define('user-card', class extends HTMLElement {
+        connectedCallback() {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.innerHTML = `
+                &lt;style&gt;
+                    ::slotted(div) {
+                        border: 1px solid red;
+                    }
+                &lt;/style&gt;
+                Имя: &lt;slot name="username"&gt;&lt;/slot&gt;
+            `;
+        }
+    });</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <script>
+            customElements.define('user-card-3', class extends HTMLElement {
+                connectedCallback() {
+                    this.attachShadow({mode: 'open'});
+                    this.shadowRoot.innerHTML = `
+                        <style>
+                            ::slotted(div) {
+                                border: 1px solid red;
+                            }
+                        </style>
+                        <div style="border: 3px solid var(--border-color-grey); border-radius: 0.5rem; width: max-content; padding: 0.5rem">
+                            Имя: <slot name="username"></slot>
+                        </div>
+                    `;
+                }
+            });
+        </script>
+        <user-card-3>
+            <div slot="username">
+                <div style="padding: 0.1rem">John Smith</div>
+            </div>
+        </user-card-3>
+        <p>Обратите внимание, что селектор <code>::slotted</code> не может спускаться дальше в слот. Эти селекторы
+        недействительны:</p>
+<pre><code class="language-css">::slotted(div span) {
+    /* Наш слот &lt;div&gt; не соответствует этому */
+}
+
+::slotted(div) p {
+    /* Не может войти в светлый DOM */
+}</code></pre>
+        <p>Кроме того, <code>::slotted</code> можно использовать только в CSS. Мы не можем использовать его
+        в <code>querySelector</code>.</p>
+    </article>
+
+    <article>
+        <h2>CSS-хуки с пользовательскими свойствами</h2>
+        <p>Как можно стилизовать внутренние элементы компоненты из основного документа?</p>
+        <p>Селекторы типа <code>:host</code> применяют правила к элементу <code>&lt;custom-dialog&gt;</code> или
+        <code>&lt;user-card&gt;</code>, но как стилизовать элементы теневого DOM внутри них? Например,
+        в <code>&lt;user-card&gt;</code> мы хотели бы разрешить внешнему документу изменять внешний вид пользовательских
+        полей.</p>
+        <p>Аналогично тому, как мы предусматриваем у компонента методы, чтобы взаимодействовать с ним, мы можем
+        использовать переменные CSS (пользовательские свойства CSS) для его стилизации.</p>
+        <p><b>Пользовательские свойства CSS существуют одновременно на всех уровнях, как светлом, так и в теневом DOM.</b></p>
+        <p>Например, в теневом DOM мы можем использовать CSS-переменную <code>--user-card-field-color</code> для стилизации
+        полей, а документ будет ее устанавливать:</p>
+<pre><code class="language-html">&lt;style&gt;
+    .field {
+        color: var(--user-card-field-color, black);
+        /* Если переменная --user-card-field-color не определена, будет использован цвет black */
+    }
+&lt;/style&gt;
+&lt;div class="field"&gt;Имя: &lt;slot name="username"&gt;&lt;/slot&gt;&lt;/div&gt;
+&lt;div class="field"&gt;Дата рождения: &lt;slot name="birthday"&gt;&lt;/slot&gt;&lt;/div&gt;</code></pre>
+        <p>Затем мы можем объявить это свойство во внешнем документе для <code>&lt;user-card&gt;</code>:</p>
+<pre><code class="language-css">user-card {
+    --user-card-field-color: green;
+}</code></pre>
+        <p>Пользовательские CSS свойства проникают через теневой DOM, они видны повсюду, поэтому внутреннее правило
+        <code>.field</code> будет использовать его.</p>
+        <p>Вот полный пример:</p>
+<pre><code class="language-html">&lt;style&gt;
+    user-card {
+        --user-card-field-color: green;
+    }
+&lt;/style&gt;
+
+&lt;template id="tmpl"&gt;
+    &lt;style&gt;
+        .field {
+            color: var(--user-card-field-color, black);
+        }
+    &lt;/style&gt;
+    &lt;div class="field"&gt;Имя: &lt;slot name="username"&gt;&lt;/slot&gt;&lt;/div&gt;
+    &lt;div class="field"&gt;Дата рождения: &lt;slot name="birthday"&gt;&lt;/slot&gt;&lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">customElements.define('user-card', class extends HTMLElement {
+        connectedCallback() {
+            this.attachShadow({mode: 'open'});
+            this.shadowRoot.append(document.getElementById('tmpl').content.cloneNode(true));
+        }
+    });</code>
+<code class="language-html">&lt;/script&gt;
+
+&lt;user-card&gt;
+    &lt;span slot="username"&gt;John Smith&lt;/span&gt;
+    &lt;span slot="birthday"&gt;01.01.2001&lt;/span&gt;
+&lt;/user-card&gt;</code></pre>
+        <template id="template-user-card">
+            <style>
+                .field {
+                    color: var(--user-card-field-color, black);
+                }
+            </style>
+            <div style="border: 3px solid var(--border-color-grey); border-radius: 0.5rem; width: max-content; padding: 0.5rem">
+                <div class="field">Имя: <slot name="username"></slot></div>
+                <div class="field">Дата рождения: <slot name="birthday"></slot></div>
+            </div>
+        </template>
+        <script>
+            customElements.define('user-card-4', class extends HTMLElement {
+                connectedCallback() {
+                    this.attachShadow({mode: 'open'});
+                    this.shadowRoot.append(document.getElementById('template-user-card').content.cloneNode(true));
+                }
+            });
+        </script>
+        <user-card-4>
+            <span slot="username">John Smith</span>
+            <span slot="birthday">01.01.2001</span>
+        </user-card-4>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Теневой DOM может включать в себя стили, такие как <code>&lt;style&gt;</code> или
+        <code>&lt;link rel="stylesheet" href="..."&gt;</code>.</p>
+        <p>Локальные стили могут влиять на:</p>
+        <ul>
+            <li>
+                <p>Теневое дерево.</p>
+            </li>
+            <li>
+                <p>Элемент-хозяин, при помощи псевдоклассов <code>:host</code> и <code>:host(selector)</code>.</p>
+            </li>
+            <li>
+                <p>Слотовые элементы (из светлого DOM), <code>::slotted(selector)</code> позволяет стилизовать сами
+                слотовые элементы, то не их дочерние элементы.</p>
+            </li>
+        </ul>
+        <p>Стили документов могут влиять на:</p>
+        <ul>
+            <li>
+                <p>Элемент-хозяин (так как он находится во внешнем документе).</p>
+            </li>
+            <li>
+                <p>Слотовые элементы и их содержимое (так как они также физически присутствуют во внешнем документе).</p>
+            </li>
+        </ul>
+        <p>Когда свойства CSS конфликтуют, обычно стили документа имеют приоритет, если только свойство не помечено
+        как <code>!important</code>. Тогда предпочтение отдается локальным стилям.</p>
+        <p>Пользовательские свойства CSS проникают через теневой DOM. Они используются как «хуки» для придания
+        элементам стиля:</p>
+        <ol>
+            <li>
+                <p>Компонент использует пользовательское CSS-свойство для инициализации ключевых элементов, например
+                <code>var(--component-name-title, &lt;значение по умолчанию&gt;)</code>.</p>
+            </li>
+            <li>
+                <p>Автор компонента публикует эти свойства для разработчиков, они так же важны, как и другие общедоступные
+                методы компонента.</p>
+            </li>
+            <li>
+                <p>Когда разработчик хочет стилизовать заголовок, он назначает CSS-свойство <code>--component-name-title</code>
+                для элемента-хозяина или выше.</p>
+            </li>
+            <li>
+                <p>Profit!</p>
+            </li>
+        </ol>
+    </article>
+</body>
+</html>
