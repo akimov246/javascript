@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Введение: шаблоны и флаги</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Введение: шаблоны и флаги</h2>
+        <p>Регулярные выражения - мощное средство поиска и замены в строке.</p>
+        <p>В JavaScript регулярные выражения реализованы отдельным объектом
+        <a target="_blank" href="https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/RegExp">RegExp</a>
+        и интегрированы в методы строк.</p>
+    </article>
+
+    <article>
+        <h2>Регулярные выражения</h2>
+        <p>Регулярное выражение состоит из <i>шаблона</i> (паттерна) и необязательных <i>флагов</i>.</p>
+        <p>Существует два синтаксиса для создания регулярного выражения.</p>
+        <p>«Длинный» синтаксис:</p>
+<pre><code class="language-javascript">regexp = new RegExp('шаблон', 'флаги');</code></pre>
+        <p>... И короткий синтаксис, использующий слеши <code>'/'</code>:</p>
+<pre><code class="language-javascript">regexp = /шаблон/; // Без флагов
+regexp = /шаблон/gmi; // С флагами gmi (будут описаны далее)</code></pre>
+        <p>Слеши <code>/.../</code> говорят JavaScript о том, что это регулярное выражение. Они играют здесь ту роль,
+        что и кавычки для обозначения строк.</p>
+        <p>Регулярное выражение <code>regexp</code> в обоих случаях является объектом встроенного класса <code>RegExp</code>.</p>
+        <p>Основная разница между этими двумя способами создания заключается в том, что слеши <code>/.../</code>
+        не допускают никаких вставок переменных (наподобие возможных в строках через <code>${...}</code>). Они полностью
+        статичны.</p>
+        <p>Слеши используются, когда мы на момент написания кода точно знаем, каким будет регулярное выражение -
+        и это большинство ситуация. А <code>new RegExp</code> - когда мы хотим создать регулярное выражение «на лету»
+        из динамически сгенерированной строки, например:</p>
+<pre><code class="language-javascript">let tag = prompt('Какой тег вы хотите найти?', 'h2');
+
+let regexp = new RegExp(`<${tag}>`); то же, что /&lt;h2&gt;/ при ответе "h2" на prompt выше</code></pre>
+    </article>
+
+    <article>
+        <h2>Флаги</h2>
+        <p>Регулярные выражения могут иметь флаги, которые влияют на поиск или предоставляют дополнительную информацию.</p>
+        <p>В JavaScript их всего семь:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Флаг</th>
+                <th>Описание</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>i</code></td>
+                <td>С этим флагом поиск не зависит от регистра: нет разницы между <code>A</code> и <code>a</code>.</td>
+            </tr>
+            <tr>
+                <td><code>g</code></td>
+                <td>С этим флагом поиск ищет все совпадения, без него - только первое.</td>
+            </tr>
+            <tr>
+                <td><code>m</code></td>
+                <td>Многострочный режим (рассматривается в главе
+                <a target="_blank" href="https://learn.javascript.ru/regexp-multiline-mode">Многострочный режим якорей ^ $, флаг "m"</a>).</td>
+            </tr>
+            <tr>
+                <td><code>s</code></td>
+                <td>Включает режим «dotall», при котором точка <code>.</code> может соответствовать символу перевода строки
+                <code>\n</code> (рассматривается в главе
+                <a target="_blank" href="https://learn.javascript.ru/regexp-character-classes">Символьные классы</a>.</td>
+            </tr>
+            <tr>
+                <td><code>u</code></td>
+                <td>Включает полную поддержку Юникода. Флаг разрешает корректную обработку суррогатных пар
+                (подробнее об этом в главе
+                <a target="_blank" href="https://learn.javascript.ru/regexp-unicode">Юникод: флаг "u" и класс \p{...}</a>).</td>
+            </tr>
+            <tr>
+                <td><code>y</code></td>
+                <td>Режим поиска на конкретной позиции в тексте (описан в главе
+                <a target="_blank" href="https://learn.javascript.ru/regexp-sticky">Поиск на заданной позиции, флаг "y"</a>).</td>
+            </tr>
+            <tr>
+                <td><code>d</code></td>
+                <td>С этим флагом результат регулярного выражения помещается в массив, который содержит дополнительную информацию
+                о регулярном выражении, например, индексы начала и конца подстрок. Этот флаг не меняет поведения
+                регулярного выражения, а лишь предоставляет дополнительную информацию.</td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+
+    <article>
+        <h2>Поиск: str.match</h2>
+        <p>Как уже говорилось, использование регулярных выражений интегрировано в методы строк.</p>
+        <p>Метод <code>str.match(regexp)</code> для строки <code>str</code> возвращает совпадения с регулярным выражением
+        <code>regexp</code>.</p>
+        <p>У него есть три режима работы:</p>
+        <ol>
+            <li>
+                <p>Если у регулярного выражения есть флаг <code>g</code>, то он возвращает массив всех совпадений:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Любо, братцы, любо!';
+
+alert(str.match(/любо/gi)); // Любо,любо (массив из двух подстрок-совпадений)</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Любо, братцы, любо!';
+                            alert(str.match(/любо/gi));
+                        });
+                    });
+                </script>
+                <p>Обратите внимание: найдены и <code>Любо</code> и <code>любо</code>, благодаря флагу <code>i</code>,
+                который делает регулярное выражение регистронезависимым.</p>
+            </li>
+            <li>
+                <p>Если такого флага нет, то возвращает только первое совпадение в виде массива, в котором по индексу
+                <code>0</code> находится совпадение, и есть свойства с дополнительной информацией о нем:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Любо, братцы, любо!';
+
+let result = str.match(/любо/i); // Без флага g
+
+alert(result[0]); // Любо (первое совпадение)
+alert(result.length); // 1
+
+// Дополнительная информация:
+alert(result.index); // 0 (позиция совпадения)
+alert(result.input); // Любо, братцы, любо! (исходная строка)</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Любо, братцы, любо!';
+                            let result = str.match(/любо/i);
+
+                            alert(`Первое совпадение: ${result[0]}`);
+                            alert(`Длина массива: ${result.length}`);
+                            alert(`Позиция совпадения: ${result.index}`);
+                            alert(`Исходная строка: ${result.input}`);
+                        });
+                    });
+                </script>
+                <p>В этом массиве могут быть и другие индексы, кроме <code>0</code>, если часть регулярного выражения
+                выделена в скобки. Мы разберем это в главе
+                <a target="_blank" href="https://learn.javascript.ru/regexp-groups">Скобочные группы</a>.</p>
+            </li>
+            <li>
+                <p>И, наконец, если совпадений нет, то, вне зависимости от наличия флага <code>g</code>, возвращается
+                <code>null</code>.</p>
+                <p>Это очень важный нюанс. При отсутствии совпадений возвращается не пустой массив, а именно <code>null</code>.
+                Если об этом забыть, можно легко допустить ошибку, например:</p>
+<pre class="executable"><code class="language-javascript">let matches = 'JavaScript'.match(/HTML/); // null
+
+if (!matches.length) { // Ошибка: у null нет свойства length
+    alert('Ошибка в строке выше');
+}</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let matches = 'JavaScript'.match(/HTML/);
+
+                            try {
+                                if (!matches.length) {
+                                    alert('Ошибка в строке выше');
+                                }
+                            } catch(error) {
+                                alert(error);
+                            }
+                        });
+                    });
+                </script>
+                <p>Если хочется, чтобы результатом всегда был массив, можно написать так:</p>
+<pre class="executable"><code class="language-javascript">let matches = 'JavaScript'.match(/HTML/) || [];
+
+if (!matches.length) {
+    alert('Совпадений нет'); // Теперь работает
+}</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let matches = 'JavaScript'.match(/HTML/) || [];
+
+                            if (!matches.length) {
+                                alert('Совпадений нет');
+                            }
+                        });
+                    });
+                </script>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Замена: str.replace</h2>
+        <p>Метод <code>str.replace(regexp, replacement)</code> заменяет совпадения с <code>regexp</code> в строке
+        <code>str</code> на <code>replacement</code> (все, если есть флаг <code>g</code>, иначе только первое).</p>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">// Без флага g
+alert('We will, we will'.replace(/we/i, 'I')); // I will, we will
+
+// С флагом g
+alert('We will, we will'.replace(/we/gi, 'I')); // I will, I will</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    alert('We will, we will'.replace(/we/i, 'I'));
+                    alert('We will, we will'.replace(/we/gi, (m) => {
+                        if (m[0].toUpperCase() === m[0]) {
+                            return 'I';
+                        } else {
+                            return 'i';
+                        }
+                    }));
+                });
+            });
+        </script>
+        <p>В строке замены <code>replacement</code> мы можем использовать специальные комбинации символов для вставки
+        фрагментов совпадения:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Спецсимволы</th>
+                <th>Действие в строке замены</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>$&</code></td>
+                <td>Вставляет все найденное совпадение</td>
+            </tr>
+            <tr>
+                <td><code>$`</code></td>
+                <td>Вставляет часть строки до совпадения</td>
+            </tr>
+            <tr>
+                <td><code>$'</code></td>
+                <td>Вставляет часть строки после совпадения</td>
+            </tr>
+            <tr>
+                <td><code>$n</code></td>
+                <td>Если <code>n</code> это 1-2 значное число, вставляет содержимое n-й скобочной группы регулярного
+                выражения, больше об этом в главе
+                <a target="_blank" href="https://learn.javascript.ru/regexp-groups">Скобочные группы</a></td>
+            </tr>
+            <tr>
+                <td><code>$&lt;name&gt;</code></td>
+                <td>Вставляет содержимое скобочной группы с именем <code>name</code>, также изучим в главе
+                <a target="_blank" href="https://learn.javascript.ru/regexp-groups">Скобочные группы</a></td>
+            </tr>
+            <tr>
+                <td><code>$$</code></td>
+                <td>Вставляет символ <code>$</code></td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Пример с <code>$&</code>:</p>
+<pre class="executable"><code class="language-javascript">alert('Люблю HTML'.replace(/HTML/, '$& и JavaScript')); // Люблю HTML и JavaScript</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    alert('Люблю HTML'.replace(/HTML/, '$& и JavaScript'));
+                });
+            });
+        </script>
+    </article>
+
+    <article>
+        <h2>Проверка: regexp.test</h2>
+        <p>Метод <code>regexp.test(str)</code> проверяет, есть ли хоть одно совпадение, если да, то возвращает <code>true</code>,
+        иначе <code>false</code>.</p>
+<pre class="executable"><code class="language-javascript">let str = 'Я ЛюБлЮ JavaScript';
+let regexp = /люблю/i;
+
+alert(regexp.test(str)); // true</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Я ЛюБлЮ JavaScript';
+                            let regexp = /люблю/i;
+                            alert(regexp.test(str));
+                        });
+                    });
+        </script>
+        <p>Далее в этом разделе мы будем изучать регулярные выражения, видим еще много примеров их использования, а
+        также познакомимся с другими методами.</p>
+        <p>Полная информация о различных методах дана в главе
+        <a target="_blank" href="https://learn.javascript.ru/regexp-methods">Методы RegExp и String</a>.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>
+                <p>Регулярное выражение состоит из шаблона и необязательных флагов: <code>g</code>, <code>i</code>,
+                <code>m</code>, <code>u</code>, <code>s</code>, <code>y</code>, <code>d</code>.</p>
+            </li>
+            <li>
+                <p>Без флагов и специальных символов, которые мы изучим позже, поиск по регулярному выражению аналогичен
+                поиску подстроки.</p>
+            </li>
+            <li>
+                <p>Метод <code>str.match(regexp)</code> ищет совпадения: все, если есть флаг <code>g</code>, иначе только
+                первое.</p>
+            </li>
+            <li>
+                <p>Метод <code>str.replace(regexp, replacement)</code> заменяет совпадение с <code>regexp</code> на
+                <code>replacement</code>: все, если у регулярного выражения есть флаг <code>g</code>, иначе только первое.</p>
+            </li>
+            <li>
+                <p>Метод <code>regexp.test(str)</code> возвращает <code>true</code>, если есть хоть одно совпадение,
+                иначе <code>false</code>.</p>
+            </li>
+            <li>
+                <p><a target="_blank" href="https://regexr.com/">https://regexr.com/</a></p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
