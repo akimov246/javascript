@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Символьные классы</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Символьные классы</h2>
+        <p>Рассмотрим практическую задачу - у нас есть номер телефона видал <code>"+7(903)-123-45-67"</code>, и нам
+        нужно превратить его в строку только из чисел: <code>"79031234567"</code>.</p>
+        <p>Для этого мы можем найти и удалить все, что не является числом. С этим нам помогут символьные классы.</p>
+        <p><i>Символьный класс</i> - это специальное обозначение, которое соответствует любому символу из определенного
+        набора.</p>
+        <p>Для начала давайте рассмотрим класс «цифра». Он обозначается как <code>\d</code> и в регулярном выражении
+        соответствует «любой одной цифре».</p>
+        <p>Например, давайте найдем первую цифру в номере телефона:</p>
+<pre class="executable"><code class="language-javascript">let str = "+7(903)-123-45-67";
+
+let regexp = /\d/;
+
+alert(str.match(regexp)); // 7</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '+7(903)-123-45-67';
+                            let regexp = /\d/;
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Без флага <code>g</code> регулярное выражение ищет только первое совпадение, то есть первую цифру <code>\d</code>.</p>
+        <p>Давайте добавим флаг <code>g</code>, чтобы найти все цифры:</p>
+<pre class="executable"><code class="language-javascript">let str = '+7(903)-123-45-56';
+
+let regexp = /\d/g;
+
+alert(str.match(regexp)); // Массив совпадений: 7,9,0,3,1,2,3,4,5,6,7
+
+// И можно сделать из них уже чисто цифровой номер телефона
+alert(str.match(regexp).join('')); // 79031234567</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '+7(903)-123-45-67';
+                            let regexp = /\d/g;
+                            alert(str.match(regexp));
+                            alert(str.match(regexp).join(''));
+                        });
+                    });
+        </script>
+        <p>Это был символьный класс для цифр. Есть и другие символьные классы.</p>
+        <p>Наиболее используемые:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Символьный класс</th>
+                <th>Описание</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>\d</code> <b>(«d»: от английского «digit» означает «цифра»)</b></td>
+                <td>Цифра: символ от <code>0</code> до <code>9</code></td>
+            </tr>
+            <tr>
+                <td><code>\s</code> <b>(«s»: от английского «space» - «пробел»)</b></td>
+                <td>Пробельные символы: включает в себя символ пробела, табуляции <code>\t</code>, перевода строки
+                <code>\n</code> и некоторые другие редкие пробельные символы, обозначаемые как <code>\v</code>,
+                <code>\f</code> и <code>\r</code>.</td>
+            </tr>
+            <tr>
+                <td><code>\w</code> <b>(«w»: от английского «word» - «слово»)</b></td>
+                <td>Символ «слова», а точнее - буква латинского алфавита или цифра или подчеркивание <code>_</code>.
+                Нелатинские буквы не является частью класса <code>\w</code>, то есть буква русского языка не подходит.</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Для примера, <code>\d\s\w</code> обозначает «цифру», за которой идет пробельный символ, а затем символ
+        слова, например, <code>1 a</code>.</p>
+        <p><b>Регулярное выражение может содержать как обычные символы, так и символьные классы.</b></p>
+        <p>Например, <code>CSS\d</code> соответствует строке <code>CSS</code> с цифрой после нее:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Есть ли стандарт CSS4?';
+let regexp = /CSS\d/;
+
+alert(str.match(regexp)); // CSS4</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Есть ли стандарт CSS4?';
+                            let regexp = /CSS\d/;
+
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Также мы можем использовать несколько символьных классов:</p>
+<pre class="executable"><code class="language-javascript">alert('I love HTML5'.match(/\s\w\w\w\w\d/)); // ' HTML5'</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('I love HTML5'.match(/\s\w\w\w\w\d/));
+                        });
+                    });
+        </script>
+        <p>Соответствие (каждому символьному классу соответствует один символ результата):</p>
+        <img src="images/love-html5-classes.svg" alt style="width: 40vw">
+    </article>
+
+    <article>
+        <h2>Обратные символьные классы</h2>
+        <p>Для каждого символьного класса существует «обратный класс», обозначаемый той же буквой, но в верхнем регистре.</p>
+        <p>«Обратный» обозначает, что он соответствует всем другим символам, например:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Символьный класс</th>
+                <th>Описание</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>\D</code></td>
+                <td>Не цифра: любой символ, кроме <code>\d</code>, например, буква.</td>
+            </tr>
+            <tr>
+                <td><code>\S</code></td>
+                <td>Не пробел: любой символ, кроме <code>\s</code>, например, буква.</td>
+            </tr>
+            <tr>
+                <td><code>\W</code></td>
+                <td>Любой символ, кроме <code>\w</code>, то есть не буквы из латиницы, не знак подчеркивания и не цифры.
+                В частности, русские буквы принадлежат этому классу.</td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Мы уже видели, как сделать цифровой номер из строки вида <code>+7(903)-123-45-67</code>: найти все цифры
+        и соединить их.</p>
+<pre class="executable"><code class="language-javascript">let str = '+7(903)-123-45-67';
+
+alert(str.match(/\d/g).join('')); // 79031234567</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '+7(903)-123-45-67';
+                            alert(str.match(/\d/g).join(''));
+                        });
+                    });
+        </script>
+        <p>Альтернативный, более короткий путь - найти нецифровые символы <code>\D</code> и удалить их из строки:</p>
+<pre class="executable"><code class="language-javascript">let str = '+7(903)-123-45-67';
+
+alert(str.replace(/\D/g, '')); // 79031234567</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '+7(903)-123-45-67';
+                            alert(str.replace(/\D/g, ''));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Точка - это любой символ</h2>
+        <p>Точка <code>.</code> - это специальный символьный класс, который соответствует «любому символу, кроме новой
+        строки».</p>
+        <p>Для примера:</p>
+<pre class="executable"><code class="language-javascript">alert('Ю'.match(/./)); // Ю</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Ю'.match(/./));
+                        });
+                    });
+        </script>
+        <p>Или в середине регулярного выражения:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /CS.4/;
+
+alert('CSS4'.match(regexp)); // CSS4
+alert('CS-4'.match(regexp)); // CS-4
+alert('CS 4'.match(regexp)); // CS 4 (пробел тоже является символом)
+</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /CS.4/;
+
+                            alert('CSS4'.match(regexp));
+                            alert('CS-4'.match(regexp));
+                            alert('CS 4'.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Обратите внимание, что точка означает «любой символ», но не «отсутствие символа». Там должен быть какой-либо
+        символ, чтобы соответствовать условию поиска:</p>
+<pre class="executable"><code class="language-javascript">alert('CS4'.match(/CS.4/)); // null, нет совпадений, потому что нет символа для точки</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('CS4'.match(/CS.4/));
+                        });
+                    });
+        </script>
+
+        <h3>Точка, как буквально любой символ, с флагом «s»</h3>
+        <p>Обычно точка не соответствует символу новой строки <code>\n</code>.</p>
+        <p>То есть, регулярное выражение <code>A.B</code> будет искать символ <code>A</code> и затем <code>B</code>,
+        с любым символом между ними, кроме перевода строки <code>\n</code>:</p>
+<pre class="executable"><code class="language-javascript">alert('A\nB'.match(/A.B/)); // null (нет совпадений)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('A\nB'.match(/A.B/));
+                        });
+                    });
+        </script>
+        <p>Но во многих ситуациях точкой мы хотим обозначить действительно «любой символ», включая перевод строки.</p>
+        <p>Как раз для этого нужен флаг <code>s</code>. Если регулярное выражение имеет его, то точка <code>.</code>
+        соответствует буквально любому символу:</p>
+<pre class="executable"><code class="language-javascript">alert('A\nB'.match(/A.B/s)); // A\nB (совпадение!)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('A\nB'.match(/A.B/s));
+                        });
+                    });
+        </script>
+
+        <article class="warning">
+            <h3>Внимание, пробелы!</h3>
+            <p>Обычно мы уделяем мало внимания пробелам. Для нас строки <code>1-5</code> и <code>1 - 5</code> практически
+            идентичны.</p>
+            <p>Но если регулярное выражение не учитывает пробелы, оно может не сработать.</p>
+            <p>Давайте попробуем найти цифры, разделенные дефисом:</p>
+<pre class="executable"><code class="language-javascript">alert('1 - 5'.match(/\d-\d/)); // null (нет совпадений)</code></pre>
+            <script>
+                document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                            event.target.querySelector('button').addEventListener('click', function() {
+                                alert('1 - 5'.match(/\d-\d/));
+                            });
+                        });
+            </script>
+            <p>Исправим это, добавив пробелы в регулярное выражение <code>\d - \d</code>:</p>
+<pre class="executable"><code class="language-javascript">alert('1 - 5'.match(/\d - \d/)); // 1 - 5, теперь работает
+// Или можно использовать класс \s:
+alert('1 - 5'.match(/\d\s-\s\d/)); // 1 - 5, тоже работает</code></pre>
+            <script>
+                document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                            event.target.querySelector('button').addEventListener('click', function() {
+                                alert('1 - 5'.match(/\d - \d/));
+                                alert('1 - 5'.match(/\d\s-\s\d/));
+                            });
+                        });
+            </script>
+            <p><b>Пробел - это символ. Такой же важный, как любой другой.</b></p>
+            <p>Нельзя просто добавить или удалить пробелы из регулярного выражения, и ожидать, что оно будет также работать.</p>
+            <p>Другими словами, в регулярном выражении все символы имеют значение, даже пробелы.</p>
+
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Существуют следующие символьные классы:</p>
+        <ul>
+            <li>
+                <p><code>\d</code> - цифры.</p>
+            </li>
+            <li>
+                <p><code>\D</code> - не цифры.</p>
+            </li>
+            <li>
+                <p><code>\s</code> - пробельные символы, табы, новые строки.</p>
+            </li>
+            <li>
+                <p><code>\S</code> - все, кроме <code>\s</code>.</p>
+            </li>
+            <li>
+                <p><code>\w</code> - латиница, цифры, подчеркивание <code>"_"</code>.</p>
+            </li>
+            <li>
+                <p><code>\W</code> - все, кроме <code>\w</code>.</p>
+            </li>
+            <li>
+                <p><code>.</code> - любой символ, если с флагом регулярного выражения <code>s</code>, в противном случае
+                любой символ, кроме перевода строки <code>\n</code>.</p>
+            </li>
+        </ul>
+        <p>... Но это не все!</p>
+        <p>В кодировке Юникод, которую JavaScript использует для строк, каждому символу соответствует ряд свойств,
+        например - какого языка это буква (если буква), является ли символ знаком пунктуации и т.п.</p>
+        <p>Можно искать, в том числе, и по этим свойствам. Для этого нужен флаг <code>u</code>, который мы рассмотрим
+        в следующей главе.</p>
+    </article>
+</body>
+</html>
