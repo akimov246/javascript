@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Якоря: начало строки ^ и конец $ </title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Якоря: начало строки ^ и конец $</h2>
+        <p>У символов каретки <code>^</code> и доллара <code>$</code> есть специальные значения в регулярных выражениях.
+        Они называются «якоря» (anchors).</p>
+        <p>Каретка <code>^</code> означает совпадение с началом текста, а доллар <code>$</code> - с концом.</p>
+        <p>К примеру, давайте проверим начинается ли текст с <code>Mary</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Mary had a little lamb';
+
+alert(/^Mary/.test(str));</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    let str = 'Mary had a little lamb';
+
+                    alert(/^Mary/.test(str));
+                });
+            });
+        </script>
+        <p>Шаблон <code>^Mary</code> означает: «начало строки, затем Mary».</p>
+        <p>Аналогично можно проверить, кончается ли строка словом <code>snow</code> при помощи <code>snow$</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = "It's fleece was white as snow";
+
+alert(/snow$/.test(str));</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    let str = "It's fleece was white as snow";
+
+                    alert(/snow$/.test(str));
+                });
+            });
+        </script>
+        <p>В конкретно этих случаях мы могли бы использовать и методы строк <code>startsWith</code>/<code>endsWith</code>.
+        Регулярные выражения следует применять, когда нам нужна проверка сложнее.</p>
+    </article>
+
+    <article>
+        <h2>Проверка на полное совпадение</h2>
+        <p>Оба якоря вместе <code>^...$</code> часто используются для проверки, совпадает ли строка с шаблоном полностью.
+        Например, чтобы определить, в правильном ли формате пользователь ввел данные.</p>
+        <p>Проверим, что строка является временем в формате <code>12:34</code>, то есть две цифры, затем двоеточие,
+        затем еще две цифры.</p>
+        <p>На языке регулярных выражений это <code>\d\d:\d\d</code>:</p>
+<pre class="executable"><code class="language-javascript">let goodInput = '12:34';
+let badInput = '12:345';
+
+let regexp = /^\d\d:\d\d$/;
+alert(regexp.test(goodInput)); // true
+alert(regexp.test(badInput)); // false</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    let goodInput = '12:34';
+                    let badInput = '12:345';
+
+                    let regexp = /^\d\d:\d\d$/;
+                    alert(regexp.test(goodInput));
+                    alert(regexp.test(badInput));
+                });
+            });
+        </script>
+        <p>Здесь совпадение с <code>\d\d:\d\d</code> ищется не где-то посередине текста, а сразу после начала строки
+        <code>^</code>, и после него должен быть сразу конец строки <code>$</code>.</p>
+        <p>То есть, вся строка - это как раз время в нужном формате.</p>
+        <p>Поведение якорей меняется, если присутствует флаг <code>m</code>. Мы рассмотрим этот флаг в следующей статье.</p>
+
+        <article class="note">
+            <h3>У якорей нулевая ширина</h3>
+            <p>Якоря <code>^</code> и <code>$</code> - это проверки. У них нулевая ширина.</p>
+            <p>Другими словами, они не добавляют к результату поиска символы, а только заставляют движок регулярных
+            выражений проверять условие (начало/конец текста).</p>
+        </article>
+
+    </article>
+</body>
+</html>
