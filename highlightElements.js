@@ -43,3 +43,37 @@ document.querySelectorAll('pre.executable').forEach((elem) => {
 
     elem.dispatchEvent(new CustomEvent('buttonAdded'));
 });
+
+
+customElements.define('console-log', class extends HTMLElement {
+    connectedCallback() {
+        this.attachShadow({mode: 'open'});
+        this.shadowRoot.innerHTML = `
+            <style>
+                div {
+                    background-color: var(--border-color-grey);
+                    padding: 0.5rem;
+                    max-height: 10rem;
+                    overflow-y: auto;
+                }
+            
+                ::slotted(p) {
+                    margin: 0.1rem;
+                    font-family: monospace;
+                    font-size: 1rem;
+                }
+                
+                ::slotted(p):before {
+                    content: '> ';
+                    color: red;
+                }
+            </style>
+            <div>
+                <slot></slot>
+            </div>
+        `;
+        this.shadowRoot.querySelector('div').addEventListener('slotchange', function(event) {
+            event.currentTarget.scrollTop = event.currentTarget.scrollHeight;
+        });
+    }
+});

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Многострочный режим якорей ^ $, флаг «m»</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Многострочный режим якорей ^ $, флаг «m»</h2>
+        <p>Многострочный режим включается флагом <code>m</code>.</p>
+        <p>Он влияет только на поведение <code>^</code> и <code>$</code>.</p>
+        <p>В многострочном режиме они означают не только начало/конец текста, но и начало/конец каждой строки в тексте.</p>
+    </article>
+
+    <article>
+        <h2>Поиск в начале строки ^</h2>
+        <p>В примере ниже текст состоит из нескольких строк. Шаблон <code>/^\d/gm</code> берет цифру с начала каждой строки:</p>
+<pre class="executable"><code class="language-javascript">let str = `1е место: Винни
+2е место: Пятачок
+3е место: Слонопотам`;
+
+console.log(str.match(/^\d/gm)); // 1, 2, 3</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            if (event.target.nextElementSibling?.tagName !== 'CONSOLE-LOG') {
+                                event.target.insertAdjacentHTML('afterend', '<console-log></console-log>')
+                            }
+                            let log = event.target.nextElementSibling;
+                            let p = document.createElement('p');
+
+                            let str = `1е место: Винни\n2е место: Пятачок\n3е место: Слонопотам`;
+
+                            p.innerText = JSON.stringify(str.match(/^\d/gm));
+                            log.append(p);
+                        });
+                    });
+        </script>
+        <p>Обратите внимание - без флага <code>m</code> было бы найдено только первое число:</p>
+<pre class="executable"><code class="language-javascript">let str = `1е место: Винни
+2е место: Пятачок
+3е место: Слонопотам`;
+
+console.log(str.match(/^\d/g)); // 1</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            if (event.target.nextElementSibling?.tagName !== 'CONSOLE-LOG') {
+                                event.target.insertAdjacentHTML('afterend', '<console-log></console-log>')
+                            }
+                            let log = event.target.nextElementSibling;
+                            let p = document.createElement('p');
+
+                            let str = `1е место: Винни\n2е место: Пятачок\n3е место: Слонопотам`;
+
+                            p.innerText = JSON.stringify(str.match(/^\d/g));
+                            log.append(p);
+                        });
+                    });
+        </script>
+        <p>Так происходит, потому что в обычном режиме каретка <code>^</code> - это только начало текста, а в многострочном -
+        начало любой строки.</p>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>«Начало строки», формально, означает «сразу после перевода строки», то есть проверка <code>^</code>
+            в многострочном режиме верна на всех позициях, которым предшествует символ перевода строки <code>\n</code>.</p>
+            <p>И в начале текста.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Поиск в конце строки $</h2>
+        <p>Символ доллара <code>$</code> ведет себя аналогично.</p>
+        <p>Регулярное выражение <code>\d$</code> ищет последнюю цифру в каждой строке:</p>
+<pre class="executable"><code class="language-javascript">let str = `Винни: 1
+Пятачок: 2
+Слонопотам: 3`;
+
+console.log(str.match(/\d$/gm)); // 1,2,3</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            if (event.target.nextElementSibling?.tagName !== 'CONSOLE-LOG') {
+                                event.target.insertAdjacentHTML('afterend', '<console-log></console-log>')
+                            }
+                            let log = event.target.nextElementSibling;
+                            let p = document.createElement('p');
+
+                            let str = `Винни: 1
+                            Пятачок: 2
+                            Слонопотам: 3`;
+
+                            p.innerText = JSON.stringify(str.match(/\d$/gm));
+                            log.append(p);
+                        });
+                    });
+        </script>
+        <p>Без флага <code>m</code> якорь <code>$</code> обозначал бы конец всей строки, и была бы найдена только
+        последняя цифра.</p>
+    </article>
+
+    <article>
+        <h2>Ищем \n вместо ^ $</h2>
+        <p>Для того, чтобы найти конец строки, можно использовать не только якоря <code>^</code> и <code>$</code>,
+        но и символ перевода строки <code>\n</code>.</p>
+        <p>В чем разница? Давайте посмотрим на примере.</p>
+        <p>Поищем <code>\d\n</code> вместо <code>\d$</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = `Винни: 1
+Пятачок: 2
+Слонопотам: 3`;
+
+console.log(str.match(/\d\n/g)); // 1\n,2\n</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            if (event.target.nextElementSibling?.tagName !== 'CONSOLE-LOG') {
+                                event.target.insertAdjacentHTML('afterend', '<console-log></console-log>')
+                            }
+                            let log = event.target.nextElementSibling;
+                            let p = document.createElement('p');
+
+                            let str = `Винни: 1\nПятачок: 2\nСлонопотам: 3`;
+
+                            p.innerText = JSON.stringify(str.match(/\d\n/g));
+                            log.append(p);
+                        });
+                    });
+        </script>
+        <p>Как видим, совпадений теперь два, а не три.</p>
+        <p>Это потому, что после <code>3</code> нет перевода строки (а конец текста, подходящий под <code>$</code> - есть).</p>
+        <p>Еще одно отличие: теперь в каждое найденное совпадение входит символ переноса строки <code>\n</code>.
+        В отличие от якорей <code>^</code>, <code>$</code>, которые только проверяют условие (начало/конец строки),
+        <code>\n</code> - символ и входит в результат.</p>
+        <p>Так что <code>\n</code> в шаблоне используется, когда нам нужен сам символ переноса строки в результате,
+        а якоря - когда мы хотим найти что-то в начале/конце строки.</p>
+    </article>
+</body>
+</html>
