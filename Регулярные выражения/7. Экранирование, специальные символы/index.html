@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Экранирование, специальные символы</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Экранирование, специальные символы</h2>
+        <p>Как мы уже видели, обратная косая черта <code>\</code> используется для обозначения классов символов,
+        например, <code>\d</code>. Это специальный символ в регулярных выражениях (как и в обычных строках).</p>
+        <p>Есть и другие специальные символы, которы имеют особое значение в регулярном выражении. Они используются
+        для более сложных поисковых конструкций. Вот полный перечень этих символов:
+        <code>[ ] \ ^ $ . | ? * + ( )</code>.</p>
+        <p>Не надо пытаться запомнить этот список: мы разберемся с каждым из них по отдельности, и таким образом
+        вы выучите их «автоматически».</p>
+    </article>
+
+    <article>
+        <h2>Экранирование символов</h2>
+        <p>Допустим, мы хотим найти буквально точку. Не «любой символ», а именно точку.</p>
+        <p>Чтобы использовать специальный символ как обычный, добавьте к нему обратную косую черту: <code>\</code>.</p>
+        <p>Это называется «экранирование символа».</p>
+        <p>К примеру:</p>
+<pre class="executable"><code class="language-javascript">alert('Глава 5.1'.match(/\d\.\d/)); // 5.1 (совпадение!)
+alert('Глава 511'.match(/\d\.\d/)); // null ("\." - ищет обычную точку)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Глава 5.1'.match(/\d\.\d/));
+                            alert('Глава 511'.match(/\d\.\d/));
+                        });
+                    });
+        </script>
+        <p>Круглые скобки также являются специальными символами, поэтому, если нам нужно использовать именно их,
+        нужно указать <code>\(</code>. В приведенном ниже примере ищется строка <code>"g()"</code>:</p>
+<pre class="executable"><code class="language-javascript">alert('function g()'.match(/g\(\)/)); // "g()"</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('function g()'.match(/g\(\)/));
+                        });
+                    });
+        </script>
+        <p>Если мы ищем обратную косую черту <code>\</code>, это специальный символ как в обычных строках, так и в
+        регулярных выражениях, поэтому мы должны удвоить ее.</p>
+<pre class="executable"><code class="language-javascript">alert('1\\2'.match(/\\/)); // \</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('1\\2'.match(/\\/));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Косая черта</h2>
+        <p>Символ косой черты <code>/</code>, так называемый «слэш», не является специальным символом, но в JavaScript
+        он используется для открытия и закрытия регулярного выражения: <code>/...шаблон.../</code>, поэтому мы должны
+        экранировать его.</p>
+        <p>Вот как выглядит поиск самой косой черты <code>/</code>:</p>
+<pre class="executable"><code class="language-javascript">alert('/'.match(/\//)); // '/'</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('/'.match(/\//));
+                        });
+                    });
+        </script>
+        <p>С другой стороны, если мы не используем короткую запись <code>/.../</code>, а создаем регулярное выражение,
+        используя <code>new RegExp</code>, тогда нам не нужно экранировать косую черту:</p>
+<pre class="executable"><code class="language-javascript">alert('/'.match(new RegExp('/'))); // находит /</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('/'.match(new RegExp('/')));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>new RegExp</h2>
+        <p>Если мы создаем регулярное выражение с помощью <code>new RegExp</code>, то нам не нужно учитывать <code>/</code>,
+        но нужно другое экранирование.</p>
+        <p>Например, такой поиск не работает:</p>
+<pre class="executable"><code class="language-javascript">let regexp = new RegExp('\d\.\d');
+
+alert('Глава 5.1'.match(regexp)); // null</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = new RegExp('\d\.\d');
+                            alert('Глава 5.1'.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Аналогичный поиск в примере выше с <code>/\d\.\d/</code> вполне работал, почему же не работает
+        <code>new RegExp('\d\.\d')</code>?</p>
+        <p>Причина в том, что символы обратной косой черты «съедаются» строкой. Как вы помните, обычные строки
+        имеют свои специальные символы, такие как <code>\n</code>, и для экранирования используется обратная косая черта.</p>
+        <p>Вот как воспринимается строка «\d\.\d»:</p>
+<pre class="executable"><code class="language-javascript">alert('\d\.\d'); // d.d</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('\d\.\d');
+                        });
+                    });
+        </script>
+        <p>Строковые кавычки «съедают» символы обратной косой черты для себя, например:</p>
+        <ul>
+            <li>
+                <p><code>\n</code> - становится символом перевода строки.</p>
+            </li>
+            <li>
+                <p><code>\u1234</code> - становится символом Юникода с указанным номером.</p>
+            </li>
+            <li>
+                <p>... А когда нет особого значения: как, например, для <code>\d</code> или <code>\z</code>, обратная
+                косая черта просто удаляется.</p>
+            </li>
+        </ul>
+        <p>Таким образом, <code>new RegExp</code> получает строку без обратной косой черты. Вот почему поиск не работает!</p>
+        <p>Чтобы исправить это, нам нужно удвоить обратную косую черту, потому что строковые кавычки превращают
+        <code>\\</code> в <code>\</code>:</p>
+<pre class="executable"><code class="language-javascript">let regStr = '\\d\\.\\d';
+alert(regStr); // \d\.\d (теперь правильно)
+
+let regexp = new RegExp(regStr);
+alert('Глава 5.1'.match(regexp)); // 5.1</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regStr = '\\d\\.\\d';
+                            alert(regStr);
+
+                            let regexp = new RegExp(regStr);
+                            alert('Глава 5.1'.match(regexp));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>
+                <p>Для поиска специальных символов <code>[ ] \ ^ $ . | ? * + ( )</code>, нам нужно добавить перед ними
+                <code>\</code> («экранировать их»).</p>
+            </li>
+            <li>
+                <p>Нам также нужно экранировать <code>/</code>, если мы используем <code>/.../</code>
+                (но не <code>new RegExp</code>).</p>
+            </li>
+            <li>
+                <p>При передаче строки в <code>new RegExp</code> нужно удваивать обратную косую черту: <code>\\</code>
+                для экранирования специальных символов, потому что строковые кавычки «съедят» одну черту.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
