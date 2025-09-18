@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Граница слова: \b</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Граница слова: \b</h2>
+        <p>Граница слова <code>\b</code> - проверка, как <code>^</code> и <code>$</code>.</p>
+        <p>Когда движок регулярных выражений (программный модуль, реализующий поиск по регулярным выражениям) видит
+        <code>\b</code>, он проверяет, что позиция в строке является границей слова.</p>
+        <p>Есть три вида позиций, которые являются границами слова:</p>
+        <ul>
+            <li>
+                <p>Начало текста, если его первый символ <code>\w</code>.</p>
+            </li>
+            <li>
+                <p>Позиция внутри текста, если слева находится <code>\w</code>, а справа - не <code>\w</code>, или наоборот.</p>
+            </li>
+            <li>
+                <p>Конец текста, если его последний символ <code>\w</code>.</p>
+            </li>
+        </ul>
+        <p>Например, регулярное выражение <code>\bJava\b</code> будет найдено в строке <code>Hello, Java!</code>, где
+        <code>Java</code> - отдельное слово, но не будет найдено в строке <code>Hello, JavaScript!</code>.</p>
+<pre class="executable"><code class="language-javascript">alert('Hello, Java!'.match(/\b\Javab/)); // Java
+alert('Hello, JavaScript!'.match(/\bJava\b/)); // null</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Hello, Java!'.match(/\bJava\b/));
+                            alert('Hello, JavaScript!'.match(/\bJava\b/));
+                        });
+                    });
+        </script>
+        <p>В строке <code>Hello, Java!</code> следующие позиции соответствуют <code>\b</code>:</p>
+        <img src="images/hello-java-boundaries.svg" alt style="width: 30vw">
+        <p>Так что она соответствует регулярному выражению <code>\bHello\b</code>, потому что:</p>
+        <ol>
+            <li>
+                <p>В начале строки совпадает первая проверка <code>\b</code>.</p>
+            </li>
+            <li>
+                <p>Далее слово <code>Hello</code> совпадает.</p>
+            </li>
+            <li>
+                <p>Далее проверка <code>\b</code> - снова совпадает, так как мы находимся между <code>o</code>
+                и запятой.</p>
+            </li>
+        </ol>
+        <p>Шаблон <code>\bJava\b</code> также совпадет. Но не <code>\bHell\b</code> (потому что после <code>l</code>
+        нет границы слова), и не <code>\bJava!\b</code> (восклицательный знак не является «символом слова» <code>\w</code>,
+        поэтому после него нет границы слова).</p>
+<pre class="executable"><code class="language-javascript">alert('Hello, Java!'.match(/\bHello\b/)); // Hello
+alert('Hello, Java!'.match(/\bJava\b/)); // Java
+alert('Hello, Java!'.match(/\bHell\b/)); // null
+alert('Hello, Java!'.match(/\bJava!\b/)); // null</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Hello, Java!'.match(/\bHello\b/));
+                            alert('Hello, Java!'.match(/\bJava\b/));
+                            alert('Hello, Java!'.match(/\bHell\b/));
+                            alert('Hello, Java!'.match(/\bJava!\b/));
+                        });
+                    });
+        </script>
+        <p>Мы можем использовать <code>\b</code> не только со словами, но и с цифрами.</p>
+        <p>Например, регулярное выражение <code>\b\d\d\b</code> ищет отдельно стоящие двузначные числа. Другими словами,
+        оно требует, чтобы и до и после <code>\d\d</code> были символы, отличные от <code>\w</code>, такие как пробелы
+        или пунктуация (или начало/конец текста).</p>
+<pre class="executable"><code class="language-javascript">alert('1 23 456 78'.match(/\b\d\d\b/g)); // 23,78
+alert('12, 34, 56'.match(/\b\d\d\b/g)); // 12,34,56</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('1 23 456 78'.match(/\b\d\d\b/g));
+                            alert('12, 34, 56'.match(/\b\d\d\b/g));
+                        });
+                    });
+        </script>
+
+        <article class="warning">
+            <h3>Граница слова <code>\b</code> не работает для алфавитов, не основанных на латинице</h3>
+            <p>Проверка <code>\b</code> смотрит на обе стороны границы: должно быть <code>\w</code> с одной стороны
+            и «не <code>\w</code>» - с другой.</p>
+            <p>Но <code>\w</code> означает латинскую букву (или цифру, или знак подчеркивания), поэтому проверка не
+            будет работать для других символов, например, кириллицы или иероглифов.</p>
+        </article>
+
+    </article>
+</body>
+</html>
