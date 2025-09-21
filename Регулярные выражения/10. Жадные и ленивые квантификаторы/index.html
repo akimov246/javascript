@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Жадные и ленивые квантификаторы</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Жадные и ленивые квантификаторы</h2>
+        <p>На первый взгляд квантификаторы - это просто, но на самом деле это не совсем так.</p>
+        <p>Нужно очень хорошо разбираться, как работает поиск, если планируем искать что-то сложнее, чем
+        <code>/\d+/</code>.</p>
+        <p>Давайте в качестве примера рассмотрим следующую задачу:</p>
+        <p>У нас есть текст, в котором нужно заменить все кавычки <code>"..."</code> на «елочки» <code>«...»</code>,
+        которые используются в типографике многих стран.</p>
+        <p>Например: <code>"Привет, мир"</code> должно превратиться в <code>«Привет, мир»</code>. Есть и другие кавычки,
+        вроде <code>„Witam, świat!”</code> (польский язык) или <code>「你好，世界」</code> (китайский язык), но для нашей
+        задачи давайте выберем <code>«...»</code>.</p>
+        <p>Первое, что нам нужно - это найти строки с кавычками, а затем мы сможем их заменить.</p>
+        <p>Регулярное выражение вроде <code>/".+"/g</code> (кавычка, какой-то текст, другая кавычка) может выглядеть
+        хорошим решением, но это не так!</p>
+        <p>Давайте это проверим:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /".+"/g;
+
+let str = 'a "witch" and her "broom" is one';
+
+alert(str.match(regexp)); // "witch" and her "broom"</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /".+"/g;
+
+                            let str = 'a "witch" and her "broom" is one';
+
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>... Как мы видим, регулярное выражение работает не как задумано!</p>
+        <p>Вместо того чтобы найти два совпадения <code>"witch"</code> и <code>"broom"</code>, было найдено одно:
+        <code>"witch" and her "broom"</code>.</p>
+        <p>Причину можно описать, как «жадность - причина всех зол».</p>
+    </article>
+
+    <article>
+        <h2>Жадный поиск</h2>
+        <p>Чтобы найти совпадение, движок регулярных выражений работает по следующему алгоритму:</p>
+        <ul>
+            <li>
+                <p>Для каждой позиции в строке для поиска:</p>
+                <ul>
+                    <li>
+                        <p>Попробовать найти совпадение с шаблоном на этой позиции.</p>
+                    </li>
+                    <li>
+                        <p>Если нет совпадения, переход к следующей позиции.</p>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+        <p>Эти общие слова никак не объясняют, почему регулярное выражение работает неправильно, так что давайте разберем
+        подробно, как работает шаблон <code>".+"</code>.</p>
+        <ol>
+            <li>
+                <p>Первый символ шаблона - это кавычка <code>"</code>.</p>
+                <p>Движок регулярного выражения пытается найти его на нулевой позиции исходной строки
+                <code>a "witch" and her "broom" is one</code>, но там - <code>a</code>, так что совпадений нет.</p>
+                <p>Он продолжает: двигается к следующей позиции исходной строки и пытается найти первый символ шаблона
+                там. У него не получается, он двигается дальше, и, наконец, находит кавычку на третьей позиции:</p>
+                <img src="images/witch_greedy1.png" alt style="width: 30vw">
+            </li>
+            <li>
+                <p>Кавычка замечена, после чего движок пытается найти совпадение для оставшегося шаблона. Смотрит,
+                удовлетворяет ли остаток строки шаблону <code>.+"</code>.</p>
+                <p>В нашем случае следующий символ шаблона: <code>.</code> (точка). Она обозначает «любой символ,
+                кроме новой строки», так что следующая буква строки <code>'w'</code> подходит.</p>
+                <img src="images/witch_greedy2.png" alt style="width: 30vw">
+            </li>
+            <li>
+                <p>Затем точка повторяется из-за квантификатора <code>.+</code>. Движок регулярного выражения добавляет
+                к совпадению один символ за другим.</p>
+                <p>... До каких пор? Точке соответствуют любые символы, так что движок остановится только тогда,
+                когда достигнет конца строки:</p>
+                <img src="images/witch_greedy3.png" alt style="width: 30vw">
+            </li>
+            <li>
+                <p>Тогда он перестанет повторять <code>.+</code> и попробует найти следующий символ шаблона. Это кавычка
+                <code>"</code>. Но есть проблема: строка для поиска закончилась, больше нет символов!</p>
+                <p>Движок регулярного выражения понимает, что захватил слишком много <code>.+</code> и начинает
+                <i>отступать</i>.</p>
+                <p>Другими словами, он сокращает совпадение по квантификатору на один символ:</p>
+                <img src="images/witch_greedy4.png" alt style="width: 30vw">
+                <p>Теперь он предполагает, что <code>.+</code> заканчивается за один символ до конца строки и пытается
+                сопоставить остаток шаблона для этой позиции.</p>
+                <p>Если бы тут была кавычка, тогда бы поиск закончился, но последний символ - это <code>'e'</code>, так
+                что он не подходит.</p>
+            </li>
+            <li>
+                <p>... Поэтому движок уменьшает количество повторений <code>.+</code> еще на один символ:</p>
+                <img src="images/witch_greedy5.png" alt style="width: 30vw">
+                <p>Кавычка <code>'"'</code> не соответствует <code>'n'</code>.</p>
+            </li>
+            <li>
+                <p>Движок продолжает возвращаться: он уменьшает количество повторений <code>'.'</code>, пока оставшийся
+                шаблон (в нашем случае <code>'"'</code>) не совпадет:</p>
+                <img src="images/witch_greedy6.png" alt style="width: 30vw">
+            </li>
+            <li>
+                <p>Совпадение найдено.</p>
+            </li>
+            <li>
+                <p>Так что первое совпадение: <code>"witch" and her "broom"</code>. Если у регулярного выражения стоит
+                флаг <code>g</code>, то поиск продолжится с того места, где закончился предыдущий. В оставшейся строке
+                <code>is one</code> нет кавычек, так что совпадений больше не будет.</p>
+            </li>
+        </ol>
+        <p>Это, определенно, не то, что мы ожидали. Но так оно работает.</p>
+        <p><b>В жадном режиме (по умолчанию) квантификатор повторяется столько раз, сколько это возможно.</b></p>
+        <p>Движок регулярного выражения пытается получить максимальное количество символов, соответствующих <code>.+</code>,
+        а затем сокращает это количество символ за символом, если остаток шаблона не совпадает.</p>
+        <p>В нашей задаче мы хотим другого. И нам поможет ленивый режим квантификатора.</p>
+    </article>
+
+    <article>
+        <h2>Ленивый режим</h2>
+        <p>«Ленивый» режим противоположен «жадному». Он означает: «повторять квантификатор наименьшее количество раз».</p>
+        <p>Мы можем включить его, вставив знак вопроса <code>'?'</code> после квантификатора, то есть будет
+        <code>*?</code> или <code>+?</code>, или даже <code>??</code> для <code>'?'</code>.</p>
+        <p>Проясним: обычно знак вопроса <code>?</code> сам по себе является квантификатором (ноль или один), но,
+        если он добавлен <i>после другого квантификатора (или даже после самого себя)</i>, он получает другое значение -
+        он меняет режим совпадения с жадного на ленивый.</p>
+        <p>Регулярное выражение <code>/".+?"/g</code> работает как задумано, оно находит <code>"witch"</code>
+        и <code>"broom"</code>:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /".+?"/g;
+
+let str = 'a "witch" and her "broom" is one';
+
+alert(str.match(regexp)); // "witch","broom"</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /".+?"/g;
+
+                            let str = 'a "witch" and her "broom" is one';
+
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Чтобы лучше понять, что поменялось, давайте рассмотрим процесс поиска шаг за шагом.</p>
+        <ol>
+            <li>
+                <p>Первый шаг будет таким же: движок находит начало шаблона <code>'"'</code> за 3-ей позиции:</p>
+                <img src="images/witch_greedy1.png" alt style="width: 30vw">
+            </li>
+            <li>
+                <p>Следующий шаг аналогичен: он найдет совпадений для точки <code>'.'</code>:</p>
+                <img src="images/witch_greedy2.png" alt style="width: 30vw">
+            </li>
+            <li>
+                <p>А отсюда поиск продолжится по-другому. Из-за того, что у нас включен ленивый режим для <code>+?</code>,
+                движок не будет пытаться найти совпадение для точки еще раз, оно становится и попробует найти совпадение
+                для оставшегося шаблона <code>'"'</code> прямо сейчас:</p>
+                <img src="images/witch_lazy3.png" alt style="width: 30vw">
+                <p>Если бы на этом месте была кавычка, то поиск бы закончился, но там находится <code>'i'</code>,
+                то есть совпадения нет.</p>
+            </li>
+            <li>
+                <p>Тогда движок регулярного выражения увеличит количество повторений для точки и попробует еще раз:</p>
+                <img src="images/witch_lazy4.png" alt style="width: 30vw">
+                <p>Опять неудача. Тогда количество повторений будет увеличено еще и еще...</p>
+            </li>
+            <li>
+                <p>... До тех пор, пока совпадение для оставшегося шаблона не будет найдено:</p>
+                <img src="images/witch_lazy5.png" alt style="width: 30vw">
+            </li>
+            <li>
+                <p>Следующий поиск начнется с того места, где закончилось текущее совпадение и у нас будет еще один
+                результат:</p>
+                <img src="images/witch_lazy6.png" alt style="width: 30vw">
+            </li>
+        </ol>
+        <p>В этом примере мы увидели, как ленивый режим работает для <code>+?</code>. Квантификаторы <code>*?</code>
+        и <code>??</code> работают аналогичным образом - движок регулярного выражения увеличит количество совпадений,
+        только если не сможет найти совпадение для оставшегося шаблона на текущей позиции.</p>
+        <p><b>Ленивый режим включается только для квантификаторов с <code>?</code>.</b></p>
+        <p>Остальные квантификаторы остаются жадными.</p>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">alert('123 456'.match(/\d+ \d+?/)); // 123 4</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('123 456'.match(/\d+ \d+?/));
+                        });
+                    });
+        </script>
+        <ol>
+            <li>
+                <p>Шаблон <code>\d+</code> пытается найти столько цифр, сколько возможно (жадный режим), так что он
+                находит <code>123</code> и останавливается, потому что следующим символом будет пробел <code>' '</code>.</p>
+            </li>
+            <li>
+                <p>Дальше в шаблоне пробел и в строке тоже, так что есть совпадение.</p>
+            </li>
+            <li>
+                <p>Затем идет <code>\d+?</code>. Квантификатор находится в ленивом режиме, так что он находит одну цифру
+                <code>4</code> и проверяет, если ли совпадение для оставшегося шаблона с этого места.</p>
+                <p>... Но в шаблоне <code>\d+?</code> больше ничего нет.</p>
+                <p>Ленивый режим ничего не проверяет без необходимости. Шаблон закончился, заканчивается и поиск.
+                Мы получаем <code>123 4</code>.</p>
+            </li>
+        </ol>
+
+        <article class="note">
+            <h3>Оптимизации</h3>
+            <p>Современные движки регулярных выражений могут оптимизировать внутренние алгоритмы ради ускорения.
+            Так что их работа может несколько отличаться от описанного алгоритма.</p>
+            <p>Но эти внутренние оптимизации для нас незаметны, снаружи все будет работать, как описано.</p>
+            <p>Сложные регулярные выражения трудно оптимизировать, так что поиск может работать и в точности так,
+            как было описано.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Альтернативный подход</h2>
+        <p>С регулярными выражениями часть есть несколько путей добиться одного и того же результата.</p>
+        <p>В нашем случае мы можем найти кавычки без использования ленивого режима с помощью регулярного выражения
+        <code>"[^"]+"</code>:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /"[^"]+"/g;
+
+let str = 'a "witch" and her "broom" is one';
+
+alert(str.match(regexp)); // "witch","broom"</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /"[^"]+"/g;
+
+                            let str = 'a "witch" and her "broom" is one';
+
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Регулярное выражение <code>"[^"]+"</code> получит нужный результат, потому что оно ищет кавычку <code>'"'</code>,
+        за которой следует один или несколько символов «не-кавычек» <code>[^"]</code>, а затем - закрывающая кавычка.</p>
+        <p>Движок регулярного выражения набирает, сколько может, <code>[^"]+</code>, пока не встречает закрывающую
+        кавычку, на которой останавливается.</p>
+        <p>Обратите внимание, что эта логика не заменяет ленивые квантификаторы!</p>
+        <p>Просто она работает по-другому. Временами нужен один вариант, временами - другой.</p>
+        <p><b>Давайте посмотрим пример, в котором ленивый квантификатор не справляется, а этот вариант работает правильно.</b></p>
+        <p>Например, мы хотим найти ссылки вида <code>&lt;a href="..." class="doc"&gt;</code>, с произвольным
+        <code>href</code>.</p>
+        <p>Какое регулярное выражение нам нужно использовать?</p>
+        <p>Первой мыслью может быть: <code>/&lt;a href".*" class="doc"/g</code>.</p>
+        <p>Давайте проверим:</p>
+<pre class="executable"><code class="language-javascript">let str = '...&lt;a href="link" class="doc"&gt;...';
+let regexp = /&lt;a href=".*" class="doc"&gt;/g;
+
+// Работает!
+alert(str.match(regexp)); // &lt;a href="link" class="doc"&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '...<a href="link" class="doc">...';
+                            let regexp = /<a href=".*" class="doc">/g;
+
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Регулярное выражение работает. Но давайте посмотрим, что произойдет, если в тексте будет много ссылок?</p>
+<pre class="executable"><code class="language-javascript">let str = '...&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;...';
+let regexp = /&lt;a href=".*" class="doc"&gt;/g;
+
+// Упс! Две ссылки в одном совпадении!
+alert(str.match(regexp)); // &lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '...<a href="link1" class="doc">... <a href="link2" class="doc">...';
+                            let regexp = /<a href=".*" class="doc">/g;
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>В данном случае мы получили неправильный результат по той же причине, что в примере с «witch».
+        Квантификатор <code>.*</code> забирает слишком много символов.</p>
+        <p>Совпадение будет выглядеть так:</p>
+<pre><code class="language-html">&lt;a href="....................................." class="doc"&gt;
+&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;</code></pre>
+        <p>Давайте изменим шаблон, сделав квантификатор ленивым <code>.*?</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = '...&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;...';
+let regexp = /&lt;a href=".*?" class="doc"&gt;/g;
+
+// Работает!
+alert(str.match(regexp)); // &lt;a href="link1" class="doc"&gt;,&lt;a href="link2" class="doc"&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '...<a href="link1" class="doc">... <a href="link2" class="doc">...';
+                            let regexp = /<a href=".*?" class="doc">/g;
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Теперь кажется, что все работает правильно. У нас есть два совпадения:</p>
+<pre><code class="language-html">&lt;a href="....." class="doc"&gt;    &lt;a href="....." class="doc"&gt;
+&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;</code></pre>
+        <p>... Но давайте попробуем его на еще одном тексте:</p>
+<pre class="executable"><code class="language-javascript">let str = '...&lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;';
+let regexp = /&lt;a href=".*?" class="doc"&gt;/g;
+
+// Неправильное совпадение!
+alert(str.match(regexp)); // &lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '...<a href="link1" class="wrong">... <p style="" class="doc">...';
+                            let regexp = /<a href=".*?" class="doc">/g;
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Ну вот, ленивый квантификатор нас подвел. В совпадении находится не только ссылка, но и текст после нее,
+        включая <code>&lt;p...&gt;</code>.</p>
+        <p>Почему?</p>
+        <p>Происходит следующее:</p>
+        <ol>
+            <li>
+                <p>Первым делом регулярное выражение находит начало ссылки <code>&lt;a href="</code>.</p>
+            </li>
+            <li>
+                <p>Затем оно ищет <code>.*?</code>, берет один символ (лениво!) и проверяет, есть ли совпадение
+                для <code>" class="doc"&gt;</code> (нет).</p>
+            </li>
+            <li>
+                <p>Затем берет другой символ для <code>.*?</code>, и так далее... пока не достигнет <code>" class="doc"&gt;</code>.
+                Поиск завершен.</p>
+            </li>
+        </ol>
+        <p>Но с этим есть проблема: конец совпадения находится уже за границей ссылки <code>&lt;a...&gt;</code>, вообще
+        в другом теге <code>&lt;p&gt;</code>. Что нам не подходит.</p>
+        <p>Вот как совпадение выглядит по отношению к исходному тексту:</p>
+<pre><code class="language-html">&lt;a href="..................................." class="doc"&gt;
+&lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;</code></pre>
+        <p>Итак, нужен шаблон для поиска <code>&lt;a href="...something..." class="doc"&gt;</code>, но и с ленивым
+        и жадным режимами есть проблема.</p>
+        <p>Правильным вариантом может стать: <code>href="[^"]*"</code>. Он найдет все символы внутри атрибута
+        <code>href</code> до ближайшей следующей кавычки, как раз то, что нам нужно.</p>
+        <p>Работающий пример:</p>
+<pre class="executable"><code class="language-javascript">let str1 = '...&lt;a href="link1" class="wrong"&gt;... &lt;p style="" class="doc"&gt;...';
+let str2 = '...&lt;a href="link1" class="doc"&gt;... &lt;a href="link2" class="doc"&gt;...';
+let regexp = /&lt;a href="[^"]*" class="doc"&gt;/g;
+
+// Работает!
+alert(str1.match(regexp)); // Совпадений нет, все правильно
+alert(str2.match(regexp)); // &lt;a href="link1" class="doc"&gt;,&lt;a href="link2" class="doc"&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str1 = '...<a href="link1" class="wrong">... <p style="" class="doc">...';
+                            let str2 = '...<a href="link2" class="doc">... <a href="link2" class="doc">...';
+                            let regexp = /<a href="[^"]*" class="doc">/g;
+
+                            alert(str1.match(regexp));
+                            alert(str2.match(regexp));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>У квантификаторов есть два режима работы:</p>
+        <ul>
+            <li>
+                <p><b>Жадный</b></p>
+                <p>По умолчанию движок регулярного выражения пытается повторить квантификатор столько раз, сколько
+                это возможно. Например, <code>\d+</code> получит все возможные цифры. Когда цифры закончатся или
+                он дойдет до конца строки, движок продолжит искать совпадение для оставшегося шаблона. Если совпадения
+                не будет, он уменьшит количество повторов (осуществит возврат) и попробует снова.</p>
+            </li>
+            <li>
+                <p><b>Ленивый</b></p>
+                <p>Включается с помощью знака вопроса <code>?</code> после квантификатора. Движок регулярного выражения
+                пытается найти совпадение для оставшегося шаблона перед каждым повторением квантификатора.</p>
+                <p>Как мы увидели на примере поиска строк в кавычках, ленивый режим не «панацея» от всех проблем
+                жадного поиска. В качестве альтернативы может выступать «хорошо настроенный» жадный поиск, как в шаблоне
+                <code>"[^"]+"</code>.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
