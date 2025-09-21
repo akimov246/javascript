@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Квантификаторы +, *, ? и {n}</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Квантификаторы +, *, ? и {n}</h2>
+        <p>Давайте возьмем строку вида <code>+7(903)-123-45-67</code> и найдем все числа в ней. Но теперь нас интересуют
+        не цифры по отдельности, а именно числа: <code>7, 903, 123, 45, 67</code>.</p>
+        <p>Число - это последовательность из 1 или более цифр <code>\d</code>. Чтобы указать количество повторений,
+        нам нужно добавить <i>квантификатор</i>.</p>
+    </article>
+
+    <article>
+        <h2>Количество {n}</h2>
+        <p>Самый простой квантификатор - это число в фигурных скобках: <code>{n}</code>.</p>
+        <p>Он добавляется к символу (или символьному классу, или набору <code>[...]</code> и т.д.) и указывает, сколько
+        их нам нужно.</p>
+        <p>Можно по-разному указать количество, например:</p>
+        <p><b>Точное количество: <code>{n}</code></b></p>
+        <p>Шаблон <code>\d{5}</code> обозначает ровно 5 цифр, он эквивалентен <code>\d\d\d\d\d</code>.</p>
+        <p>Следующий пример находит пятизначное число:</p>
+<pre class="executable"><code class="language-javascript">alert('Мне 12345 лет'.match(/\d{5}/)); // 12345</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Мне 12345 лет'.match(/\d{5}/));
+                        });
+                    });
+        </script>
+        <p>Мы можем добавить <code>\b</code>, чтобы исключить числа длиннее: <code>\b\d{5}\b</code>.</p>
+        <p><b>Диапазон: {3,5}, от 3 до 5</b></p>
+        <p>Для того, чтобы найти числа от 3 до 5 цифр, мы можем указать границы в фигурных скобках: <code>\d{3,5}</code></p>
+<pre class="executable"><code class="language-javascript">alert('Мне не 12, а 1234 года'.match(/\d{3,5}/)); // 1234</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Мне не 12, а 1234 года'.match(/\d{3,5}/));
+                        });
+                    });
+        </script>
+        <p>Верхнюю границу можно не указывать.</p>
+        <p>Тогда шаблон <code>\d{3,}</code> найдет последовательность чисел длиной <code>3</code> и более цифр:</p>
+<pre class="executable"><code class="language-javascript">alert('Мне не 12, а 345678 лет'.match(/\d{3,}/)); // 345678</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Мне не 12, а 345678 лет'.match(/\d{3,}/));
+                        });
+                    });
+        </script>
+        <p>Давайте вернемся к строке <code>+7(903)-123-45-67</code>.</p>
+        <p>Число - это последовательность из одной или более цифр. Поэтому шаблон будет <code>\d{1,}</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = '+7(903)-123-45-67';
+
+let numbers = str.match(/\d{1,}/g);
+
+alert(numbers); // 7,903,123,45,67</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '+7(903)-123-45-67';
+                            alert(str.match(/\d{1,}/g));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Короткие обозначения</h2>
+        <p>Для самых востребованных квантификаторов есть сокращенные формы записи:</p>
+        <ul>
+            <li>
+                <p><code>+</code></p>
+                <p>Означает «один или более». То же самое, что и <code>{1,}</code>.</p>
+                <p>Например, <code>\d+</code> находит числа (из одной или более цифр):</p>
+<pre class="executable"><code class="language-javascript">let str = '+7(903)-123-45-67';
+
+alert(str.match(/\d+/g)); // 7,903,123,45,67</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    let str = '+7(903)-123-45-67';
+                                    alert(str.match(/\d+/g));
+                                });
+                            });
+                </script>
+            </li>
+            <li>
+                <p><code>?</code></p>
+                <p>Означает «ноль или один». То же самое, что и <code>{0,1}</code>. По сути, делает символ необязательным.</p>
+                <p>Например, шаблон <code>ou?r</code> найдет <code>o</code> после которого, возможно, следует
+                <code>u</code>, а затем <code>r</code>.</p>
+                <p>Поэтому шаблон <code>colou?r</code> найдет два варианта: <code>color</code> и <code>colour</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Следует писать color или colour?';
+
+alert(str.match(/colou?r/g)); // color,colour</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    let str = 'Следует писать color или colour?';
+                                    alert(str.match(/colou?r/g));
+                                });
+                            });
+                </script>
+            </li>
+            <li>
+                <p><code>*</code></p>
+                <p>Означает «ноль или более». То же самое, что <code>{0,}</code>. То есть символ может повторяться много
+                раз или вообще отсутствовать.</p>
+                <p>Например, шаблон <code>\d0*</code> находит цифру и все нули за ней (их может быть много или не одного):</p>
+<pre class="executable"><code class="language-javascript">alert('100 10 1'.match(/\d0*/g)); // 100,10,1</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    alert('100 10 1'.match(/\d0*/g));
+                                });
+                            });
+                </script>
+                <p>Сравните это с <code>+</code> (один или более):</p>
+<pre class="executable"><code class="language-javascript">alert('100 10 1'.match(/\d0+/g)); // 100,10
+// 1 не подходит, так как 0+ требует как минимум один ноль</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    alert('100 10 1'.match(/\d0+/g));
+                                });
+                            });
+                </script>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Еще примеры</h2>
+        <p>Квантификаторы используются очень часто. Они служат основными «строительными блоками» сложных регулярных выражений,
+        поэтому давайте рассмотрим еще примеры.</p>
+        <p><b>Регулярное выражение для десятичных дробей (чисел с плавающей точкой): <code>\d+\.\d+</code></b></p>
+        <p>В действии:</p>
+<pre class="executable"><code class="language-javascript">alert('0 1 12.345 7890'.match(/\d+\.\d+/g)); // 12.345</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('0 1 12.345 7890'.match(/\d+\.\d+/g));
+                        });
+                    });
+        </script>
+        <p><b>Регулярное выражение для «открывающего HTML-тега без атрибутов», например, <code>&lt;span&gt;</code>
+        или <code>&lt;p&gt;</code>.</b></p>
+        <ol>
+            <li>
+                <p>Самое простое: <code>/<[a-z]+>/i</code></p>
+<pre class="executable"><code class="language-javascript">alert('&lt;body&gt;...&lt;/body&gt;'.match(/<[a-z]+>/gi)); // &lt;body&gt;</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    alert('<body>...</body>'.match(/<[a-z]+>/gi));
+                                });
+                            });
+                </script>
+                <p>Это регулярное выражение ищет символ <code>'<'</code>, за которым идут одна или более букв латинского
+                алфавита, а затем <code>'>'</code>.</p>
+            </li>
+            <li>
+                <p>Улучшенное: <code>/<[a-z][a-z0-9]*>/i</code></p>
+                <p>Здесь регулярное выражение расширено: в соответствии со стандартом, в названии HTML-тега цифра
+                может быть на любой позиции, кроме первой, например, <code>&lt;h1&gt;</code>.</p>
+<pre class="executable"><code class="language-javascript">alert('&lt;h1&gt;Привет!&lt;/h1&gt;'.match(/<[a-z][a-z0-9]*>/gi)); // &lt;h1&gt;</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    alert('<h1>Привет!</h1>'.match(/<[a-z][a-z0-9]*>/gi));
+                                });
+                            });
+                </script>
+            </li>
+        </ol>
+        <p><b>Регулярное выражение для «открывающего или закрывающего HTML-тега без атрибутов»:
+        <code>/<\/?[a-z][a-z0-9]*>/i</code></b></p>
+        <p>В начало предыдущего шаблона мы добавили необязательный слеш <code>/?</code>. Этот символ понадобилось
+        экранировать, чтобы JavaScript не принял его за конец шаблона.</p>
+<pre class="executable"><code class="language-javascript">alert('&lt;h1&gt;Привет!&lt;/h1&gt;'.match(/<\/?[a-z][a-z0-9]*>/gi)); // &lt;h1&gt;,&lt;/h1&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('<h1>Привет!</h1>'.match(/<\/?[a-z][a-z0-9]*>/gi));
+                        });
+                    });
+        </script>
+
+        <article class="note">
+            <h3>Чтобы регулярное выражение было точнее, нам часто приходится делать его сложнее</h3>
+            <p>В этих примерах мы видим общее правило: чем точнее регулярное выражение - тем оно длиннее и сложнее.</p>
+            <p>Например, для HTML-тегов без атрибутов, скорее всего, подошло бы и более простое регулярное выражение:
+            <code><\w+></code>. Но стандарт HTML накладывает более жесткие ограничения на имя тега, так что более
+            точным будет шаблон <code><[a-z][a-z0-9]*></code>.</p>
+            <p>Подойдет ли нам <code><\w+></code> или нужно использовать <code><[a-z][a-z0-9]*></code>? А может быть,
+            нужно еще его усложнить, добавить атрибуты?</p>
+            <p>В реальной жизни допустимы разные варианты. Ответ на подобные вопросы зависит от того, насколько реально
+            важна точность и насколько потом будет сложно или несложно отфильтровать лишние совпадения.</p>
+        </article>
+
+    </article>
+</body>
+</html>
