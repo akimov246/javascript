@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Скобочные группы</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Скобочные группы</h2>
+        <p>Часть шаблона можно заключить в скобки <code>(...)</code>. Это называется «скобочная группа».</p>
+        <p>У такого выделения есть два эффекта:</p>
+        <ol>
+            <li>
+                <p>Позволяет поместить часть совпадения в отдельный массив.</p>
+            </li>
+            <li>
+                <p>Если установить квантификатор после скобок, то он будет применяться ко всему содержимому скобки,
+                а не к одному символу.</p>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>Примеры</h2>
+        <p>Разберем скобки на примерах.</p>
+
+        <h3>Пример: gogogo</h3>
+        <p>Без скобок шаблон <code>go+</code> означает символ <code>g</code> и идущий после него символ <code>o</code>,
+        который повторяется один или более раз. Например, <code>goooo</code> или <code>gooooooooo</code>.</p>
+        <p>Скобки группируют символы вместе. Так что <code>(go)+</code> означает <code>go</code>, <code>gogo</code>,
+        <code>gogogo</code> и т.п.</p>
+<pre class="executable"><code class="language-javascript">alert('Gogogo now!'.match(/(go)+/ig)); // Gogogo</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Gogogo now!'.match(/(go)+/ig));
+                        });
+                    });
+        </script>
+
+        <h3>Пример: домен</h3>
+        <p>Сделаем что-то более сложное - регулярное выражение, которое соответствует домену сайта.</p>
+        <p>Например:</p>
+<pre><code class="language-javascript">mail.com
+users.mail.com
+smith.users.mail.com</code></pre>
+        <p>Как видно, домен состоит из повторяющихся слов, причем после каждого, кроме последнего, стоит точка.</p>
+        <p>На языке регулярных выражений <code>(\w+\.)+\w+</code>:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /(\w+\.)+\w+/g;
+
+alert('site.com my.site.com'.match(regexp)); // site.com,my.site.com</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /(\w+\.)+\w+/g;
+                            alert('site.com my.site.com'.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Поиск работает, но такому шаблону не соответствует домен с дефисом, например, <code>my-site.com</code>,
+        так как дефис не входит в класс <code>\w</code>.</p>
+        <p>Можно исправить это, заменим <code>\w</code> на <code>[\w-]</code> везде, кроме как в конце:
+        <code>([\w-]+\.)+\w+</code>.</p>
+
+        <h3>Пример: email</h3>
+        <p>Предыдущий пример можно расширить, создав регулярное выражение для поиска email.</p>
+        <p>Формат email: <code>имя@домен</code>. В качестве имени может быть любое слово, разрешены дефисы и точки.
+        На языке регулярных выражений это <code>[-.\w]+</code>.</p>
+        <p>Итоговый шаблон:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /[-.\w]+@([\w-]+\.)+\w+/g;
+
+alert('my@mail.com @ his@site.com.uk'.match(regexp)); // my@mail.com,his@site.com.uk</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /[-.\w]+@([\w-]+\.)+\w+/g;
+
+                            alert('my@mail.com @ his@site.com.uk'.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Это регулярное выражение не идеально, но, как правило, работает и помогает исправлять опечатки.
+        Окончательную проверку правильности email, в любом случае, можно осуществить, лишь послав на него письмо.</p>
+    </article>
+
+    <article>
+        <h2>Содержимое скобок в match</h2>
+        <p>Скобочные группы нумеруются слева направо. Поисковый движок запоминает содержимое, которое соответствует
+        каждой скобочной группе, и позволяет получить его в результате.</p>
+        <p>Метод <code>str.match(regexp)</code>, если у регулярного выражения <code>regexp</code> нет флага <code>g</code>,
+        ищет первое совпадение и возвращает его в виде массива:</p>
+        <ol>
+            <li>
+                <p>На позиции <code>0</code> будет все совпадение целиком.</p>
+            </li>
+            <li>
+                <p>На позиции <code>1</code> - содержимое первой скобочной группы.</p>
+            </li>
+            <li>
+                <p>На позиции <code>2</code> - содержимое второй скобочной группы.</p>
+            </li>
+            <li>
+                <p>... И так далее...</p>
+            </li>
+        </ol>
+        <p>Например, мы хотим найти HTML теги <code><.*?></code> и обработать их. Было бы удобно иметь содержимое тега
+        (то, что внутри уголков) в отдельной переменной.</p>
+        <p>Давайте заключим внутреннее содержимое в круглые скобки: <code><(.*?)></code>.</p>
+        <p>Теперь получим как тег целиком <code>&lt;h1&gt;</code>, так и его содержимое <code>h1</code> в виде массива:</p>
+<pre class="executable"><code class="language-javascript">let str = '&lt;h1&gt;Hello, world!&lt;/h1&gt;';
+
+let tag = str.match(/<(.*?)>/);
+
+alert(tag[0]); // &lt;h1&gt;
+alert(tag[1]); // h1</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '<h1>Hello, world!</h1>';
+
+                            let tag = str.match(/<(.*?)>/);
+
+                            alert(tag[0]);
+                            alert(tag[1]);
+                        });
+                    });
+        </script>
+
+        <h3>Вложенные группы</h3>
+        <p>Скобки могут быть и вложенными.</p>
+        <p>Например, при поиске тега в <code>&lt;span class="my"&gt;</code> нас может интересовать:</p>
+        <ol>
+            <li>
+                <p>Содержимое тега целиком: <code>span class="my"</code>.</p>
+            </li>
+            <li>
+                <p>Название тега: <code>span</code>.</p>
+            </li>
+            <li>
+                <p>Атрибуты тега: <code>class="my"</code>.</p>
+            </li>
+        </ol>
+        <p>Заключим их в скобки в шаблоне: <code><(([a-z]+)\s*([^>]*))></code>.</p>
+        <p>Вот их номера (слева направо, по открывающей скобке):</p>
+        <img src="images/regexp-nested-groups-pattern.svg" alt style="width: 30vw">
+        <p>В действии:</p>
+<pre class="executable"><code class="language-javascript">let str = '&lt;span class="my"&gt;';
+
+let regexp = /<(([a-z]+)\s*([^>]*))>/;
+
+let result = str.match(regexp);
+alert(result[0]); // &lt;span class="my"&gt;
+alert(result[1]); // span class="my"
+alert(result[2]); // span
+alert(result[3]); // class="my"</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '<span class="my">';
+
+                            let regexp = /<(([a-z]+)\s*([^>]*))>/;
+
+                            let result = str.match(regexp);
+                            alert(result[0]);
+                            alert(result[1]);
+                            alert(result[2]);
+                            alert(result[3]);
+                        });
+                    });
+        </script>
+        <p>По нулевому индексу в <code>result</code> всегда идет полное совпадение.</p>
+        <p>Затем следуют группы, нумеруемые слева направо, по открывающим скобкам. Группа, открывающая скобка которой
+        идет первой, получит первый индекс в результате - <code>result[1]</code>. Там находится все содержимое тега.</p>
+        <p>Затем в <code>result[2]</code> идет группа, образованная второй открывающей скобкой <code>([a-z]+)</code> -
+        имя тега, далее в <code>result[3]</code> будет остальное содержимое тега: <code>([^>]*)</code>.</p>
+        <p>Соответствие для каждой группы в строке:</p>
+        <img src="images/regexp-nested-groups-matches.svg" alt style="width: 30vw">
+
+        <h3>Необязательные группы</h3>
+        <p>Даже если скобочная группа необязательна (например, стоит квантификатор <code>(...)?</code>), соответствующий
+        элемент массива <code>result</code> существует и равен <code>undefined</code>.</p>
+        <p>Например, рассмотрим регулярное выражение <code>a(z)?(c)?</code>. Оно ищет букву <code>'a'</code>, за которой
+        идет необязательная буква <code>'z'</code>, за которой, в свою очередь, идет необязательная буква <code>'c'</code>.</p>
+        <p>Если применить его к строке из одной буквы <code>a</code>, то результат будет такой:</p>
+<pre class="executable"><code class="language-javascript">let match = 'a'.match(/a(z)?(c)?/);
+
+alert(match.length); // 3
+alert(match[0]); // a (все совпадение)
+alert(match[1]); // undefined
+alert(match[2]); // undefined</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let match = 'a'.match(/a(z)?(c)?/);
+
+                            alert(match.length);
+                            alert(match[0]);
+                            alert(match[1]);
+                            alert(match[2]);
+                        });
+                    });
+        </script>
+        <p>Массив имеет длину <code>3</code>, но все скобочные группы пустые.</p>
+        <p>А теперь более сложная ситуация для строки <code>ac</code>:</p>
+<pre class="executable"><code class="language-javascript">let match = 'ac'.match(/a(z)?(c)?/);
+
+alert(match.length); // 3
+alert(match[0]); // ac (все совпадение)
+alert(match[1]); // undefined, потому что для (z)? ничего нет
+alert(match[2]); // c</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let match = 'ac'.match(/a(z)?(c)?/);
+
+                            alert(match.length);
+                            alert(match[0]);
+                            alert(match[1]);
+                            alert(match[2]);
+                        });
+                    });
+        </script>
+        <p>Длина массива всегда равна <code>3</code>. Для группы <code>(z)?</code> ничего нет, поэтому результат:
+        <code>['ac', undefined, 'c']</code>.</p>
+    </article>
+
+    <article>
+        <h2>Поиск всех совпадений с группами: matchAll</h2>
+        <p>При поиске всех совпадений (флаг <code>g</code>) метод <code>match</code> не возвращает скобочные группы.</p>
+        <p>Например, попробуем найти все теги в строке:</p>
+<pre class="executable"><code class="language-javascript">let str = '&lt;h1&gt; &lt;h2&gt;';
+
+let tags = str.match(/<(.*?)>/g);
+
+alert(tags); // &lt;h1&gt;,&lt;h2&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '<h1> <h2>';
+                            let tags = str.match(/<(.*?)>/g);
+                            alert(tags);
+                        });
+                    });
+        </script>
+        <p>Результат - массив совпадений, но без делателй о каждом. Но на практике скобочные группы тоже часто нужны.</p>
+        <p>Для того, чтобы их получать, мы можем использовать метод <code>str.matchAll(regexp)</code>.</p>
+        <p>Он был добавлен в JavaScript гораздо позже, чем <code>str.match</code>, как его «новая улучшенная» версия.</p>
+        <p>Он, как и <code>str.match(regexp)</code>, ищет совпадения, но у него есть три отличия:</p>
+        <ol>
+            <li>
+                <p>Он возвращает не массив, а перебираемый объект.</p>
+            </li>
+            <li>
+                <p>При поиске с флагом <code>g</code>, он возвращает каждое совпадение в виде массива со скобочными группами.</p>
+            </li>
+            <li>
+                <p>Если совпадений нет, он возвращает не <code>null</code>, а просто пустой перебираемый объект.</p>
+            </li>
+        </ol>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">let result = '&lt;h1&gt; &lt;h2&gt;'.matchAll(/<(.*?)>/gi);
+
+// result - не массив, а перебираемый объект
+alert(result); // [object RegExp String Iterator]
+
+alert(result[0]); // undefined (*)
+
+result = Array.from(result); // Превращаем в массив
+
+alert(result[0]); // &lt;h1&gt;,h1 (первый тег)
+alert(result[1]); // &lt;h2&gt;,h2 (второй тег)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let result = '<h1> <h2>'.matchAll(/<(.*?)>/gi);
+                            alert(result);
+                            alert(result[0]);
+                            result = Array.from(result);
+                            alert(result[0]);
+                            alert(result[1]);
+                        });
+                    });
+        </script>
+        <p>Как видите, первое отличие - очень важное, это демонстрирует строка <code>(*)</code>. Мы не можем получить
+        совпадение как <code>result[0]</code>, так как этот объект не является псевдомассивом. Его можно превратить
+        в настоящий массив при помощи <code>Array.from</code>. Более подробно о псевдомассивах и перебираемых объектах
+        мы говорили в главе
+        <a target="_blank" href="../../Язык%20JavaScript/5.%20Типы%20данных/6.%20Перебираемые%20объекты/index.html">Перебираемые объекты</a>.</p>
+        <p>В явном преобразовании через <code>Array.from</code> нет необходимости, если мы перебираем результат в цикле,
+        вот так:</p>
+<pre class="executable"><code class="language-javascript">let results = '&lt;h1&gt; &lt;h2&gt;'.matchAll(/<(.*?)>/gi);
+
+for (let result of results) {
+    alert(result);
+    // Первый вывод: &lt;h1&gt;,h1
+    // Второй вывод: &lt;h2&gt;,h2
+}</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let results = '<h1> <h2>'.matchAll(/<(.*?)>/gi);
+
+                            for (let result of results) {
+                                alert(result);
+                            }
+                        });
+                    });
+        </script>
+        <p>... Или используем деструктуризацию:</p>
+<pre><code class="language-javascript">let [tag1, tag2] = '&lt;h1&gt; &lt;h2&gt;'.matchAll(/<(.*?)>/gi);</code></pre>
+        <p>Каждое совпадение, возвращаемое <code>matchAll</code>, имеет тот же вид, что и при <code>match</code>
+        без флага <code>g</code>: это массив с дополнительными свойствами <code>index</code> (позиция совпадения)
+        и <code>input</code> (исходный текст):</p>
+<pre class="executable"><code class="language-javascript">let results = '&lt;h1&gt; &lt;h2&gt;'.matchAll(/<(.*?)>/gi);
+
+let [tag1, tag2] = results;
+
+alert(tag1[0]); // &lt;h1&gt;
+alert(tag1[1]); // h1
+alert(tag1.index); // 0
+alert(tag1.input); // &lt;h1&gt; &lt;h2&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let results = '<h1> <h2>'.matchAll(/<(.*?)>/gi);
+                            let [tag1, tag2] = results;
+
+                            alert(tag1[0]);
+                            alert(tag1[1]);
+                            alert(tag1.index);
+                            alert(tag1.input);
+                        });
+                    });
+        </script>
+
+        <article class="note">
+            <h3>Почему результат <code>matchAll</code> - перебираемый объект, а не обычный массив?</h3>
+            <p>Зачем так сделано? Причина проста - для оптимизации.</p>
+            <p>При вызове <code>matchAll</code> движок JavaScript возвращает перебираемый объект, в котором еще нет
+            результатов. Поиск осуществляется по мере того, как мы запрашиваем результаты, например, в цикле.</p>
+            <p>Таким образом, будет найдено ровно столько результатов, сколько нам нужно.</p>
+            <p>Например, всего в тексте может быть 100 совпадений, а в цикле после 5-го результата мы поняли,
+            что нам их достаточно и сделали <code>break</code>. Тогда движок не будет тратить время на поиск остальных
+            95.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Именованные группы</h2>
+        <p>Запоминать группы по номерам не очень удобно. Для простых шаблонов это допустимо, но в сложных регулярных
+        выражениях считать скобки затруднительно. Гораздо лучше - давать скобкам имена.</p>
+        <p>Это делается добавлением <code>?&lt;name&gt;</code> непосредственно после открытия скобки.</p>
+        <p>Например, поищем дату в формате «год-месяц-день»:</p>
+<pre class="executable"><code class="language-javascript">let dateRegexp = /(?&lt;year&gt;[0-9]{4})-(?&lt;month&gt;[0-9{2}])-(?&lt;day&gt;[0-9]{2})/;
+let str = '2019-04-30';
+
+let groups = str.match(dateRegexp).groups;
+
+alert(groups.year); // 2019
+alert(groups.month); // 04
+alert(groups.day); // 30</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let dateRegexp = /(?<year>[0-9]{4})-(?<month>[0-9]{2})-(?<day>[0-9]{2})/;
+                            let str = '2019-04-30';
+
+                            let groups = str.match(dateRegexp).groups;
+                            alert(groups.year);
+                            alert(groups.month);
+                            alert(groups.day);
+                        });
+                    });
+        </script>
+        <p>Как вы можете видеть, группы располагаются в свойстве <code>groups</code> результата <code>match</code>.</p>
+        <p>Чтобы найти не только первую дату, используем флаг <code>g</code>.</p>
+        <p>Также нам понадобится <code>matchAll</code>, чтобы получить скобочные группы:</p>
+<pre class="executable"><code class="language-javascript">let dateRegexp = /(?&lt;year&gt;[0-9]{4})-(?&lt;month&gt;[0-9]{2})-(?&lt;day&gt;[0-9]{2})/g;
+
+let str = '2019-10-30 2020-01-01';
+
+let results = str.matchAll(dateRegexp);
+
+for (let result of results) {
+    let {year, month, day} = result.groups;
+
+    alert(`${day}.${month}.${year}`);
+    // Первый вывод: 30.10.2019
+    // Второй вывод: 01.01.2020
+}</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let dateRegexp = /(?<year>[0-9]{4})-(?<month>[0-9]{2})-(?<day>[0-9]{2})/g;
+
+                            let str = '2019-10-30 2020-01-01';
+
+                            let results = str.matchAll(dateRegexp);
+
+                            for (let result of results) {
+                                let {year, month, day} = result.groups;
+                                alert(`${day}.${month}.${year}`);
+                            }
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Скобочные группы при замене</h2>
+        <p>Метод <code>str.replace(regexp, replacement)</code>, осуществляющий замену совпадений с <code>regexp</code>
+        в строке <code>str</code>, позволяет использовать в строке замены содержимое скобок. Это делается при помощи
+        обозначений вида <code>$n</code>, где <code>n</code> - номер скобочной группы.</p>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">let str = ''John Bull;
+let regexp = /(\w+) (\w+)/;
+
+alert(str.replace(regexp, '$2, $1')); Bull, John</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'John Bull';
+                            let regexp = /(\w+) (\w+)/;
+
+                            alert(str.replace(regexp, '$2, $1'));
+                        });
+                    });
+        </script>
+        <p>Для именованных скобок ссылка будет выглядеть как <code>$&lt;имя&gt;</code>.</p>
+        <p>Например, заменим даты в формате «год-месяц-день» на «день.месяц.год»:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /(?&lt;year&gt;[0-9]{4})-(?&lt;month&gt;[0-9]{2})-(?&lt;day&gt;[0-9]{2})/g;
+
+let str = '2019-10-30, 2020-01-01';
+
+alert(str.replace(regexp, '$&lt;day&gt;.$&lt;month&gt;.$&lt;year&gt;'));
+// 30.10.2019, 01.01.2020</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /(?<year>[0-9]{4})-(?<month>[0-9]{2})-(?<day>[0-9]{2})/g;
+                            let str = '2019-10-30, 2020-01-01';
+
+                            alert(str.replace(regexp, '$<day>.$<month>.$<year>'));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Исключение из запоминания через ?:</h2>
+        <p>Бывает так, что скобки нужны, чтобы квантификатор правильно применился, но мы не хотим, чтобы их содержимое
+        было выделено в результате.</p>
+        <p>Скобочную группу можно исключить из запоминаемых и нумеруемых, добавив в ее начало <code>?:</code>.</p>
+        <p>Например, если мы хотим найти <code>(go)+</code>, но не хотим иметь в массиве-результате отдельным элементом
+        содержимое скобок (<code>go</code>), то можем написать <code>(?:go)+</code>.</p>
+        <p>В примере ниже мы получим только имя <code>John</code> как отдельный элемент совпадения:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Gogogo John!';
+
+// ?: исключает go из запоминания
+let regexp = /(?:go)+ (\w+)/i;
+
+let result = str.match(regexp);
+
+alert(result[0]); // Gogogo John (полное совпадение)
+alert(result[1]); // John
+alert(result.length); // 2 (больше в массиве элементов нет)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Gogogo John';
+                            let regexp = /(?:go)+ (\w+)/i;
+
+                            let result = str.match(regexp);
+
+                            alert(result[0]);
+                            alert(result[1]);
+                            alert(result.length);
+                        });
+                    });
+        </script>
+        <p>Как видно, содержимое скобок <code>(?:go)</code> не стало отдельным элементом массива <code>result</code>.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Круглые скобки группируют вместе часть регулярного выражения, так что квантификатор применяется к ним в целом.</p>
+        <p>Скобочные группы нумеруются слева направо. Также им можно дать имя с помощью <code>(?&lt;name&gt;...)</code>.</p>
+        <p>Часть совпадения, соответствующую скобочной группе, мы можем получить в результатах поиска.</p>
+        <ul>
+            <li>
+                <p>Метод <code>str.match</code> возвращает скобочны группы только без флага <code>g</code>.</p>
+            </li>
+            <li>
+                <p>Метод <code>str.matchAll</code> возвращает скобочные группы всегда.</p>
+            </li>
+        </ul>
+        <p>Если скобка не имеет имени, то содержимое группы будет по своему номеру в массиве-результате, если имеет,
+        то также в свойстве <code>groups</code>.</p>
+        <p>Содержимое скобочной группы можно также использовать при замене <code>str.replace(regexp, replacement)</code>:
+        по номеру <code>$n</code> или по имени <code>$&lt;имя&gt;</code>.</p>
+        <p>Можно исключить скобочную группу из запоминания, добавив в ее начало <code>?:</code>. Это используется,
+        если необходимо применить квантификатор ко всей группе, но не запоминать их содержимое в отдельном элементе
+        массива-результата. Также мы не можем ссылаться на такие скобки в строке замены.</p>
+    </article>
+</body>
+</html>
