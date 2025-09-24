@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Обратные ссылки в шаблоне: \N и \k&lt;имя&gt;</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Обратные ссылки в шаблоне: \N и \k&lt;имя&gt;</h2>
+        <p>Доступ к содержимому скобочных групп <code>(...)</code> есть не только в результате поиска и при замене,
+        но и в самом шаблоне.</p>
+    </article>
+
+    <article>
+        <h2>Обратная ссылка по номеру: \N</h2>
+        <p>К группе можно обратиться в шаблоне, используя <code>\N</code>, где <code>N</code> - это номер группы.</p>
+        <p>Чтобы было яснее зачем это нужно, рассмотрим пример.</p>
+        <p>Необходимо найти строки в кавычках: либо одинарных <code>'...'</code>, либо двойных <code>"..."</code> -
+        оба варианта должны подходить.</p>
+        <p>Как найти такие строки?</p>
+        <p>Можно попытаться добавить оба вида кавычек в квадратные скобки: <code>['"](.*?)['"]</code>, но в таком
+        случае будут находиться строки со смешанными кавычками, например, <code>"...'</code> и <code>'..."</code>.
+        Это привет к ошибке, когда одна кавычка окажется внутри других, как в строке <code>"She's the one!"</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = `He said: "She's the one!".`;
+
+let regexp = /['"](.*?)['"]/g;
+
+// Результат - не тот, который хотелось бы
+alert(str.match(regexp)); // "She'</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    let str = `He said: "She's the one!"`;
+                    let regexp = /['"](.*?)['"]/g;
+                    alert(str.match(regexp));
+                });
+            });
+        </script>
+        <p>Как видно, шаблон нашел открывающую кавычку <code>"</code>, а после нашел текст вплоть до следующей кавычки
+        <code>'</code>, после чего поиск завершился.</p>
+        <p>Для того чтобы шаблон искал закрывающую кавычку такую же, как и открывающую, обернем открывающие кавычки
+        в скобочную группу и используем обратную ссылку на нее: <code>(['"])(.*?)\1</code>.</p>
+        <p>Вот верный код:</p>
+<pre class="executable"><code class="language-javascript">let str = `He said: "She's the one!".`;
+
+let regexp = /(['"](.*?)\1)/g;
+
+alert(str.match(regexp)); // "She's the one!"</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    let str = `He said: "She's the one!".`;
+                    let regexp = /(['"])(.*?)\1/g;
+                    alert(str.match(regexp));
+                });
+            });
+        </script>
+        <p>Теперь работает! Движок регулярных выражений находит первую кавычку из шаблона <code>(['"])</code> и запоминает
+        ее содержимое. Это первая скобочная группа.</p>
+        <p>Далее в шаблоне <code>\1</code> означает «найти то же самое, что в первой скобочной группе», а именно -
+        аналогичную кавычку в нашем случае.</p>
+        <p>Аналогично, <code>\2</code> означает содержимое второй скобочной группы, <code>\3</code> - третьей и так далее.</p>
+
+        <article class="note">
+            <h3>На заметку:</h3>
+            <p>Мы не можем обратиться к группе, которая исключена из запоминания при помощи <code>?:</code>.</p>
+        </article>
+
+        <article class="warning">
+            <h3>Не перепутайте: в шаблоне <code>\1</code>, при замене <code>$1</code></h3>
+            <p>В строке замены для вставки группы мы используем доллар: <code>$1</code>, а в шаблоне обратный слеш <code>\1</code>.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Обратная ссылка по имени: <code>\k&lt;имя&gt;</code></h2>
+        <p>Если в регулярном выражении много скобочных групп, то удобно давать им имена.</p>
+        <p>Для обращения к именованной группе можно использовать синтаксис <code>\k&lt;имя&gt;</code>.</p>
+        <p>В примере ниже кавычки обозначены <code>?&lt;quote&gt;</code>, так что обращение будет <code>\k&lt;quote&gt;</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = `He said: "She's the one!".`;
+
+let regexp = /(?&lt;quoute&gt;['"])(.*?)\k&lt;quote&gt;/g;
+
+alert(str.match(regexp)); // "She's the one!"</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                event.target.querySelector('button').addEventListener('click', function() {
+                    let str = `He said: "She's the one!".`;
+                    let regexp = /(?<quote>['"])(.*?)\k<quote>/g;
+                    alert(str.match(regexp));
+                });
+            });
+        </script>
+    </article>
+</body>
+</html>
