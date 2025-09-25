@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Альтернация (или) |</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Альтернация (или) |</h2>
+        <p>Альтернация - термин в регулярных выражениях, которому в русском языке соответствует слова «ИЛИ».</p>
+        <p>В регулярных выражениях она обозначается символом вертикальной черты <code>|</code>.</p>
+        <p>Например, нам нужно найти языки программирования: HTML, PHP, Java и JavaScript.</p>
+        <p>Соответствующее регулярное выражение: <code>html|php|java(script)?</code>.</p>
+        <p>Пример использования:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /html|css|java(script)?/gi;
+
+let str = 'Сначала появился язык Java, затем HTML, потом JavaScript';
+
+alert(str.match(regexp)); // Java,HTML,JavaScript</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /html|css|java(script)?/gi;
+                            let str = 'Сначала появился язык Java, затем HTML, потом JavaScript';
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>Мы уже видели нечто подобное - квадратные скобки. Они позволяют выбирать между несколькими символами, например,
+        <code>gr[ae]y</code> найдет <code>gray</code>, либо <code>grey</code>.</p>
+        <p>Квадратные скобки работают только с символами или наборами символов. Альтернация мощнее, она работает с
+        любыми выражениями. Регулярное выражение <code>A|B|C</code> обозначает поиск одного из выражений:
+        <code>A</code>, <code>B</code> или <code>C</code>.</p>
+        <p>Например:</p>
+        <ul>
+            <li>
+                <p><code>gr(a|e)y</code> означает то же, что и <code>gr[ae]y</code>.</p>
+            </li>
+            <li>
+                <p><code>gra|ey</code> означает <code>gra</code> или <code>ey</code>.</p>
+            </li>
+        </ul>
+        <p>Чтобы применить альтернацию только к части шаблона, можно заключить ее в скобки:</p>
+        <ul>
+            <li>
+                <p><code>Люблю HTML|CSS</code> найдет <code>Люблю HTML</code> или <code>CSS</code>.</p>
+            </li>
+            <li>
+                <p><code>Люблю (HTML|CSS)</code> найдет <code>Люблю HTML</code> или <code>Люблю CSS</code>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Пример: шаблон для времени</h2>
+        <p>В предыдущих главах было задание написать регулярное выражение для поиска времени в формате <code>чч:мм</code>,
+        например, <code>12:00</code>. Но шаблон <code>\d\d:\d\d</code> недостаточно точный. Он принимает <code>25:99</code>
+        за время (99 минут подходят под шаблон, но так не должно быть).</p>
+        <p>Как сделать лучше?</p>
+        <p>Мы можем применить более тщательное сравнение. Во-первых, часы:</p>
+        <ul>
+            <li>
+                <p>Если первая цифра <code>0</code> или <code>1</code>, тогда следующая цифра может быть любой:
+                <code>[01]\d</code>.</p>
+            </li>
+            <li>
+                <p>Или если первая цифра <code>2</code>, тогда следующая цифра должна быть от <code>0</code>
+                до <code>3</code>: <code>2[0-3]</code>.</p>
+            </li>
+            <li>
+                <p>(другой первой цифры быть не может).</p>
+            </li>
+        </ul>
+        <p>В виде регулярного выражения оба варианта для часов можно записать при помощи альтернации:
+        <code>[01]\d|2[03]</code>.</p>
+        <p>Далее, минуты должны быть от <code>00</code> до <code>59</code>. На языке регулярных выражений это означает
+        <code>[0-5]\d</code>: первая цифра <code>0-5</code>, а за ней любая.</p>
+        <p>Давайте соединим часы и минуты в одно выражение, получится так: <code>[01]\d|2[0-3]:[0-5]\d</code>.</p>
+        <p>Почти готово, но есть проблема. После такого соединения, альтернация <code>|</code> оказалась между
+        <code>[01]\d</code> и <code>2[0-3]:[0-5]\d</code>.</p>
+        <p>То есть, минуты добавились ко второму варианту альтернации, вот более наглядно:</p>
+<pre><code class="language-javascript">[01]\d | 2[0-3]:[0-5]\d</code></pre>
+        <p>Такой шаблон будет искать <code>[01]\d</code> или <code>2[0-3]:[0-5]\d</code>.</p>
+        <p>Но это неверно. Нам нужно, чтобы альтернация использовалась только внутри части регулярного выражения,
+        относящейся к часам, чтобы разрешать <code>[01]\d</code> ИЛИ <code>2[0-3]</code>. Для этого обернем «часы» в
+        скобки: <code>([01]\d|2[0-3]):[0-5]\d</code>.</p>
+        <p>Пример работы:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /([01]\d|2[0-3]):[0-5]\d/g;
+
+alert('00:00 10:10 23:59 25:99 1:2'.match(regexp)); // 00:00,10:10,23:59</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /([01]\d|2[0-3]):[0-5]\d/g;
+                            let str = '00:00 10:10 23:59 25:99 1:2';
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+    </article>
+</body>
+</html>
