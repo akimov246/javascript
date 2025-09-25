@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Опережающие и ретроспективные проверки</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Опережающие и ретроспективные проверки</h2>
+        <p>В некоторых случаях нам нужно найти соответствия шаблону, но только те, за которыми или перед которыми
+        следует другой шаблон.</p>
+        <p>Для этого в регулярных выражениях есть специальный синтаксис: опережающая (lookahead) и ретроспективная
+        (lookbehind) проверка.</p>
+        <p>В качестве первого примера найдем стоимость из строки <code>1 индейка стоит 30€</code>. То есть, найдем число,
+        после которого есть знак валюты <code>€</code>.</p>
+    </article>
+
+    <article>
+        <h2>Опережающая проверка</h2>
+        <p>Синтаксис опережающей проверки: <code>X(?=Y)</code>.</p>
+        <p>Он означает: найти <code>X</code> при условии, что за ним следует <code>Y</code>. Вместо <code>X</code>
+        и <code>Y</code> здесь может быть любой шаблон.</p>
+        <p>Для целого числа, за которым идет знак <code>€</code>, шаблон регулярного выражения будет <code>\d+(?=€)</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = '1 индейка стоит 30€';
+
+alert(str.match(/\d+(?=€)/)); // 30, число 1 проигнорировано, так как за ним НЕ следует €</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '1 индейка стоит 30€';
+                            alert(str.match(/\d+(?=€)/));
+                        });
+                    });
+        </script>
+        <p>Обратим внимание, что проверка - это именно проверка, содержимое скобок <code>(?=...)</code> не включается в
+        результат <code>30</code>.</p>
+        <p>При поиске <code>X(?=Y)</code> движок регулярных выражений, найдя <code>X</code>, проверяет есть ли после него
+        <code>Y</code>. Если это не так, то игнорирует совпадение и продолжает поиск дальше.</p>
+        <p>Возможны и более сложные проверки, например, <code>X(?=Y)(?=Z)</code> означает:</p>
+        <ol>
+            <li>
+                <p>Найти <code>X</code>.</p>
+            </li>
+            <li>
+                <p>Проверить, идет ли <code>Y</code> сразу после <code>X</code> (если нет - не подходит).</p>
+            </li>
+            <li>
+                <p>Проверить, идет ли <code>Z</code> сразу после <code>X</code> (если нет - не подходит).</p>
+            </li>
+            <li>
+                <p>Если обе проверки прошли - совпадение найдено.</p>
+            </li>
+        </ol>
+        <p>То есть шаблон означает, что мы ищем <code>X</code> при условии, что за ним идет и <code>Y</code> и <code>Z</code>.</p>
+        <p>Такое возможно только при условии, что шаблоны <code>Y</code> и <code>Z</code> не являются взаимно исключающими.</p>
+        <p>Например, <code>\d+(?=\s)(?=.*30)</code> ищет <code>\d+</code> при условии, что за ним идет пробел, и где-то
+        впереди есть <code>30</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = '1 индейка стоит 30€';
+
+alert(str.match(/\d+(?=\s)(?=.*30)/)); // 1</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '1 индейка стоит 30€';
+                            alert(str.match(/\d+(?=\s)(?=.*30)/));
+                        });
+                    });
+        </script>
+        <p>В нашей строке это как раз число <code>1</code>.</p>
+    </article>
+
+    <article>
+        <h2>Негативная опережающая проверка</h2>
+        <p>Допустим, нам нужно узнать из этой же строки количество индеек, то есть число <code>\d+</code>, за которым
+        НЕ следует знак <code>€</code>.</p>
+        <p>Для этой задачи мы можем применить негативную опережающую проверку.</p>
+        <p>Синтаксис: <code>X(?!Y)</code></p>
+        <p>Он означает: найти такой <code>X</code>, за которым НЕ следует <code>Y</code>.</p>
+<pre class="executable"><code class="language-javascript">let str = '2 индейки стоят 60€';
+
+alert(str.match(/\d+(?!€)/)); // 2 (в этот раз проигнорирована цена)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '2 индейки стоят 60€';
+                            alert(str.match(/\d+(?!€)/));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Ретроспективная проверка</h2>
+
+        <article class="warning">
+            <h3>Браузерная совместимость с ретроспективной проверкой</h3>
+            <p>Обратите внимание: Lookbehind не поддерживается в браузерах построенных не на движке V8, таких, как
+            Safari и Internet Explorer.</p>
+        </article>
+
+        <p>Опережающие проверки позволяют задавать условия на то, что «идет после».</p>
+        <p>Ретроспективная проверка выполняет такую же функцию, но с просмотром назад. Другими словами, она находит
+        соответствие шаблону, только если перед ним есть что-то заранее определенное.</p>
+        <p>Синтаксис:</p>
+        <ul>
+            <li>
+                <p>Позитивная ретроспективная проверка: <code>(?<=Y)X</code>, ищет совпадение с <code>X</code> при
+                условии, что перед ним ЕСТЬ <code>Y</code>.</p>
+            </li>
+            <li>
+                <p>Негативная ретроспективная проверка: <code>(?&lt;!Y)X</code>, ищет совпадение с <code>X</code> при условии,
+                что перед ним НЕТ <code>Y</code>.</p>
+            </li>
+        </ul>
+        <p>Чтобы протестировать ретроспективную проверку, давайте поменяем валюту на доллары США. Знак доллара обычно
+        ставится перед суммой денег, поэтому для того, чтобы найти <code>$30</code>, мы используем <code>(?<=\$)\d+</code> -
+        число, перед которым идет <code>$</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = '1 индейка стоит $30';
+
+// Знак доллара экранируем \$, так как это специальный символ
+alert(str.match(/(?&lt;=\$)\d+/)); // 30, одинокое число игнорируется</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '1 индейка стоит $30';
+                            alert(str.match(/(?<=\$)\d+/));
+                        });
+                    });
+        </script>
+        <p>Если нам необходимо найти количество индеек - число, перед которым не идет <code>$</code>, мы можем
+        использовать негативную ретроспективную проверку <code>(?&lt;!\$)\d+</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = '2 индейка стоят $60';
+
+alert(str.match(/(?&lt;!\$)\d+/)); // 2 (проигнорировалась цена)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '2 индейки стоят $60';
+                            alert(str.match(/(?<!\$)\d+/));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Скобочные группы</h2>
+        <p>Как правило, то что находится внутри скобок, задающих опережающую и ретроспективную проверку, не включается
+        в результат совпадения.</p>
+        <p>Например, в шаблоне <code>\d+(?=€)</code> знак <code>€</code> не будет включен в результат. Это логично,
+        ведь мы ищем число <code>\d+</code>, а <code>(?=€)</code> - это всего лишь проверка, что за ним идет знак
+        <code>€</code>.</p>
+        <p>Но в некоторых ситуациях нам может быть интересно захватить и то, что в проверке. Для этого нужно обернуть
+        это в дополнительные скобки.</p>
+        <p>В следующем примере знак валюты <code>(€|£)</code> будет включен в результат вместе с суммой:</p>
+<pre class="executable"><code class="language-javascript">let str = '1 индейка стоит 30€';
+let regexp = /\d+(?=(€|£))/; // Добавлены дополнительные скобки вокруг €|£
+
+alert(str.match(regexp)); // 30,€</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '1 индейка стоит 30€';
+                            let regexp = /\d+(?=(€|£))/;
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+        <p>То же самое можно применить к ретроспективной проверке:</p>
+<pre class="executable"><code class="language-javascript">let str = '1 индейка стоит $30';
+let regexp = /(?&lt;=(\$|£))\d+/;
+
+alert(str.match(regexp)); // 30,$</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '1 индейка стоит $30';
+                            let regexp = /(?<=(\$|£))\d+/;
+                            alert(str.match(regexp));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Опережающая и ретроспективная проверки удобны, когда мы хотим искать шаблон по дополнительному условию на
+        контекст, в котором он находится.</p>
+        <p>Для простых регулярных выражений мы можем сделать похожую вещь «вручную». То есть, найти все совпадения,
+        независимо от контекста, а затем в цикле отфильтровать подходящие.</p>
+        <p>Как мы помним, <code>regexp.match</code> (без флага <code>g</code>) и <code>str.matchAll</code> (всегда)
+        возвращают совпадения со свойством <code>index</code>, которое содержит позицию совпадения в строке, так что
+        мы можем посмотреть на контекст.</p>
+        <p>Но обычно регулярное выражение удобнее.</p>
+        <p>Виды проверок:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Шаблон</th>
+                <th>Тип</th>
+                <th>Совпадение</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>X(?=Y)</code></td>
+                <td>Позитивная опережающая</td>
+                <td><code>X</code>, если за ним следует <code>Y</code></td>
+            </tr>
+            <tr>
+                <td><code>X(?!Y)</code></td>
+                <td>Негативная опережающая</td>
+                <td><code>X</code>, если за ним НЕ следует <code>Y</code></td>
+            </tr>
+            <tr>
+                <td><code>(?<=Y)X</code></td>
+                <td>Позитивная ретроспективная</td>
+                <td><code>X</code>, если следует за <code>Y</code></td>
+            </tr>
+            <tr>
+                <td><code>(?&lt;!Y)X</code></td>
+                <td>Негативная ретроспективная</td>
+                <td><code>X</code>, если НЕ следует за <code>Y</code></td>
+            </tr>
+            </tbody>
+        </table>
+    </article>
+</body>
+</html>
