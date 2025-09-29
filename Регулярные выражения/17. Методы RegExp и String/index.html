@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Методы RegExp и String</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Методы RegExp и String</h2>
+        <p>В этой главе мы рассмотрим все детали методов для работы с регулярными выражениями.</p>
+    </article>
+
+    <article>
+        <h2>str.match(regexp)</h2>
+        <p>Метод <code>str.match(regexp)</code> ищет совпадения с <code>regexp</code> в строке <code>str</code>.</p>
+        <p>У него есть три режима работы:</p>
+        <ol>
+            <li>
+                <p>Если у регулярного выражения нет флага <code>g</code>, то он возвращает первое совпадение в виде
+                массива со скобочными группами и свойствами <code>index</code> (позиция совпадения), <code>input</code>
+                (строка поиска, равна <code>str</code>):</p>
+<pre class="executable"><code class="language-javascript">let str = 'I love JavaScript';
+
+let result = str.match(/Java(Script)/);
+
+alert(result[0]); // JavaScript (все совпадение)
+alert(result[1]); // Script (первые скобки)
+alert(result.length); // 2
+
+// Дополнительная информация:
+alert(result.index); // 7 (позиция совпадения)
+alert(result.input); // I love JavaScript (исходная строка)</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    let str = 'I love JavaScript';
+                                    let regexp = /Java(Script)/;
+                                    let result = str.match(regexp);
+
+                                    alert(`Все совпадение: ${result[0]}\nПервые скобки: ${result[1]}\nДлина массива-результата: ${result.length}`);
+
+                                    alert(`Дополнительная информация:\nПозиция совпадения: ${result.index}\nИсходная строка: ${result.input}`);
+                                });
+                            });
+                </script>
+            </li>
+            <li>
+                <p>Если у регулярного выражения есть флаг <code>g</code>, то он возвращает массив всех совпадений,
+                без скобочных групп и других деталей:</p>
+<pre class="executable"><code class="language-javascript">let str = 'I love JavaScript';
+
+let result = str.match(/Java(Script)/g);
+
+alert(result[0]); // JavaScript
+alert(result.length); // 1</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    let str = 'I love JavaScript';
+                                    let result = str.match(/Java(Script)/g);
+                                    alert(result[0]);
+                                    alert(result.length);
+                                });
+                            });
+                </script>
+            </li>
+            <li>
+                <p>Если совпадений нет, то, вне зависимости флага <code>g</code>, возвращается <code>null</code>.</p>
+                <p>Это очень важный нюанс. При отсутствии совпадений возвращается не пустой массив, а именно
+                <code>null</code>. Если об этом забыть, можно легко допустить ошибку, например:</p>
+<pre class="executable"><code class="language-javascript">let str = 'I love JavaScript';
+
+let result = str.match(/HTML/);
+
+alert(result); // null
+alert(result.length); // Ошибка: у null нет свойства length</code></pre>
+                <script>
+                    document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                                event.target.querySelector('button').addEventListener('click', function() {
+                                    let str = 'I love JavaScript';
+                                    let result = str.match(/HTML/);
+
+                                    alert(result);
+                                    try {
+                                        alert(result.length);
+                                    } catch(error) {
+                                        alert(error);
+                                    }
+                                });
+                            });
+                </script>
+                <p>Если хочется, чтобы результатом всегда был массив, можно написать так:</p>
+<pre><code class="language-javascript">let result = str.match(regexp) || [];</code></pre>
+            </li>
+        </ol>
+    </article>
+
+    <article>
+        <h2>str.matchAll(regexp)</h2>
+        <p>Метод <code>str.matchAll(regexp)</code> - «новый, улучшенный» вариант метода <code>str.match</code>.</p>
+        <p>Он используется, в первую очередь, для поиска всех совпадений вместе со скобочными группами.</p>
+        <p>У него три отличия от <code>match</code>:</p>
+        <ol>
+            <li>
+                <p>Он возвращает не массив, а перебираемый объект с результатами, обычный массив можно сделать при
+                помощи <code>Array.from</code>.</p>
+            </li>
+            <li>
+                <p>Каждое совпадение возвращается в виде массива со скобочными группами (как в <code>str.match</code>
+                без флага <code>g</code>).</p>
+            </li>
+            <li>
+                <p>Если совпадений нет, то возвращается не <code>null</code>, а пустой перебираемый объект.</p>
+            </li>
+        </ol>
+        <p>Пример использования:</p>
+<pre class="executable"><code class="language-javascript">let str = '&lt;h1&gt;Hello, world!&lt;/h1&gt;';
+let regexp = /<(.*?)>/g;
+
+let matchAll = str.matchAll(regexp);
+
+alert(matchAll); // [object RegExp String Iterator], не массив, а перебираемый объект
+
+matchAll = Array.from(matchAll); // Теперь массив
+
+let firstMatch = matchAll[0];
+alert(firstMatch[0]); // &lt;h1&gt;
+alert(firstMatch[1]); // h1
+alert(firstMatch.index); // 0
+alert(firstMatch.input); // &lt;h1&gt;Hello, world!&lt;/h1&gt;</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = '<h1>Hello, world!</h1>';
+                            let regexp = /<(.*?)>/g;
+
+                            let matchAll = str.matchAll(regexp);
+
+                            alert(matchAll);
+
+                            matchAll = Array.from(matchAll);
+
+                            let firstMatch = matchAll[0];
+                            alert(`firstMatch[0]=${firstMatch[0]}\nfirstMatch[1]=${firstMatch[1]}\nfirstMatch.index=${firstMatch.index}\nfirstMatch.input=${firstMatch.input}`);
+                        });
+                    });
+        </script>
+        <p>При переборе результатов <code>matchAll</code> в цикле <code>for...of</code> вызов <code>Array.from</code>,
+        разумеется, не нужен.</p>
+    </article>
+
+    <article>
+        <h2>str.split(regexp|substr, limit)</h2>
+        <p>Разбивает строку в массив по разделителю - регулярному выражению <code>regexp</code> или подстроке
+        <code>substr</code>.</p>
+        <p>Обычно мы используем метод <code>split</code> со строками, вот так:</p>
+<pre class="executable"><code class="language-javascript">alert('12-34-56'.split('-')); // 12,34,56</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('12-34-56'.split('-'));
+                        });
+                    });
+        </script>
+        <p>Но мы можем разделить по регулярному выражению аналогичным образом:</p>
+<pre class="executable"><code class="language-javascript">alert('12, 34, 56'.split(/,\s*/)); // 12,34,56</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('12, 34, 56'.split(/,\s*/));
+                        });
+                    });
+        </script>
+    </article>
+
+    <article>
+        <h2>str.search(regexp)</h2>
+        <p>Метод <code>str.search(regexp)</code> возвращает позицию первого совпадения с <code>regexp</code> в строке
+        <code>str</code> или <code>-1</code>, если совпадений нет.</p>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Я люблю JavaScript';
+
+let regexp = /Java.+/;
+
+alert(str.search(regexp)); // 8</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Я люблю JavaScript';
+                            let regexp = /Java.+/;
+
+                            alert(str.search(regexp));
+                        });
+                    });
+        </script>
+        <p><b>Важное ограничение: <code>str.search</code> умеет возвращать только позицию первого совпадения.</b></p>
+        <p>Если нужны позиции других совпадений, то следует использовать другой метод, например, найти их все
+        при помощи <code>str.matchAll(regexp)</code>.</p>
+    </article>
+
+    <article>
+        <h2>str.replace(substr|regexp, substr|func)</h2>
+        <p>Это универсальный метод поиска-и-замены, один из самых полезных. Этакий швейцарский армейский нож для поиска
+        и замены в строке.</p>
+        <p>Мы можем использовать его и без регулярных выражений, дли поиска-и-замены подстроки:</p>
+<pre class="executable"><code class="language-javascript">// Заменить тире двоеточием
+alert('12-34-56'.replace('-', ':')); // 12:34-56</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('12-34-56'.replace('-', ':'));
+                        });
+                    });
+        </script>
+        <p>Хотя есть подводный камень.</p>
+        <p><b>Когда первый аргумент <code>replace</code> является строкой, он заменяет только первое совпадение.</b></p>
+        <p>Вы можете видеть это в приведенном выше примере: только первый <code>"-"</code> заменяется на
+        <code>":"</code>.</p>
+        <p>Чтобы найти все дефисы, нам нужно использовать не строку <code>"-"</code>, а регулярное выражение
+        <code>/-/g</code> с обязательным флагом <code>g</code>:</p>
+<pre class="executable"><code class="language-javascript">// Заменить все тире двоеточиями
+alert('12-34-56'.replace(/-/g, ':')); // 12:34:56</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('12-34-56'.replace(/-/g, ':'));
+                        });
+                    });
+        </script>
+        <p>Второй аргумент - строка замены. Мы можем использовать специальные символы в нем:</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Спецсимволы</th>
+                <th>Действие в строке замены</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><code>$&</code></td>
+                <td>Вставляет все найденное совпадение</td>
+            </tr>
+            <tr>
+                <td><code>$`</code></td>
+                <td>Вставляет часть строки до совпадения</td>
+            </tr>
+            <tr>
+                <td><code>$'</code></td>
+                <td>Вставляет часть строки после совпадения</td>
+            </tr>
+            <tr>
+                <td><code>$n</code></td>
+                <td>Если <code>n</code> это 1-2 значное число, то вставляет содержимое n-й скобки
+                (см. главу <a target="_blank" href="../11.%20Скобочные%20группы/index.html">Скобочные группы</a>)</td>
+            </tr>
+            <tr>
+                <td><code>$&lt;name&gt;</code></td>
+                <td>Вставляет содержимое скобки с указанным <code>name</code> (см. главу
+                <a target="_blank" href="../11.%20Скобочные%20группы/index.html">Скобочные группы</a>)</td>
+            </tr>
+            <tr>
+                <td><code>$$</code></td>
+                <td>Вставляет <code>$</code></td>
+            </tr>
+            </tbody>
+        </table>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">let str = 'John Smith';
+
+// Поменять местами имя и фамилию
+alert(str.replace(/(\w+) (\w+)/i), '$2, $1'); // Smith, John</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'John Smith';
+                            alert(str.replace(/(\w+) (\w+)/i, '$2, $1'));
+                        });
+                    });
+        </script>
+        <p><b>Для ситуаций, которые требуют «умных» замен, вторым аргументом может быть функция.</b></p>
+        <p>Она будет вызываться для каждого совпадения, и ее результат будет вставлен в качестве замены.</p>
+        <p>Функция вызывается с аргументами <code>func(match, p1, p2, ..., pn, offset, input, groups)</code>:</p>
+        <ol>
+            <li>
+                <p><code>match</code> - найденное совпадение.</p>
+            </li>
+            <li>
+                <p><code>p1, p2, ..., pn</code> - содержимое скобок (см. главу
+                <a target="_blank" href="../11.%20Скобочные%20группы/index.html">Скобочные группы</a>).</p>
+            </li>
+            <li>
+                <p><code>offset</code> - позиция, на которой найдено совпадение.</p>
+            </li>
+            <li>
+                <p><code>input</code> - исходная строка.</p>
+            </li>
+            <li>
+                <p><code>groups</code> - объект с содержимым именованных скобок (см. главу
+                <a target="_blank" href="../11.%20Скобочные%20группы/index.html">Скобочные группы</a>).</p>
+            </li>
+        </ol>
+        <p>Если скобок в регулярном выражении нет, то будет только 3 аргумента: <code>func(match, offset, input)</code>.</p>
+        <p>Например, переведем выбранные совпадения в верхний регистр:</p>
+<pre class="executable"><code class="language-javascript">let str = 'html and css';
+
+let result = str.replace(/html|css/gi, str => str.toUpperCase());
+
+alert(result); // HTML and CSS</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'html and css';
+                            let result = str.replace(/html|css/gi, str => str.toUpperCase());
+                            alert(result);
+                        });
+                    });
+        </script>
+        <p>Заменим каждое совпадение на его позицию в строке:</p>
+<pre class="executable"><code class="language-javascript">alert('Xo-xo-xo'.replace(/xo/gi, (match, offset) => offset); // 0-3-6</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            alert('Xo-xo-xo'.replace(/xo/gi, (match, offset) => offset));
+                        });
+                    });
+        </script>
+        <p>В примере ниже две скобки, поэтому функция замены вызывается с 5-ю аргументами: первый - все совпадение,
+        затем два аргумента - содержимое скобок, затем (в примере не используются) индекс совпадения и исходная строка:</p>
+<pre class="executable"><code class="language-javascript">let str = 'John Smith';
+
+let result = str.replace(/(\w+) (\w+)/, (match, name, surname) => `${surname}, ${name}`;
+
+alert(result); Smith, John</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'John Smith';
+                            let result = str.replace(/(\w+) (\w+)/, (match, name, surname) => `${surname}, ${name}`);
+                            alert(result);
+                        });
+                    });
+        </script>
+        <p>Если в регулярном выражении много скобочных групп, то бывает удобно использовать остаточные аргументы
+        для обращения к ним:</p>
+<pre class="executable"><code class="language-javascript">let str = 'John Smith';
+
+let result = str.replace(/(\w+) (\w+)/, (...match) => `${match[2]}, ${match[1]}`);
+
+alert(result); Smith, John</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'John Smith';
+                            let result = str.replace(/(\w+) (\w+)/, (...match) => `${match[2]}, ${match[1]}`);
+                            alert(result);
+                        });
+                    });
+        </script>
+        <p>Или, если мы используем именованные группы, то объект <code>groups</code> с ними всегда идет последним,
+        так что можно получить его так:</p>
+<pre class="executable"><code class="language-javascript">let str = 'John Smith';
+
+let result = str.replace(/(?&lt;name&gt;\w+) (?&lt;surname&gt;\w+)/, (...match) => {
+    let groups = match.pop();
+
+    return `${groups.surname}, ${groups.name}`;
+});
+
+alert(result); // Smith, John</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'John Smith';
+                            let result = str.replace(/(?<name>\w+) (?<surname>\w+)/, (...match) => {
+                                let groups = match.pop();
+                                return `${groups.surname}, ${groups.name}`;
+                            });
+                            alert(result);
+                        });
+                    });
+        </script>
+        <p>Использование функции дает нам максимальные возможности по замене, потому что функция получает всю информацию
+        о совпадении, имеет доступ к внешним переменным и может делать все что угодно.</p>
+    </article>
+
+    <article>
+        <h2>regexp.exec(str)</h2>
+        <p>Метод <code>regexp.exec(str)</code> ищет совпадение с <code>regexp</code> в строке <code>str</code>.
+        В отличие от предыдущих методов, вызывается на регулярном выражении, а не на строке.</p>
+        <p>Он ведет себя по-разному в зависимости от того, имеет ли регулярное выражение флаг <code>g</code>.</p>
+        <p>Если нет <code>g</code>, то <code>regexp.exec(str)</code> возвращает первое совпадение в точности как
+        <code>str.match(regexp)</code>. Такое совпадение не дает нам ничего нового.</p>
+        <p>Но если есть <code>g</code>, то:</p>
+        <ul>
+            <li>
+                <p>Вызов <code>regexp.exec(str)</code> возвращает первое совпадение и <i>запоминает</i> позицию после
+                него в свойстве <code>regexp.lastIndex</code>.</p>
+            </li>
+            <li>
+                <p>Следующий такой вызов начинает поиск с позиции <code>regexp.lastIndex</code>, возвращает следующее
+                совпадение и запоминает позицию после него в <code>regexp.lastIndex</code>.</p>
+            </li>
+            <li>
+                <p>... И так далее.</p>
+            </li>
+            <li>
+                <p>Если совпадений больше нет, то <code>regexp.exec</code> возвращает <code>null</code>, а для
+                <code>regexp.lastIndex</code> устанавливается значение <code>0</code>.</p>
+            </li>
+        </ul>
+        <p>Таким образом, повторные вызовы возвращают одно за другим все совпадения, используя свойство
+        <code>regexp.lastIndex</code> для отслеживания текущей позиции поиска.</p>
+        <p>В прошлом, до появления метода <code>str.matchAll</code> в JavaScript, вызов <code>regexp.exec</code>
+        использовали для получения всех совпадений с их позициями и группами скобок в цикле:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Больше о JavaScript на https://javascript.info';
+let regexp = /javascript/gi;
+
+let result;
+
+while (result = regexp.exec(str)) {
+    alert(`Найдено ${result[0]} на позиции ${result.index}`);
+    // Найдено JavaScript на позиции 9, затем
+    // Найдено javascript на позиции 31
+}</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Больше о JavaScript на https://javascript.info';
+                            let regexp = /javascript/gi;
+
+                            let result;
+                            while (result = regexp.exec(str)) {
+                                alert(`Найдено ${result[0]} на позиции ${result.index}`);
+                            }
+                        });
+                    });
+        </script>
+        <p>Это работает и сейчас, хотя для современных браузеров <code>str.matchAll</code>, как правило, удобнее.</p>
+        <p><b>Мы можем использовать <code>regexp.exec</code> для поиска совпадений, начиная с нужной позиции,
+        если вручную поставим <code>lastIndex</code>.</b></p>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Hello, world!';
+
+let regexp = /\w+/g; // Без флага g свойство lastIndex игнорируется
+regexp.lastIndex = 5; // Ищем с 5-й позиции (т.е. с запятой и далее)
+
+alert(regexp.exec(str)); // world</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Hello, world!';
+                            let regexp = /\w+/g;
+                            regexp.lastIndex = 5;
+                            alert(regexp.exec(str));
+                        });
+                    });
+        </script>
+        <p>Если у регулярного выражения стоит флаг <code>y</code>, то поиск будет вестись не начиная с позиции
+        <code>regexp.lastIndex</code>, а только на этой позиции (не далее в тексте).</p>
+        <p>В примере выше заменим флаг <code>g</code> на <code>y</code>. Ничего найдено не будет, поскольку именно
+        на позиции <code>5</code> слова нет:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Hello, world!';
+let regexp = /\w+/y;
+regexp.lastIndex = 5; // Ищем ровно на 5-й позиции
+
+alert(regexp.exec(str)); // null</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Hello, world!';
+                            let regexp = /\w+/y;
+                            regexp.lastIndex = 5;
+                            alert(regexp.exec(str));
+                        });
+                    });
+        </script>
+        <p>Это удобно в тех ситуациях, когда мы хотим «прочитать» что-то из строки по регулярному выражению именно
+        на конкретной позиции, а не где-то далее.</p>
+    </article>
+
+    <article>
+        <h2>regexp.test(str)</h2>
+        <p>Метод <code>regexp.test(str)</code> ищет совпадение и возвращает <code>true/false</code>, в зависимости от
+        того, находит ли он его.</p>
+        <p>Например:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Я люблю JavaScript';
+
+// Эти два теста делают одно и то же
+alert(/люблю/i.test(str)); // true
+alert(str.search(/люблю/i) !== -1); // true</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Я люблю JavaScript';
+
+                            alert(/люблю/i.test(str));
+                            alert(str.search(/люблю/i) !== -1);
+                        });
+                    });
+        </script>
+        <p>Пример с отрицательным ответом:</p>
+<pre class="executable"><code class="language-javascript">let str = 'Ля-ля-ля';
+
+alert(/люблю/i.test(str)); // false
+alert(str.search(/люблю/i) !== -1); // false</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'Ля-ля-ля';
+                            alert(/люблю/i.test(str));
+                            alert(str.search(/люблю/i) !== -1);
+                        });
+                    });
+        </script>
+        <p>Если регулярное выражение имеет флаг <code>g</code>, то <code>regexp.test</code> ищет, начиная с
+        <code>regexp.lastIndex</code> и обновляет это свойство, аналогично <code>regexp.exec</code>.</p>
+        <p>Таким образом, мы можем использовать его для поиска с заданной позиции:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /люблю/gi;
+
+let str = 'Я люблю JavaScript';
+
+// Начать поиск с 10-й позиции
+regexp.lastIndex = 10;
+alert(regexp.test(str)); // false (совпадений нет)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let regexp = /люблю/gi;
+                            let str = 'Я люблю JavaScript';
+                            regexp.lastIndex = 10;
+                            alert(regexp.test(str));
+                        });
+                    });
+        </script>
+
+        <article class="warning">
+            <h3>Одно и то же регулярное выражение, использованное повторно на другом тексте, может дать другой результат</h3>
+            <p>Если мы применяем одно и то же регулярное выражение последовательно к разным строкам, это может привести
+            к неверному результату, поскольку вызов <code>regexp.test</code> обновляет свойство <code>regexp.lastIndex</code>,
+            поэтому поиск в новой строке может начаться с ненулевой позиции.</p>
+            <p>Например, здесь мы дважды вызываем <code>regexp.test</code> для одного и того же текста, и второй раз
+            поиск завершается неудачно:</p>
+<pre class="executable"><code class="language-javascript">let regexp = /javascript/g; // (regexp только что создан: regexp.lastIndex=0)
+
+alert(regexp.test('javascript')); // true (теперь regexp.lastIndex=10)
+alert(regexp.test('javascript')); // false</code></pre>
+            <script>
+                document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                            event.target.querySelector('button').addEventListener('click', function() {
+                                let regexp = /javascript/g;
+                                alert(regexp.test('javascript'));
+                                alert(regexp.test('javascript'));
+                            });
+                        });
+            </script>
+            <p>Это именно потому, что во втором тесте <code>regexp.lastIndex</code> не равен нулю.</p>
+            <p>Чтобы обойти это, можно присвоить <code>regexp.lastIndex = 0</code> перед новым поиском. Или вместо
+            методов на регулярном выражении вызывать методы строк <code>str.match/search/...</code>, они не используют
+            <code>lastIndex</code>.</p>
+        </article>
+
+    </article>
+</body>
+</html>
