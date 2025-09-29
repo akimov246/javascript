@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Поиск на заданной позиции, флаг «y»</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Поиск на заданной позиции, флаг «y»</h2>
+        <p>Флаг <code>y</code> позволяет произвести поиск на определенной позиции в исходной строке.</p>
+        <p>Чтобы разобрать флаг <code>y</code> и понять, чем же он хорош, рассмотрим практический пример.</p>
+        <p>Одна из часто встречающихся задач регулярных выражений - лексический разбор: мы имеем текст, например,
+        на каком-то языке программирования и получаем его структурные элементы.</p>
+        <p>Например, в HTML есть теги и атрибуты, в JavaScript-коде - переменные и функции, и т.п.</p>
+        <p>Мы не будем погружаться глубоко в тему написания таких анализаторов (это специализированная область со
+        своим набором инструментов и алгоритмов). Но в процессе их работы, вообще, в процессе анализа текста, очень
+        часто возникает задача «прочитать что-то на заданной позиции».</p>
+        <p>Например, у нас есть строка кода <code>let varName = 'value'</code>, и нам надо прочитать из нее имя переменной,
+        которое начинается с позиции <code>4</code>.</p>
+        <p>Имя переменной будем искать как слово <code>\w+</code>. Вообще, в языке JavaScript для имени переменной нужно
+        чуть более сложное регулярное выражение, но здесь это не важно.</p>
+        <p>Вызов <code>str.match(/\w+/)</code> найдет только первое слово в строке или все слова (с флагом <code>g</code>),
+        а нам нужно одно слово именно на позиции <code>4</code>.</p>
+        <p>Для поиска, начиная с нужной позиции, можно использовать метод <code>regexp.exec(str)</code>.</p>
+        <p>Если у регулярного выражения <code>regexp</code> нет флагов <code>g</code> или <code>y</code>, то этот метод
+        ищет совпадение в строке <code>str</code>, точно так же, как <code>str.match(regexp)</code>. Здесь нас этот
+        простейший вариант без флагов не интересует.</p>
+        <p>Если флаг <code>g</code> есть, то он осуществляет поиск в строке <code>str</code>, начиная с позиции,
+        заданной свойством <code>regexp.lastIndex</code>. И, когда находит, обновляет <code>regexp.lastIndex</code>
+        на позицию после совпадения.</p>
+        <p>При создании регулярного выражения его свойство <code>lastIndex</code> равно <code>0</code>.</p>
+        <p>Так что повторные вызовы <code>regexp.exec</code> возвращают совпадения по очереди, одно за другим.</p>
+        <p>Например (с флагом <code>g</code>):</p>
+<pre class="executable"><code class="language-javascript">let str = 'let varName';
+
+let regexp = /\w+/g;
+alert(regexp.lastIndex); // 0 (при создании lastIndex=0)
+
+let word1 = regexp.exec(str);
+alert(word1[0]); // let (первое слово)
+alert(regexp.lastIndex); // 3 (позиция за первым совпадением)
+
+let word2 = regexp.exec(str);
+alert(word2[0]); // varName (второе слово)
+alert(regexp.lastIndex); // 11 (позиция за вторым совпадением)
+
+let word3 = regexp.exec(str);
+alert(word3); // null (больше совпадений нет)
+alert(regexp.lastIndex); // 0 (сбрасывается по окончании поиска)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'let varName';
+                            let regexp = /\w+/g;
+
+                            alert(`regexp.lastIndex=${regexp.lastIndex}`);
+
+                            let word1 = regexp.exec(str);
+                            alert(`word1[0]=${word1[0]}`);
+                            alert(`regexp.lastIndex=${regexp.lastIndex}`);
+
+                            let word2 = regexp.exec(str);
+                            alert(`word2[0]=${word2[0]}`);
+                            alert(`regexp.lastIndex=${regexp.lastIndex}`);
+
+                            let word3 = regexp.exec(str);
+                            alert(`word3=${word3}`);
+                            alert(`regexp.lastIndex=${regexp.lastIndex}`);
+                        });
+                    });
+        </script>
+        <p>Заметим, что каждое совпадение возвращается в виде массива, со всеми скобочными группами и дополнительными
+        свойствами.</p>
+        <p>Можно перебрать все совпадения в цикле:</p>
+<pre class="executable"><code class="language-javascript">let str = 'let varName';
+let regexp = /\w+/g;
+
+let result;
+
+while (result = regexp.exec(str)) {
+    alert(`Найдено ${result[0]} на позиции ${result.index}`);
+    // Найдено let на позиции 0, затем
+    // Найдено varName на позиции 4
+}</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'let varName';
+                            let regexp = /\w+/g;
+
+                            let result;
+                            while (result = regexp.exec(str)) {
+                                alert(`Найдено ${result[0]} на позиции ${result.index}`);
+                            }
+                        });
+                    });
+        </script>
+        <p>Такое использование <code>regexp.exec</code> представляет собой альтернативу методу <code>str.matchAll</code>.</p>
+        <p>Таким образом, последовательные вызовы <code>regexp.exec</code> могут найти все совпадения, представляя
+        собой альтернативу методам <code>str.match/matchAll</code>.</p>
+        <p>Но в отличие от других методов, мы можем поставить самостоятельно <code>lastIndex</code>, начав тем самым
+        поиск именно с нужной позиции.</p>
+        <p>Например, найдем слово, начиная с позиции <code>4</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = 'let varName = "value"';
+
+let regexp = /\w+/g; // Без флага g свойство lastIndex игнорируется
+
+regexp.lastIndex = 4;
+
+let word = regexp.exec(str);
+alert(word[0]); // varName</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'let varName = "value"';
+                            let regexp = /\w+/g;
+                            regexp.lastIndex = 4;
+                            let word = regexp.exec(str);
+                            alert(word[0]);
+                        });
+                    });
+        </script>
+        <p>Поиск <code>\w+</code> произведен, начиная с позиции <code>regexp.lastIndex = 4</code>.</p>
+        <p>Заметим, что такой поиск лишь начинается с позиции <code>lastIndex</code> и идет дальше. Если слова на позиции
+        <code>lastIndex</code> нет, но оно есть позже, оно все равно будет найдено:</p>
+<pre class="executable"><code class="language-javascript">let str = 'let varName = "value"';
+
+let regexp = /\w+/g;
+
+regexp.lastIndex = 3;
+
+let word = regexp.exec(str);
+alert(word[0]); // varName
+alert(word.index); // 4</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'let varName = "value"';
+                            let regexp = /\w+/g;
+                            regexp.lastIndex = 3;
+                            let word = regexp.exec(str);
+                            alert(word[0]);
+                            alert(word.index);
+                        });
+                    });
+        </script>
+        <p>... То есть, при флаге <code>g</code> свойство <code>lastIndex</code> задает начальную позицию поиска.</p>
+        <p><b>Флаг <code>y</code> заставляет <code>regexp.exec</code> искать ровно на позиции <code>lastIndex</code>,
+        ни до и ни после.</b></p>
+        <p>Вот тот же поиск с флагом <code>y</code>:</p>
+<pre class="executable"><code class="language-javascript">let str = 'let varName = "value"';
+
+let regexp = /\w+/y;
+
+regexp.lastIndex = 3;
+alert(regexp.exec(str)); // null (на позиции 3 пробел, а не слово)
+
+regexp.lastIndex = 4;
+alert(regexp.exec(str)); // varName (слово на позиции 4)</code></pre>
+        <script>
+            document.currentScript.previousElementSibling.addEventListener('buttonAdded', function(event) {
+                        event.target.querySelector('button').addEventListener('click', function() {
+                            let str = 'let varName = "value"';
+                            let regexp = /\w+/y;
+
+                            regexp.lastIndex = 3;
+                            alert(regexp.exec(str));
+
+                            regexp.lastIndex = 4;
+                            alert(regexp.exec(str));
+                        });
+                    });
+        </script>
+        <p>Как можно видеть, регулярное выражение <code>/\w+/y</code> не найдено на позиции <code>3</code>
+        (в отличие от флага <code>g</code>), но найдено на позиции <code>4</code>.</p>
+        <p>Представим себе, что у нас большой текст, и в нем нет ни одного совпадения. В таком случае регулярное выражение
+        с флагом <code>g</code> будет идти до самого конца текста, и это займет гораздо больше времени, чем поиск
+        с флагом <code>y</code>.</p>
+        <p>В задачах, подобных лексическому анализу, обычно много поисков на конкретной позиции.
+        Использование флага <code>y</code> - ключ к хорошей производительности.</p>
+    </article>
+</body>
+</html>
