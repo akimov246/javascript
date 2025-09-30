@@ -79,6 +79,7 @@ pre:hover {
 pre {
     transition: box-shadow .5s ease;
     position: relative;
+    border-radius: 0.5rem;
 }
 
 fieldset {
@@ -88,4 +89,12 @@ fieldset {
 
 fieldset legend {
     font-size: 1.3rem;
+}
+
+.example {
+    border: 3px solid var(--border-color-grey);
+    border-radius: 0.5rem;
+    width: max-content;
+    max-width: 90%;
+    padding: 0.5rem;
 }

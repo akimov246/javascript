@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Единицы измерения: px, em, rem и другие</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .em li {
+            font-size: 0.8em;
+        }
+
+        button {
+            width: 3rem;
+            height: 3rem;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Единицы измерения: px, em, rem и другие</h2>
+        <p>В этом очерке я постараюсь не только рассказать о различных единицах измерения, но и построить общую картину -
+        что и когда выбирать.</p>
+    </article>
+
+    <article>
+        <h2>Пиксели: px</h2>
+        <p>Пиксели <code>px</code> - это самая базовая, абсолютная и окончательная единица измерения.</p>
+        <p>Количество пикселей задается в настройках <a target="_blank" href="https://ru.wikipedia.org/wiki/%D0%A0%D0%B0%D0%B7%D1%80%D0%B5%D1%88%D0%B5%D0%BD%D0%B8%D0%B5_(%D0%BA%D0%BE%D0%BC%D0%BF%D1%8C%D1%8E%D1%82%D0%B5%D1%80%D0%BD%D0%B0%D1%8F_%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D0%BA%D0%B0)">разрешения экрана</a>,
+        один <code>px</code> - это как раз один такой пиксель на экране. Все значения браузер в итоге пересчитает в пиксели.</p>
+        <p>Пиксели могут быть дробными, например, размер можно задать в <code>16.5px</code>. Это совершенно нормально,
+        браузер сам использует дробные пиксели для внутренних вычислений. К примеру, если элемент шириной в <code>100px</code>,
+        его нужно разделить на три части - волей-неволей появляются <code>33.333...px</code>. При окончательном отображении
+        дробные пиксели, конечно же, округляются и становятся целыми.</p>
+        <p>Для мобильных устройств, у которых много пикселей на экране, но сам экран маленький, чтобы обеспечить читаемость,
+        браузер автоматически применяет масштабирование.</p>
+        <table>
+            <thead>
+            <tr>
+                <th>Достоинства</th>
+                <th>Недостатки</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Главное достоинство пикселя - четкость и понятность</td>
+                <td>Другие единицы измерения - в некотором смысле «мощнее», они являются относительными и позволяют
+                устанавливать соотношения между различными размерами</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <article class="warning">
+            <h3>Давно на свалке: <code>mm</code>, <code>cm</code>, <code>pt</code>, <code>pc</code></h3>
+            <p>Существуют также «производные» от пикселя единицы измерения: <code>mm</code>, <code>cm</code>,
+            <code>pt</code> и <code>pc</code>, но они давно отправились на свалку истории.</p>
+            <p>Вот, если интересно, их значения:</p>
+            <ul>
+                <li>
+                    <p><code>1mm</code> (мм) = <code>3.8px</code></p>
+                </li>
+                <li>
+                    <p><code>1cm</code> (см) = <code>38px</code></p>
+                </li>
+                <li>
+                    <p><code>1pt</code> (типографский пункт) = <code>4/3px</code></p>
+                </li>
+                <li>
+                    <p><code>1pc</code> (типографская пика) = <code>16px</code></p>
+                </li>
+            </ul>
+            <p>Так как браузер пересчитывает эти значения в пиксели, то смысла в их употреблении нет.</p>
+        </article>
+
+        <article class="note">
+            <h3>Почему в сантиметре <code>cm</code> содержится ровно 38 писклей?</h3>
+            <p>В реальной жизни сантиметр - это эталон длины, одна сотая метра. А
+            <a target="_blank" href="https://ru.wikipedia.org/wiki/%D0%9F%D0%B8%D0%BA%D1%81%D0%B5%D0%BB%D1%8C">пиксель</a>
+            может быть разным, в зависимости от экрана.</p>
+            <p>Но в формулах выше под пикселем понимается «сферический пиксель в вакууме», точка на «стандартизированном
+            экране», характеристики которого описаны в
+            <a target="_blank" href="https://www.w3.org/TR/CSS2/syndata.html#length-units">спецификации</a>.</p>
+            <p>Поэтому ни о каком соответствии <code>cm</code> реальному сантиметру здесь нет и речи. Это полностью
+            синтетическая и производная единица измерения, которая не нужна.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Относительно шрифта: em</h2>
+        <p><code>1em</code> - текущий размер шрифта.</p>
+        <p>Можно брать любые пропорции от текущего шрифта: <code>2em</code>, <code>0.5em</code> и т.п.</p>
+        <p><b>Размеры в <code>em</code> - <i>относительные</i>, они определяются по текущему контексту.</b></p>
+        <p>Например, давайте сравним <code>px</code> с <code>em</code> на таком примере:</p>
+<pre><code class="language-html">&lt;div style="font-size: 24px"&gt;
+    Страусы
+    &lt;div style="font-size: 24px"&gt;Живут также в Африке&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="font-size: 24px">
+                Страусы
+                <div style="font-size: 24px">Живут также в Африке</div>
+            </div>
+        </div>
+        <p><code>24</code> пикселя - и в Африке <code>24</code> пикселя, поэтому размер шрифта в <code>&lt;div&gt;</code>
+        одинаков.</p>
+        <p>А вот аналогичный пример с <code>em</code> вместо <code>px</code>:</p>
+<pre><code class="language-html">&lt;div style="font-size: 1.5em"&gt;
+    Страусы
+    &lt;div style="font-size: 1.5em"&gt;Живут также в Африке&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="font-size: 1.5em">
+                Страусы
+                <div style="font-size: 1.5em">Живут также в Африке</div>
+            </div>
+        </div>
+        <p>Так как значение в <code>em</code> высчитывается относительно <i>текущего шрифта</i>, то вложенная строка
+        в <code>1.5</code> раза больше, чем первая.</p>
+        <p>Выходит, размеры, заданные в <code>em</code>, будут уменьшаться или увеличиваться вместе со шрифтом.
+        С учетом того, что размер шрифта обычно определяется в родителе, и может быть изменен ровно в одном месте,
+        это бывает очень удобно.</p>
+
+        <article class="note">
+            <h3>Что такое размер шрифта?</h3>
+            <p>Что такое «размер шрифта»? Это совсем не «размер самой большой буквы в нем», как можно было бы подумать.</p>
+            <p>Размер шрифта - это некоторая «условная единица», которая встроена в шрифт.</p>
+            <p>Она обычно чуть больше, чем расстояние от верха самой большой буквы до низа самой маленькой. То есть,
+            предполагается, что в эту высоту помещается любая буква или их сочетание. Но при этом «хвосты» букв,
+            таких как <code>p</code>, <code>g</code> могут заходить за это значение, то есть вылезать снизу. Поэтому
+            обычно высоту строки делают чуть больше, чем размер шрифта.</p>
+        </article>
+
+        <article class="note">
+            <h3>Единицы в <code>ex</code> и <code>ch</code></h3>
+            <p>В спецификации указаны также единицы
+            <a target="_blank" href="https://www.w3.org/TR/css3-values/#ex-unit">ex</a> и
+            <a target="_blank" href="https://www.w3.org/TR/css3-values/#ch-unit">ch</a>, которые означают размер
+            символа <code>"x"</code> и размер символа <code>"0"</code>.</p>
+            <p>Эти размеры присутствуют в шрифте всегда, даже если по коду этих символов в шрифте находятся другие
+            значения, а не именно буква <code>"x"</code> и ноль <code>"0"</code>. В этом случае они носят более
+            условный характер.</p>
+            <p>Эти единицы используются чрезвычайно редко, так как «размер шрифта» <code>em</code> обычно вполне
+            подходит.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>Проценты %</h2>
+        <p>Процент <code>%</code>, как и <code>em</code> - относительные единицы.</p>
+        <p>Когда мы говорим «процент», то возникает вопрос - «процент от чего?»</p>
+        <p>Как правило, процент будет от значения свойства родителя с тем же названием, но не всегда.</p>
+        <p>Это очень важная особенность процентов, про которую, увы, часто забывают.</p>
+        <p>Отличный источник информации по этой теме - стандарт,
+        <a target="_blank" href="https://www.w3.org/TR/CSS2/visudet.html">Visual formatting model details</a>.</p>
+        <p>Вот пример с <code>%</code>, он выглядит в точности так же, как с <code>em</code>:</p>
+<pre><code class="language-html">&lt;div style="font-size: 150%"&gt;
+    Страусы
+    &lt;div style="font-size: 150%"&gt;Живут также в Африке&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="font-size: 150%">
+                Страусы
+                <div style="font-size: 150%">Живут также в Африке</div>
+            </div>
+        </div>
+        <p>В примере выше процент берется от размера шрифта родителя.</p>
+        <p>А вот примеры-исключения, в которых <code>%</code> берется не так:</p>
+        <ul>
+            <li>
+                <p><code>margin-left</code></p>
+                <p>При установке свойства <code>margin-left</code> в <code>%</code>, процент берется от <i>ширины</i>
+                родительского блока, а вовсе не от его <code>margin-left</code>.</p>
+            </li>
+            <li>
+                <p><code>line-height</code></p>
+                <p>При установке свойства <code>line-height</code> в <code>%</code>, процент берется от текущего
+                <i>размера шрифта</i>, а вовсе не от <code>line-height</code> родителя. Детали по <code>line-height</code>
+                и размеру шрифта вы также можете найти в статье
+                <a target="_blank" href="https://learn.javascript.ru/font-size-line-height">Свойства font-size и line-height</a>.</p>
+            </li>
+            <li>
+                <p><code>width/height</code></p>
+                <p>Для <code>width/height</code> обычно процент от ширины/высоты родителя, но при
+                <code>position: fixed</code>, процент берется от ширины/высоты <i>окна</i> (а не родителя и не документа).
+                Кроме того, иногда <code>%</code> требует соблюдения дополнительных условий, за примером -
+                обратитесь к главе <a target="_blank" href="https://learn.javascript.ru/height-percent">Особенности свойства height в %</a>.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Единица rem: смесь px и em</h2>
+        <p>Итак, мы рассмотрели:</p>
+        <ul>
+            <li>
+                <p><code>px</code> - абсолютные, четкие, понятные, не зависящие ни от чего.</p>
+            </li>
+            <li>
+                <p><code>em</code> - относительно размера шрифта.</p>
+            </li>
+            <li>
+                <p><code>%</code> - относительно такого же свойства родителя (а может и не родителя, а может и не
+                такого же - см. примеры выше).</p>
+            </li>
+        </ul>
+        <p>Может быть, пора уже остановиться, может этого достаточно?</p>
+        <p>Э-э, нет! Не все вещи делаются удобно.</p>
+        <p>Вернемся к теме шрифтов. Бывают задачи, когда мы хотим сделать на странице большие кнопки «Шрифт больше» и
+        «Шрифт меньше». При нажатии на них будет срабатывать JavaScript, который будет увеличивать или уменьшать шрифт.</p>
+        <p>Вообще-то это можно сделать без JavaScript, в браузере обычно есть горячие клавиши для масштабирования,
+        вроде <kbd>Ctrl<span style="color: darkgrey">+</span>+</kbd>, но они работают слишком тупо - берут и
+        увеличивают всю страницу, вместе с изображениями и другими элементами, которые масштабировать как раз не надо.
+        А если надо увеличить только шрифт, потому что посетитель хочет комфортнее читать?</p>
+        <p>Какую единицу использовать для задания шрифтов? Наверное не <code>px</code>, ведь значения в <code>px</code>
+        абсолютны, если менять, то во всех стилевых правилах. Вполне возможна ситуация, когда мы в одном правиле
+        размер поменяли, а другие забыли.</p>
+        <p>Следующие кандидаты - <code>em</code> и <code>%</code>.</p>
+        <p>Разницы между ними здесь нет, так как при задании <code>font-size</code> в процентах, эти проценты берутся
+        от <code>font-size</code> родителя, то есть ведут себя так же, как и <code>em</code>.</p>
+        <p>Вроде бы, использовать можно, однако есть проблема.</p>
+        <p>Попробуем использовать этот подход для <code>&lt;li&gt;</code>.</p>
+        <p>Протестируем на таком списке:</p>
+<pre><code class="language-html">&lt;ul&gt;
+    &lt;li&gt;Собака
+        &lt;ul&gt;
+            &lt;li&gt;бывает
+                &lt;ul&gt;
+                    &lt;li&gt;кучаей
+                        &lt;ul&gt;
+                            &lt;li&gt;только
+                                &lt;ul&gt;
+                                    &lt;li&gt;от жизни
+                                        &lt;ul&gt;
+                                            &lt;li&gt;собачей&lt;/li&gt;
+                                        &lt;/ul&gt;
+                                    &lt;/li&gt;
+                                &lt;/ul&gt;
+                            &lt;/li&gt;
+                        &lt;/ul&gt;
+                    &lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+        <div class="example">
+            <ul>
+                <li>
+                    Собака
+                    <ul>
+                        <li>бывает
+                            <ul>
+                                <li>кусачей
+                                    <ul>
+                                        <li>только
+                                            <ul>
+                                                <li>от жизни
+                                                    <ul>
+                                                        <li>собачей</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <p>Пока это обычный вложенный список.</p>
+        <p>Теперь уменьшим размер шрифта до <code>0.8em</code>, вот что получится:</p>
+<pre><code class="language-html">&lt;style&gt;
+    li {
+        font-size: 0.8em;
+    }
+&lt;/style&gt;
+
+&lt;ul&gt;
+    &lt;li&gt;Собака
+        &lt;ul&gt;
+            &lt;li&gt;бывает
+                &lt;ul&gt;
+                    &lt;li&gt;кучаей
+                        &lt;ul&gt;
+                            &lt;li&gt;только
+                                &lt;ul&gt;
+                                    &lt;li&gt;от жизни
+                                        &lt;ul&gt;
+                                            &lt;li&gt;собачей&lt;/li&gt;
+                                        &lt;/ul&gt;
+                                    &lt;/li&gt;
+                                &lt;/ul&gt;
+                            &lt;/li&gt;
+                        &lt;/ul&gt;
+                    &lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+        <div class="example em">
+            <ul>
+                <li>
+                    Собака
+                    <ul>
+                        <li>бывает
+                            <ul>
+                                <li>кусачей
+                                    <ul>
+                                        <li>только
+                                            <ul>
+                                                <li>от жизни
+                                                    <ul>
+                                                        <li>собачей</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <p>Проблема очевидна. Хотели, как лучше, а получилось... Мелковато. Каждый вложенный <code>&lt;li&gt;</code>
+        получил размер шрифта <code>0.8</code> от родителя, в итоге уменьшились до нечитаемого состояния. Это не совсем
+        то, чего бы здесь мы хотели.</p>
+        <p>Можно уменьшить размер шрифта только на одном «корневом элементе»... Или воспользоваться единицей
+        <code>rem</code>, которая, можно сказать, специально придумана для таких случаев!</p>
+        <p><b>Единица <code>rem</code> задает размер относительно размера шрифта элемента <code>&lt;html&gt;</code>.</b></p>
+        <p>Как правило, браузеры ставят этому элементу некоторый «разумный» (reasonable) размер по умолчанию,
+        который мы, конечно, можем переопределить и использовать <code>rem</code> для задания шрифтов внутри относительно
+        него:</p>
+<pre><code class="language-html">&lt;style&gt;
+    html {
+        font-size: 14px;
+    }
+
+    li {
+        font-size: 0.8rem;
+    }
+&lt;/style&gt;
+
+&lt;div&gt;&lt;button id="up"&gt;Кликните, чтобы увеличить размер шрифта&lt;/button&gt;&lt;/div&gt;
+
+&lt;img src="images/angry_dog.png"&gt;
+
+&lt;ul&gt;
+    &lt;li&gt;Собака
+        &lt;ul&gt;
+            &lt;li&gt;бывает
+                &lt;ul&gt;
+                    &lt;li&gt;кучаей
+                        &lt;ul&gt;
+                            &lt;li&gt;только
+                                &lt;ul&gt;
+                                    &lt;li&gt;от жизни
+                                        &lt;ul&gt;
+                                            &lt;li&gt;собачей&lt;/li&gt;
+                                        &lt;/ul&gt;
+                                    &lt;/li&gt;
+                                &lt;/ul&gt;
+                            &lt;/li&gt;
+                        &lt;/ul&gt;
+                    &lt;/li&gt;
+                &lt;/ul&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;script&gt;</code>
+    <code class="language-javascript">let html = document.documentElement;
+    up.onclick = function() {
+        // При помощи JS увеличить размер шрифта html на 2px
+        html.style.fontSize = parseInt(getComputedStyle(html, '').fontSize) + 2 + 'px';
+    };</code>
+<code class="language-html">&lt;/script&gt;</code></pre>
+        <div class="example">
+            <button id="up" title="Увеличить размер шрифта">+</button>
+            <button id="down" title="Уменьшить размер шрифта">-</button>
+            <img src="images/angry_dog.png" alt style="width: 10rem; display: block; margin-top: 0.5rem">
+            <ul>
+                <li>
+                    Собака
+                    <ul>
+                        <li>бывает
+                            <ul>
+                                <li>кусачей
+                                    <ul>
+                                        <li>только
+                                            <ul>
+                                                <li>от жизни
+                                                    <ul>
+                                                        <li>собачей</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <script>
+            let div = document.currentScript.previousElementSibling;
+            let up_button = div.querySelector('#up');
+            let down_button = div.querySelector('#down');
+            let ul = div.querySelector('ul');
+
+            up_button.addEventListener('click', function() {
+                ul.style.fontSize = Math.min(100, parseFloat(getComputedStyle(ul).fontSize) + 1) + 'px';
+            });
+
+            down_button.addEventListener('click', function() {
+                ul.style.fontSize = Math.max(parseFloat(getComputedStyle(document.documentElement).fontSize),
+                                             parseFloat(getComputedStyle(ul).fontSize) - 1) + 'px';
+            });
+        </script>
+        <p>Получилось удобное масштабирование для шрифтов, не влияющее на другие элементы.</p>
+        <p>Элементы, размер которых задан в <code>rem</code>, не зависят друг от друга и от контекста - и этим похожи на
+        <code>px</code>, а с другой стороны они все заданы относительно размера шрифта <code>&lt;html&gt;</code>.</p>
+    </article>
+
+    <article>
+        <h2>Относительно экрана: vw, vh, vmin, vmax</h2>
+        <p>Во всех современных браузерах поддерживаются новые единицы из черновика стандарта
+        <a target="_blank" href="https://drafts.csswg.org/css-values-3/">CSS Values and Units 3</a>:</p>
+        <ul>
+            <li>
+                <p><code>vw</code> - 1% ширины окна.</p>
+            </li>
+            <li>
+                <p><code>vh</code> - 1% высоты окна.</p>
+            </li>
+            <li>
+                <p><code>vmin</code> - наименьшее из (<code>vw</code>, <code>vh</code>).</p>
+            </li>
+            <li>
+                <p><code>vmax</code> - наибольшее из (<code>vw</code>, <code>vh</code>).</p>
+            </li>
+        </ul>
+        <p><b>Эти значения были созданы, в первую очередь, для поддержки мобильных устройств.</b></p>
+        <p>Их основное преимущество - в том, что любые размеры, которые в них заданы, автоматически масштабируются
+        при изменении размеров окна.</p>
+        <div class="example">
+            <p style="font-size: 5vw; margin: 0">Этот текст написан с размером 5vw</p>
+            <p style="font-size: 5vh; margin: 0">Этот текст написан с размером 5vh</p>
+            <p style="font-size: 5vmin; margin: 0">Этот текст написан с размером 5vmin</p>
+            <p style="font-size: 5vmax; margin: 0">Этот текст написан с размером 5vmax</p>
+        </div>
+        <p>Вы сможете легко увидеть, как работают <code>vw</code>, <code>vh</code>, <code>vmin</code>, <code>vmax</code>,
+        если поменяете ширину/высоту окна браузера. Текст выше будет расти/уменьшаться.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Мы рассмотрели единицы измерения:</p>
+        <ul>
+            <li>
+                <p><code>px</code> - абсолютные пиксели, к которым привязаны и потому не нужны <code>mm</code>,
+                <code>cm</code>, <code>pt</code> и <code>pc</code>. Используется для максимально конкретного и точного
+                задания размеров.</p>
+            </li>
+            <li>
+                <p><code>em</code> - задает размер относительно шрифта родителя, можно относительно конкретных
+                символов: <code>"x"</code> (<code>ex</code>) и <code>"0"</code> (<code>ch</code>), используется там,
+                где нужно упростить масштабирование компоненты.</p>
+            </li>
+            <li>
+                <p><code>rem</code> - задает размер относительно шрифта <code>&lt;hrml&gt;</code>, используется
+                для удобства глобального масштабирования: элементы которые планируется масштабировать, задаются в
+                <code>rem</code>, а JS меняет шрифт у <code>&lt;html&gt;</code>.</p>
+            </li>
+            <li>
+                <p><code>%</code> - относительно такого же свойства родителя (как правило, не всегда), используется
+                для ширин, высот и так далее, без него никуда, но надо знать, относительно чего он считает проценты.</p>
+            </li>
+            <li>
+                <p><code>vw</code>, <code>vh</code>, <code>vmin</code>, <code>vmax</code> - относительно размера экрана.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>

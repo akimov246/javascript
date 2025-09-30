@@ -10,7 +10,7 @@
             --user-card-field-color: green;
         }
 
-        span.example {
+        span.forExample {
             font-weight: bold;
         }
     </style>
@@ -226,7 +226,7 @@
             });
         </script>
         <user-card-1>
-            <div slot="username"><span class="example">John Smith</span></div>
+            <div slot="username"><span class="forExample">John Smith</span></div>
         </user-card-1>
         <p>В результате текст жирный, но не красный.</p>
         <p>Если мы хотим стилизовать слотовые элементы в нашем компоненте, то есть два варианта.</p>
@@ -268,7 +268,7 @@
             });
         </script>
         <user-card-2>
-            <div slot="username"><span class="example">John Smith</span></div>
+            <div slot="username"><span class="forExample">John Smith</span></div>
         </user-card-2>
         <p>Здесь <code>&lt;span&gt;John Smith&lt;/span&gt;</code> имеет красный цвет шрифта, потому что наследование
         CSS действует между <code>&lt;slot&gt;</code> и его содержимым. Но в CSS как таковом не все свойства наследуются.</p>
