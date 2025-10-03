@@ -94,7 +94,5 @@ fieldset legend {
 .example {
     border: 3px solid var(--border-color-grey);
     border-radius: 0.5rem;
-    width: max-content;
-    max-width: 90%;
     padding: 0.5rem;
 }
