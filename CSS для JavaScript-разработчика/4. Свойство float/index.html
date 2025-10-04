@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойство float</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+    <style>
+        .clearfix:after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+
+        .gallery li {
+            width: 10rem;
+            float: left;
+            list-style: none;
+            border: 1px solid black;
+            text-align: center;
+            margin: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <article>
+        <h2>Свойство float</h2>
+        <p>Свойство <code>float</code> в CSS занимает особенное место. До его появления расположить два блока один
+        слева от другого можно было лишь при помощи таблиц. Но в его работе есть ряд особенностей. Поэтому его
+        иногда не любят, но при их понимании <code>float</code> станет вашим верным другом и помощником.</p>
+        <p>Далее мы рассмотрим, как работает <code>float</code>, разберем решения сопутствующих проблем, а также
+        ряд полезных рецептов.</p>
+    </article>
+
+    <article>
+        <h2 id="float-algorithm">Как работает float</h2>
+        <p>Синтаксис:</p>
+<pre><code class="language-css">float: left | right | none | inherit;</code></pre>
+        <p>При применении этого свойства происходит следующее:</p>
+        <ol>
+            <li>
+                <p>Элемент позиционируется, как обычно, а затем <i>вынимается из <s>документа</s> потока</i> и сдвигается
+                влево (для <code>left</code>) или вправо (для <code>right</code>) до того как коснется либо границы
+                родителя, либо другого элемента с <code>float</code>.</p>
+            </li>
+            <li>
+                <p>Если пространства по горизонтали не хватает для того, чтобы вместить элемент, то он сдвигается вниз
+                до тех пор, пока не начнет помещаться.</p>
+            </li>
+            <li>
+                <p>Другие непозиционированные блочные элементы без <code>float</code> ведут себя так, как будто элемента
+                с <code>float</code> нет, так как он убран из потока.</p>
+            </li>
+            <li>
+                <p>Строки (<code>inline</code>-элементы), напротив, «знают» о <code>float</code> и обтекают элемент
+                по сторонам.</p>
+            </li>
+        </ol>
+        <p>Еще детали:</p>
+        <ol>
+            <li>
+                <p>Элемент при наличии <code>float</code> получает <code>display: block</code>.</p>
+                <p>То есть, указав элементу, у которого <code>display: inline</code> свойство <code>float: left/right</code>,
+                мы автоматически сделаем его блочным. В частности, для него будут работать <code>width/height</code>.</p>
+                <p>Исключением являются некоторые редкие <code>display</code>, наподобие <code>inline-table</code>
+                и <code>run-in</code> (см. <a target="_blank" href="https://www.w3.org/TR/CSS2/visuren.html#dis-pos-flo">Relationships between «display», «position» and «float»</a>).</p>
+            </li>
+            <li>
+                <p>Ширина <code>float</code>-блока определяется по содержимому (<a target="_blank" href="https://www.w3.org/TR/CSS2/visudet.html#float-width">«CSS 2.1, 10.3.5»</a>).</p>
+            </li>
+            <li>
+                <p>Вертикальные отступы <code>margin</code> элементов с <code>float</code> не сливаются с отступами
+                соседей, в отличие от обычных блочных элементов.</p>
+            </li>
+        </ol>
+        <p>Это пока только теория. Далее мы рассмотрим происходящее на примере.</p>
+    </article>
+
+    <article>
+        <h2>Текст с картинками</h2>
+        <p>Одно из первых применений <code>float</code>, для которого это свойство когда-то было придумано - это верстка
+        текста с картинками, отжатыми влево или вправо.</p>
+        <p>Например, вот страница о Винни-Пухе с картинками, которым поставлено свойство <code>float</code>:</p>
+        <img src="images/text.png" alt style="width: 50vw">
+        <p><a target="_blank" href="https://plnkr.co/edit/Rp9q9smQvhQynWAe?p=preview">Ее HTML-код</a> выглядит примерно
+        так:</p>
+<pre><code class="language-html">&lt;img src="1.jpg" style="float: right"&gt;
+&lt;p&gt;Текст...&lt;/p&gt;
+&lt;p&gt;Текст...&lt;/p&gt;
+
+&lt;img src="2.jpg" style="float: left"&gt;
+&lt;p&gt;Текст...&lt;/p&gt;
+
+&lt;img src="3.jpg" style="float: right"&gt;
+&lt;p&gt;Текст...&lt;/p&gt;</code></pre>
+        <p>Каждая картинка, у которой есть <code>float</code>, обрабатывается в точности
+        <a href="#float-algorithm">по алгоритму</a>, указанному выше.</p>
+        <p>Посмотрим, например, как выглядело бы начало текста без <code>float</code>:</p>
+        <div class="example">
+            <img src="images/winnie-mult.jpg" alt style="width: 15%; border: 1px solid black">
+            <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+            (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+            Один из самых известных героев детской литературы XX века.</p>
+            <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и фильмам
+            студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень популярен и в Советском Союзе.</p>
+        </div>
+        <ol>
+            <li>
+                <p>Элемент <code>img</code> вынимается из <s>документа</s> потока. Иначе говоря, последующие блоки
+                начинают вести себя так, как будто его нет, и заполняют освободившееся место (изображение для наглядности
+                полупрозрачно):</p>
+                <div class="example" style="height: 12rem">
+                    <img src="images/winnie-mult.jpg" alt style="width: 15%; position: absolute; opacity: 0.7; border: 1px solid black">
+                    <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                        (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                        Один из самых известных героев детской литературы XX века.</p>
+                    <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и фильмам
+                        студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень популярен и в Советском Союзе.</p>
+                </div>
+            </li>
+            <li>
+                <p>Элемент <code>img</code> сдвигается максимально вправо (при <code>float: right</code>):</p>
+                <div class="example" style="height: 12rem; position: relative">
+                    <img src="images/winnie-mult.jpg" alt style="width: 15%; position: absolute; opacity: 0.7; right: 0; border: 1px solid black">
+                    <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                        (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                        Один из самых известных героев детской литературы XX века.</p>
+                    <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и фильмам
+                        студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень популярен и в Советском Союзе.</p>
+                </div>
+            </li>
+            <li>
+                <p>Строки, в отличие от блочных элементов, «чувствуют» <code>float</code> и уступают ему место, обтекая
+                картинку слева:</p>
+                <div class="example" style="height: 12rem">
+                    <img src="images/winnie-mult.jpg" alt style="width: 15%; float: right; border: 1px solid black">
+                    <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                        (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                        Один из самых известных героев детской литературы XX века.</p>
+                    <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и фильмам
+                        студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень популярен и в Советском Союзе.</p>
+                </div>
+            </li>
+        </ol>
+        <p>При <code>float: left</code> - все то же самое, только <code>img</code> смещается влево (или не смещается,
+        если он и так у левого края), а строки - обтекают справа.</p>
+        <p><b>Строки и инлайн-элементы смещаются, чтобы уступать место <code>float</code>. Обычные блоки - ведут себя
+        так, как будто элемента нет.</b></p>
+        <p>Чтобы это видеть, добавим параграфам фон и рамку, а также сделаем изображение немного прозрачным:</p>
+        <div class="example" style="height: 12rem">
+            <img src="images/winnie-mult.jpg" alt style="width: 15%; float: right; opacity: 0.7; border: 1px solid black">
+            <p style="background: #aef; border: 1px solid red">Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                Один из самых известных героев детской литературы XX века.</p>
+            <p style="background: #aef; border: 1px solid red">В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и фильмам
+                студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень популярен и в Советском Союзе.</p>
+        </div>
+        <p>Как видно из рисунка, параграфы проходят «за» <code>float</code>. При этом строки в них о <code>float</code>
+        знают и обтекают их, поэтому соответствующая часть параграфа пуста.</p>
+    </article>
+
+    <article>
+        <h2>Блок с float</h2>
+        <p>Свойство <code>float</code> можно поставить любому элементу, не обязательно картинке. При этом элемент
+        станет блочным.</p>
+        <p>Посмотрим, как это работает, на конкретной задаче - сделать рамку с названием вокруг картинки с Винни.</p>
+        <p>HTML будет такой:</p>
+<pre><code class="language-html">&lt;h3&gt;Винни-Пух&lt;/h3&gt;
+
+&lt;div class="left-picture"&gt;
+    &lt;img src="winnie-mult.jpg"&gt;
+    &lt;div&gt;Кадр из советского мультфильма&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Текст...&lt;/p&gt;</code></pre>
+        <p>... То есть, <code>div.left-picture</code> включает в себя картинку и заголовок к ней. Добавим стиль с
+        <code>float</code>:</p>
+<pre><code class="language-css">.left-picture {
+    float: left;
+
+    /* Рамочка и отступ для красоты (не обязательно) */
+    margin: 0 10px 5px 0;
+    text-align: center;
+    border: 1px solid black;
+}</code></pre>
+        <p>Результат:</p>
+        <div class="example" style="height: 15rem">
+            <h3 style="margin-top: 0">Винни-Пух</h3>
+            <div style="float: left; margin: 0 10px 5px 0; text-align: center; border: 1px solid black">
+                <img src="images/winnie-mult.jpg" alt style="width: 100%">
+                <div>Кадр из советского мультфильма</div>
+            </div>
+            <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                Один из самых известных героев детской литературы XX века.</p>
+            <p>Один из самых известных героев детской литературы XX века.</p>
+        </div>
+        <p>Заметим, что блок <code>div.left-picture</code> «обернул» картинку и текст под ней, а не растянулся на всю
+        ширину. Это следствие того, что ширина блока с <code>float</code> определяется по содержимому.</p>
+    </article>
+
+    <article>
+        <h2>Очистка под float</h2>
+        <p>Разберем еще одну особенность использования свойства <code>float</code>.</p>
+        <p>Для этого выведем персонажей из мультфильма «Винни-Пух». Цель:</p>
+        <div class="example">
+            <h3 style="background: #aef; margin-top: 0">Винни-Пух</h3>
+            <div style="float: left; margin: 0 10px 5px 0; border: 1px solid black; text-align: center">
+                <img src="images/winnie-mult.jpg" alt style="width: 100%;">
+                <div>Кадр из советского мультфильма</div>
+            </div>
+            <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+            (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+            <p>Один из самых известных героев детской литературы XX века.</p>
+            <div style="clear: both"></div>
+            <h3 style="background: #aef; clear: left">Сова</h3>
+            <div style="float: left; margin: 0 10px 5px 0; border: 1px solid black; text-align: center">
+                <img src="images/owl-mult.jpg" alt style="width: 100%;">
+                <div>Кадр из советского мультфильма</div>
+            </div>
+            <p>Персонаж мультфильма про Винни-Пуха. Очень умная.</p>
+            <p>Говорит редко, но чрезвычайно мудро.</p>
+            <div style="clear: both"></div>
+        </div>
+        <p>Реализуем ее, шаг за шагом.</p>
+
+        <h3>Шаг 1. Добавляем информацию</h3>
+        <p>Попробуем просто добавить Сову после Винни-Пуха:</p>
+<pre><code class="language-html">&lt;h3&gt;Винни-Пух&lt;/h3&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;... Текст о Винни...&lt;/p&gt;
+
+&lt;h3&gt;Сова&lt;/h3&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;... Текст о Сове...&lt;/p&gt;</code></pre>
+        <p>Результат <a target="_blank" href="https://plnkr.co/edit/p48k5SeWEKJgJAXG?p=preview">такого кода</a> будет
+        странным, но предсказуемым:</p>
+        <div class="example">
+            <h3 style="background: #aef; margin-top: 0">Винни-Пух</h3>
+            <div style="float: left; margin: 0 10px 5px 0; border: 1px solid black; text-align: center">
+                <img src="images/winnie-mult.jpg" alt style="width: 100%;">
+                <div>Кадр из советского мультфильма</div>
+            </div>
+            <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+            <p>Один из самых известных героев детской литературы XX века.</p>
+            <h3 style="background: #aef;">Сова</h3>
+            <div style="float: left; margin: 0 10px 5px 0; border: 1px solid black; text-align: center">
+                <img src="images/owl-mult.jpg" alt style="width: 100%;">
+                <div>Кадр из советского мультфильма</div>
+            </div>
+            <p>Персонаж мультфильма про Винни-Пуха. Очень умная.</p>
+            <p>Говорит редко, но чрезвычайно мудро.</p>
+            <div style="clear: both"></div>
+        </div>
+        <p>Произошло следующее:</p>
+        <ul>
+            <li>
+                <p><b>Заголовок <code>&lt;h3&gt;Сова&lt;/h3&gt;</code> не заметил <code>float</code></b> (он же блочный
+                элемент) и расположился сразу после предыдущего параграфа <code>&lt;p&gt;...Текст о Винни...&lt;/p&gt;</code>.</p>
+            </li>
+            <li>
+                <p>После него идет <code>float</code>-элемент - картинка «Сова». Он был сдвинут влево. Согласно
+                <a href="#float-algorithm">алгоритму</a>, он двигается до левой границы или до касания с другим
+                <code>float</code>-элементом, что и произошло (картинка «Винни-Пух»).</p>
+            </li>
+            <li>
+                <p>Так как у Совы <code>float: left</code>, то <b>последующий текст обтекает ее справа.</b></p>
+            </li>
+        </ul>
+
+        <h3>Шаг 2. Свойство clear</h3>
+        <p>Мы, конечно же, хотели бы расположить заголовок «Сова» и остальную информацию ниже Винни-Пуха.</p>
+        <p>Для решения возникшей проблемы придумано свойство <code>clear</code>.</p>
+        <p>Синтаксис</p>
+<pre><code class="language-css">clear: left | right | both;</code></pre>
+        <p>Применение этого свойства сдвигает элемент вниз до тех пор, пока не закончатся <code>float</code>
+        слева/справа/с обеих сторон.</p>
+        <p>Применим его к заголовку <code>h3</code>:</p>
+<pre><code class="language-css">h3 {
+    clear: left;
+}</code></pre>
+        <p>Результат <a target="_blank" href="https://plnkr.co/edit/2Py8DhaQD9PlKcdB?p=preview">получившегося кода</a>
+        будет ближе к цели, но все еще не идеален:</p>
+        <img src="images/float-small-margin.png" alt style="width: 50vw">
+        <p>Элементы теперь в нужном порядке. Но куда пропал отступ <code>margin-top</code> у заголовка «Сова»?</p>
+        <p>Теперь заголовок «Сова» прилегает снизу почти вплотную к картинке, с учетом ее <code>margin-bottom</code>,
+        но без своего большого отступа <code>margin-top</code>.</p>
+        <p>Таково поведение свойства <code>clear</code>. Оно сдвинуло элемент <code>h3</code> вниз ровно настолько,
+        чтобы элементов <code>float</code> не было <i>сбоку от его верхней границы</i>.</p>
+        <p>Если посмотреть на элемент заголовка внимательно в инструментах разработчика, то можно заметить отступ
+        <code>margin-top</code> у заголовка по-прежнему есть, но он располагается «за» элементом <code>float</code>
+        и не учитывается при работе в <code>clear</code>.</p>
+        <p>Чтобы исправить ситуацию, можно добавить перед заголовком пустой промежуточный элемент без отступов,
+        с единственным свойством <code>clear: both</code>. Тогда уже под ним отступ заголовка будет работать нормально:</p>
+<pre><code class="language-html">&lt;h3&gt;Винни-Пух&lt;/h3&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;Текст&lt;/p&gt;
+
+&lt;div style="clear: both"&gt;&lt;/div&gt;
+
+&lt;h3&gt;Сова&lt;/h3&gt;
+&lt;div class="left"&gt;Картинка&lt;/div&gt;
+&lt;p&gt;Текст&lt;/p&gt;</code></pre>
+        <p>Результат <a target="_blank" href="https://plnkr.co/edit/pmkPBe75Qzj8w4dP?p=preview">получившегося кода</a>:</p>
+        <div class="example">
+            <h3 style="background: #aef; margin-top: 0">Винни-Пух</h3>
+            <div style="float: left; margin: 0 10px 5px 0; border: 1px solid black; text-align: center">
+                <img src="images/winnie-mult.jpg" alt style="width: 100%;">
+                <div>Кадр из советского мультфильма</div>
+            </div>
+            <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+            <p>Один из самых известных героев детской литературы XX века.</p>
+            <div style="clear: both"></div>
+            <h3 style="background: #aef; clear: left">Сова</h3>
+            <div style="float: left; margin: 0 10px 5px 0; border: 1px solid black; text-align: center">
+                <img src="images/owl-mult.jpg" alt style="width: 100%;">
+                <div>Кадр из советского мультфильма</div>
+            </div>
+            <p>Персонаж мультфильма про Винни-Пуха. Очень умная.</p>
+            <p>Говорит редко, но чрезвычайно мудро.</p>
+            <div style="clear: both"></div>
+        </div>
+        <ul>
+            <li>
+                <p>Свойство <code>clear</code> гарантировало, что <code>&lt;div style="clear: both"&gt;</code> будет
+                под картинкой с <code>float</code>.</p>
+            </li>
+            <li>
+                <p>Заголовок <code>&lt;h3&gt;Сова&lt;/h3&gt;</code> идет после этого <code>&lt;div&gt;</code>.
+                Так что его отступ учитывается.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Заполнение блока-родителя</h2>
+        <p>Итак, мы научились располагать другие элементы <i>под</i> <code>float</code>. Теперь рассмотрим следующую
+        особенность.</p>
+        <p><b>Из-за того, что блок с <code>float</code> удален из потока, родитель не выделяет под него места.</b></p>
+        <p>Например, выделим для информации о Винни-Пухе красивый элемент-контейнер <code>&lt;div class="hero"&gt;</code>:</p>
+<pre><code class="language-html">&lt;div class="hero"&gt;
+    &lt;h3&gt;Винни-Пух&lt;/h3&gt;
+    &lt;div class="left"&gt;Картинка&lt;/div&gt;
+    &lt;p&gt;Текст&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+        <p>Стиль контейнера:</p>
+<pre><code class="language-css">.hero {
+    background: #D2B48C;
+    border: 1px solid red;
+}</code></pre>
+        <p>Результат <a target="_blank" href="https://plnkr.co/edit/L8KWpfNG6f7QpjaF?p=preview">получившегося кода</a>:</p>
+        <div class="example">
+            <div style="background: #D2B48C; border: 1px solid red;">
+                <h3>Винни-Пух</h3>
+                <div style="float: left; border: 1px solid black; margin: 0 10px 5px 0; text-align: center">
+                    <img src="images/winnie-mult.jpg" alt style="width: 100%">
+                    <div>Кадр из советского мультфильма</div>
+                </div>
+                <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+                <p>Один из самых известных героев детской литературы XX века.</p>
+            </div>
+            <div style="clear: both"></div>
+        </div>
+        <p>Элемент с <code>float</code> оказался выпавшим за границу родителя <code>.hero</code>.</p>
+        <p>Чтобы этого не происходило, используют одну из следующих техник.</p>
+
+        <h3>Поставить родителю float</h3>
+        <p>Элемент с <code>float</code> обязан расшириться, чтобы вместить вложенный <code>float</code>.</p>
+        <p>Поэтому, если это допустимо, то установка <code>float</code> контейнеру все исправит:</p>
+<pre><code class="language-css">.hero {
+    background: #D2B48C;
+    border: 1px solid red;
+    float: left;
+}</code></pre>
+        <div class="example">
+            <div style="background: #D2B48C; border: 1px solid red; float: left">
+                <h3>Винни-Пух</h3>
+                <div style="float: left; border: 1px solid black; margin: 0 10px 5px 0; text-align: center; background: white">
+                    <img src="images/winnie-mult.jpg" alt style="width: 100%">
+                    <div>Кадр из советского мультфильма</div>
+                </div>
+                <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                    (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+                <p>Один из самых известных героев детской литературы XX века.</p>
+            </div>
+            <div style="clear: both"></div>
+        </div>
+        <p>Разумеется, не всегда можно поставить родителю <code>float</code>, так что смотрим дальше.</p>
+
+        <h3>Добавим в родителя элемент с clear</h3>
+        <p>Добавим элемент <code>&lt;div style="clear: both"&gt;</code> в самый конец контейнера <code>.hero</code>.</p>
+        <p>Он с одной стороны будет «нормальным» элементом, в потоке, и контейнер будет обязан выделить под него
+        пространство, с другой - он знает о <code>float</code> и сместится вниз.</p>
+        <p>Соответственно, и контейнер вырастет в размере:</p>
+<pre><code class="language-html">&lt;div class="hero"&gt;
+    &lt;h3&gt;Винни-Пух&lt;/h3&gt;
+    &lt;div class="left"&gt;Картинка&lt;/div&gt;
+    &lt;p&gt;Текст&lt;/p&gt;
+    &lt;div style="clear: both"&gt;&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="background: #D2B48C; border: 1px solid red;">
+                <h3>Винни-Пух</h3>
+                <div style="float: left; border: 1px solid black; margin: 0 10px 5px 0; text-align: center; background: white">
+                    <img src="images/winnie-mult.jpg" alt style="width: 100%">
+                    <div>Кадр из советского мультфильма</div>
+                </div>
+                <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                    (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+                <p>Один из самых известных героев детской литературы XX века.</p>
+                <div style="clear: both"></div>
+            </div>
+        </div>
+        <p>Результат - правильное отображение, как и в примере выше.
+        <a target="_blank" href="https://plnkr.co/edit/IqUsU8u1mFnniyU9?p=preview">Открыть код</a>.</p>
+        <p>Единственный недостаток этого метода - лишний HTML-элемент в разметке.</p>
+
+        <h3>Универсальный класс clearfix</h3>
+        <p>Чтобы не добавлять в HTML-код лишний элемент, можно задать его через <code>:after</code></p>
+<pre><code class="language-css">.clearfix:after {
+    content: ""; /* Добавить содержимое: "" */
+    display: block; /* Сделать блоком, т.к. inline не может иметь clear */
+    clear: both; /* С обеих сторон clear */
+}</code></pre>
+        <div class="example">
+            <div class="clearfix" style="background: #D2B48C; border: 1px solid red;">
+                <h3>Винни-Пух</h3>
+                <div style="float: left; border: 1px solid black; margin: 0 10px 5px 0; text-align: center; background: white">
+                    <img src="images/winnie-mult.jpg" alt style="width: 100%">
+                    <div>Кадр из советского мультфильма</div>
+                </div>
+                <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                    (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+                <p>Один из самых известных героев детской литературы XX века.</p>
+            </div>
+        </div>
+
+        <h3>overflow: auto/hidden</h3>
+        <p>Если добавить родителю <code>overflow: hidden</code> или <code>overflow: auto</code>, то все станет хорошо.</p>
+<pre><code class="language-css">.hero {
+    overflow: auto;
+}</code></pre>
+        <div class="example">
+            <div style="background: #D2B48C; border: 1px solid red; overflow: auto">
+                <h3>Винни-Пух</h3>
+                <div style="float: left; border: 1px solid black; margin: 0 10px 5px 0; text-align: center; background: white">
+                    <img src="images/winnie-mult.jpg" alt style="width: 100%">
+                    <div>Кадр из советского мультфильма</div>
+                </div>
+                <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                    (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).</p>
+                <p>Один из самых известных героев детской литературы XX века.</p>
+            </div>
+        </div>
+        <p>Этот метод работает во всех браузерах, <a target="_blank" href="https://plnkr.co/edit/rg3TcVGF5jx0sh1x?p=preview">полный код в песочнице</a>.</p>
+        <p>Несмотря на внешнюю странность, этот способ не является «хаком». Такое поведение прописано в спецификации CSS.</p>
+        <p>Однако, установка <code>overflow</code> может привести к появлению полосы прокрутки, способ с псевдоэлементом
+        <code>:after</code> более безопасен.</p>
+    </article>
+
+    <article>
+        <h2>float вместо display: inline-block</h2>
+        <p>При помощи <code>float</code> можно размещать блочные элементы в строке, похоже на <code>display: inline-block</code>:</p>
+<pre><code class="language-html">&lt;style&gt;
+    .gallery li {
+        float: left;
+        width: 130px;
+        list-style: none;
+        /* Красивости */
+
+        border: 1px solid black;
+        text-align: center;
+        margin: 5px;
+    }
+&lt;/style&gt;
+
+&lt;ul class="gallery"&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/1.png"&gt;
+        &lt;div&gt;Картинка 1&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/2.png"&gt;
+        &lt;div&gt;Картинка 2&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/3.png"&gt;
+        &lt;div&gt;Картинка 3&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/4.png"&gt;
+        &lt;div&gt;Картинка 4&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/5.png"&gt;
+        &lt;div&gt;Картинка 5&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/6.png"&gt;
+        &lt;div&gt;Картинка 6&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/7.png"&gt;
+        &lt;div&gt;Картинка 7&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/8.png"&gt;
+        &lt;div&gt;Картинка 8&lt;/div&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;img src="https://js.cx/carousel/9.png"&gt;
+        &lt;div&gt;Картинка 9&lt;/div&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+        <div class="example">
+            <ul class="gallery">
+                <li>
+                    <img src="images/1.png" alt>
+                    <div>Картинка 1</div>
+                </li>
+                <li>
+                    <img src="images/2.png" alt>
+                    <div>Картинка 2</div>
+                </li>
+                <li>
+                    <img src="images/3.png" alt>
+                    <div>Картинка 3</div>
+                </li>
+                <li>
+                    <img src="images/4.png" alt>
+                    <div>Картинка 4</div>
+                </li>
+                <li>
+                    <img src="images/5.png" alt>
+                    <div>Картинка 5</div>
+                </li>
+                <li>
+                    <img src="images/6.png" alt>
+                    <div>Картинка 6</div>
+                </li>
+                <li>
+                    <img src="images/7.png" alt>
+                    <div>Картинка 7</div>
+                </li>
+                <li>
+                    <img src="images/8.png" alt>
+                    <div>Картинка 8</div>
+                </li>
+                <li>
+                    <img src="images/9.png" alt>
+                    <div>Картинка 9</div>
+                </li>
+            </ul>
+            <div style="clear: both;"></div>
+        </div>
+        <p>Элементы <code>float: left</code> двигаются влево, а если это невозможно, то вниз, автоматически адаптируясь
+        под ширину контейнера, получается эффект, аналогичный <code>display: inline-block</code>, но с особенностями
+        <code>float</code>.</p>
+    </article>
+
+    <article>
+        <h2>Верстка в несколько колонок</h2>
+        <p>Свойство <code>float</code> позволяет делать несколько вертикальных колонок.</p>
+
+        <h3>float: left + float: right</h3>
+        <p>Например, для верстки в две колонки можно сделать два <code>&lt;div&gt;</code>. Первому указать
+        <code>float: left</code> (левая колонка), а правому - <code>float: right</code> (правая колонка).</p>
+        <p>Чтобы они не ссорились, каждой колонке нужно дополнительно указать ширину:</p>
+<pre><code class="language-html">&lt;div&gt;Шапка&lt;/div&gt;
+&lt;div class="column-left"&gt;Левая колонка&lt;/div&gt;
+&lt;div class="column-right"&gt;Правая колонка&lt;/div&gt;
+&lt;div class="footer"&gt;Низ&lt;/div&gt;</code></pre>
+        <p>Стили:</p>
+<pre><code class="language-css">.column-left {
+    float: left;
+    width: 30%;
+}
+
+.column-right {
+    float: left;
+    width: 70%;
+}
+
+.footer {
+    clear: both;
+}</code></pre>
+        <div class="example">
+            <div style="background: yellow">Шапка</div>
+            <div style="background: #aef; float: left; width: 30%">
+                <h3>Персонажи:</h3>
+                <ul>
+                    <li>
+                        <p>Винни-Пух</p>
+                    </li>
+                    <li>
+                        <p>Ослик Иа</p>
+                    </li>
+                    <li>
+                        <p>Сова</p>
+                    </li>
+                    <li>
+                        <p>Кролик</p>
+                    </li>
+                </ul>
+            </div>
+            <div style="background: tan; float: left; width: 70%">
+                <h3>Винни-Пух</h3>
+                <img src="images/winnie-mult.jpg" alt style="width: 20%; float: left; margin: 0 0.5rem">
+                <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                Один из самых известных героев детской литературы XX века.</p>
+                <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все»,
+                а затем и фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень
+                популярен и в Советском Союзе.</p>
+            </div>
+            <div style="background: yellow; clear: both">Низ</div>
+        </div>
+        <p>В эту структуру легко добавить больше колонок с разной шириной. Правой колонке можно было бы указать и
+        <code>float: right</code>.</p>
+
+        <h3>float + margin</h3>
+        <p>Еще вариант - сделать <code>float</code> для левой колонки, а правую остановить в потоке, но с отбивкой
+        через <code>margin</code>:</p>
+<pre><code class="language-css">.column-left {
+    float: left;
+    width: 30%;
+}
+
+.column-right {
+    margin-left: 30%;
+}
+
+.footer {
+    clear: both;
+}</code></pre>
+        <div class="example">
+            <div style="background: yellow">Шапка</div>
+            <div style="background: #aef; float: left; width: 30%">
+                <h3>Персонажи:</h3>
+                <ul>
+                    <li>
+                        <p>Винни-Пух</p>
+                    </li>
+                    <li>
+                        <p>Ослик Иа</p>
+                    </li>
+                    <li>
+                        <p>Сова</p>
+                    </li>
+                    <li>
+                        <p>Кролик</p>
+                    </li>
+                </ul>
+            </div>
+            <div style="background: tan; margin-left: 30%; overflow: auto">
+                <h3>Винни-Пух</h3>
+                <img src="images/winnie-mult.jpg" alt style="width: 20%; float: left; margin: 0 0.5rem">
+                <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра Милна
+                    (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                    Один из самых известных героев детской литературы XX века.</p>
+                <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все»,
+                    а затем и фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень
+                    популярен и в Советском Союзе.</p>
+            </div>
+            <div style="background: yellow; clear: both">Низ</div>
+        </div>
+        <p>В примере выше показана небольшая проблема. Колонки не растягиваются до одинаковой высоты. Конечно,
+        это не имеет значения, если фон одинаковый, но что, если он разный?</p>
+        <p>В современных браузерах эту же задачу лучше решает <code>flexbox</code>.</p>
+        <p>Для старых есть различные обходы и трюки, которые позволяют обойти проблему в ряде ситуаций, но они выходят
+        за рамки нашего обсуждения.</p>
+    </article>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Дерево с многострочными узлами</title>
+    <style>
+        li {
+            list-style: none;
+        }
+        li div.text, li div.icon {
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        li.open div.icon:after {
+            content: url('images/minus.gif');
+            cursor: pointer;
+        }
+
+        li.closed div.icon:after {
+            content: url('images/plus.gif');
+            cursor: pointer;
+        }
+
+        li.leaf div.icon:after {
+            content: url('images/article.gif');
+            cursor: text;
+        }
+    </style>
+</head>
+<body>
+<ul>
+    <li class="open">
+        <div class="icon"></div>
+        <div class="text">Раздел 1
+            <br>(занимает две строки)</div>
+        <ul>
+            <li class="closed">
+                <div class="icon"></div>
+                <div class="text">Раздел 1.1</div>
+            </li>
+            <li class="leaf">
+                <div class="icon"></div>
+                <div class="text">Страница 1.2
+                    <br>(занимает две строки)</div>
+            </li>
+        </ul>
+    </li>
+    <li class="closed">
+        <div class="icon"></div>
+        <div class="text">Раздел 2
+            <br>(занимает две строки)</div>
+    </li>
+</ul>
+</body>
+</html>
