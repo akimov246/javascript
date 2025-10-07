@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойство position</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Свойство position</h2>
+        <p>Свойство <code>position</code> позволяет сдвигать элемент со своего обычного места. Цель этой главы -
+        не только напомнить, как оно работает, но и разобрать ряд частых заблуждений и граблей.</p>
+    </article>
+
+    <article>
+        <h2>position: static</h2>
+        <p><i>Статическое позиционирование</i> производится по умолчанию, в том случае, если свойство <code>position</code>
+        не указано.</p>
+        <p>Его можно также явно указать через CSS-свойство:</p>
+<pre><code class="language-css">position: static;</code></pre>
+        <p>Такая запись встречается редко и используется для переопределения других значений <code>position</code>.</p>
+        <p>Здесь и далее, для примеров мы будем использовать следующий документ:</p>
+<pre><code class="language-html">&lt;div style="background: #fee; width: 500px"&gt;
+    Без позиционирования ("position: static").
+
+    &lt;h2 style="background: #aef; margin: 0"&gt;Заголовок&lt;/h2&gt;
+
+    &lt;div&gt;А тут - всякий разный текст...&lt;br&gt;
+        ... В две строки!&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="background: #fee; width: 500px;">
+                Без позиционирования ("position: static").
+
+                <h2 style="background: #aef; margin: 0">Заголовок</h2>
+
+                <div>А тут - всякий разный текст...<br>
+                    ... В две строки!</div>
+            </div>
+        </div>
+        <p>В этом документе сейчас все элементы отпозиционированы статически, то есть никак.</p>
+        <pre><code>Элемент с position: static еще называют <i>не позиционированным</i>.</code></pre>
+    </article>
+
+    <article>
+        <h2>position: relative</h2>
+        <p><i>Относительное позиционирование</i> сдвигает элемент относительно его обычного положения.</p>
+        <p>Для того, чтобы применить относительное позиционирование, необходимо указать элементу CSS-свойство
+        <code>position: relative</code> и координаты <code>left/right/top/bottom</code>.</p>
+        <p>Этот стиль сдвинет элемент на 10 пикселей относительно обычной позиции по вертикали:</p>
+<pre><code class="language-html">&lt;style&gt;
+    h2 {
+        position: relative;
+        top: 10px;
+    }
+&lt;/style&gt;
+
+&lt;div style="background: #fee; width: 500px"&gt;
+    Заголовок сдвинут на 10px вниз.
+
+    &lt;h2 style="background: #aef; margin: 0"&gt;Заголовок&lt;/h2&gt;
+
+    &lt;div&gt;А тут - всякий разный текст...&lt;br&gt;
+        ... В две строки!&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="background: #fee; width: 500px;">
+                Заголовок сдвинут на 10px вниз.
+
+                <h2 style="background: #aef; margin: 0; position: relative; top: 10px">Заголовок</h2>
+
+                <div>А тут - всякий разный текст...<br>
+                    ... В две строки!</div>
+            </div>
+        </div>
+
+        <h3>Координаты</h3>
+        <p>Для сдвига можно использовать координаты:</p>
+        <ul>
+            <li>
+                <p><code>top</code> - сдвиг от «обычной» верхней границы.</p>
+            </li>
+            <li>
+                <p><code>bottom</code> - сдвиг от нижней границы.</p>
+            </li>
+            <li>
+                <p><code>left</code> - сдвиг слева.</p>
+            </li>
+            <li>
+                <p><code>right</code> - сдвиг справа.</p>
+            </li>
+        </ul>
+        <p>Не будут работать одновременно указанные <code>top</code> и <code>bottom</code>, <code>left</code> и
+        <code>right</code>. Нужно использовать только одну границу из каждой пары.</p>
+        <p><b>Возможны отрицательные координаты</b> и координаты, использующие другие единицы измерения.
+        Например, <code>left: 10%</code> сдвигает элемент на 10% его ширины вправо, а <code>left: -10%</code> - влево.
+        При этом часть элемента может оказаться за границей окна:</p>
+<pre><code class="language-html">&lt;style&gt;
+    h2 {
+        position: relative;
+        left: -10%;
+    }
+&lt;/style&gt;
+
+&lt;div style="background: #fee; width: 500px"&gt;
+    Заголовок сдвинут на 10% влево.
+
+    &lt;h2 style="background: #aef; margin: 0"&gt;Заголовок&lt;/h2&gt;
+
+    &lt;div&gt;А тут - всякий разный текст...&lt;br&gt;
+        ... В две строки!&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="background: #fee; width: 500px;">
+                Заголовок сдвинут на 10% влево.
+
+                <h2 style="background: #aef; margin: 0; position: relative; left: -10%">Заголовок</h2>
+
+                <div>А тут - всякий разный текст...<br>
+                    ... В две строки!</div>
+            </div>
+        </div>
+        <p><b>Свойство <code>left/top</code> не будут работать для <code>position: static</code>.</b> Если их все же
+        поставить, браузер их проигнорирует. Эти свойства предназначены для работы с только позиционированными элементами.</p>
+    </article>
+
+    <article>
+        <h2>position: absolute</h2>
+        <p>Синтаксис:</p>
+<pre><code class="language-css">position: absolute;</code></pre>
+        <p>Абсолютное позиционирование делает две вещи:</p>
+        <ol>
+            <li>
+                <p><b>Элемент исчезает с того места, где он должен быть и позиционируется заново.</b> Остальные элементы,
+                располагаются так, как будто этого элемента никогда не было.</p>
+            </li>
+            <li>
+                <p><b>Координаты <code>top/bottom/left/right</code> для нового местоположения отсчитываются от ближайшего
+                позиционированного родителя</b>, т.е. родителя с позиционированием, отличным от <code>static</code>.
+                Если такого родителя нет - то относительно документа.</p>
+            </li>
+        </ol>
+        <p>Кроме того:</p>
+        <ul>
+            <li>
+                <p><b>Ширина элемента с <code>position: absolute</code> устанавливается по содержимому.</b> Детали
+                алгоритма вычисления ширины <a target="_blank" href="https://www.w3.org/TR/CSS2/visudet.html#abs-non-replaced-width">описаны в стандарте</a>.</p>
+            </li>
+            <li>
+                <p><b>Элемент получает <code>display: block</code></b>, который перекрывает почти все возможные
+                <code>display</code> (см.
+                <a target="_blank" href="https://www.w3.org/TR/CSS2/visuren.html#dis-pos-flo">Relationships between «display», «position» and «float»)</a>.</p>
+            </li>
+        </ul>
+        <p>Например, отпозиционируем заголовок в правом-верхнем углу документа:</p>
+<pre><code class="language-html">&lt;style&gt;
+    h2 {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+&lt;/style&gt;
+
+&lt;div style="background: #fee; width: 500px"&gt;
+    Заголовок в правом-верхнем углу документа.
+
+    &lt;h2 style="background: #aef; margin: 0"&gt;Заголовок&lt;/h2&gt;
+
+    &lt;div&gt;А тут - всякий разный текст...&lt;br&gt;
+        ... В две строки!&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example" style="position: relative">
+            <div style="background: #fee; width: 500px;">
+                Заголовок в правом-верхнем углу документа.
+
+                <h2 style="background: #aef; margin: 0; position: absolute; top: 0; right: 0;">Заголовок</h2>
+
+                <div>А тут - всякий разный текст...<br>
+                    ... В две строки!</div>
+            </div>
+        </div>
+        <p>Важное отличие от <code>relative</code>: <b>так как элемент удаляется со своего обычного места, то элементы
+        под ним сдвигаются, занимая освободившееся пространство.</b> Это видно в примере выше: строки идут одна за другой.</p>
+        <p>Так как при <code>position: absolute</code> размер блока устанавливается по содержимому, то широкий
+        <a>Заголовок</a> «съежился» до прямоугольника в углу.</p>
+        <p>Иногда бывает нужно поменять элементу <code>position</code> на <code>absolute</code>, но так, чтобы элементы
+        вокруг не сдвигались. Как правило, это делают, меняя соседей - добавляют <code>margin/padding</code> или вставляют
+        в документ пустой элемент с такими же размерами.</p>
+
+        <article class="note">
+            <h3>Одновременное указание <code>left/right</code>, <code>top/bottom</code></h3>
+            <p><b>В абсолютно позиционированном элементе можно одновременно задавать противоположные границы.</b></p>
+            <p>Браузер растянет такой элемент до границ.</p>
+<pre><code class="language-html">&lt;style&gt;
+    div {
+        position: absolute;
+        left: 10px;
+        right: 10px;
+        top: 10px;
+        bottom: 10px;
+    }
+&lt;/style&gt;
+
+&lt;div style="background: #aef; text-align: center"&gt;10px от границ&lt;/div&gt;</code></pre>
+            <div class="example">
+                <div style="background: #aef; text-align: center; top: 10px; left: 10px; bottom: 10px; right: 10px;">10px от границ</div>
+            </div>
+        </article>
+
+        <article class="note">
+            <h3>Внешним блоком является окно</h3>
+            <p>Как растянуть абсолютно позиционированный блок на всю ширину документа?</p>
+            <p>Первое, что может прийти в голове:</p>
+<pre><code class="language-css">div {
+    position: absolute;
+    left: 0; top: 0; /* В левый-верхний угол */
+    width: 100%; height: 100%; /* ... и растянуть */
+}</code></pre>
+            <p>Но это будет работать лишь до тех пор, пока у страницы не появится скроллинг!</p>
+            <p>Покрутите вниз ифрейм:</p>
+            <iframe src="iframes/1.html" style="border: 3px solid var(--border-color-grey); border-radius: 0.5rem"></iframe>
+            <p><b>Вы увидите, что голубой вон оканчивается задолго до конца документа.</b></p>
+            <p>Дело в том, что в CSS <code>100%</code> относится к ширине внешнего блока («containing block»). А какой
+            внешний блок имеется в виду здесь, ведь элемент изъят со своего обычного места?</p>
+            <p>В данном случае им является так называемый
+            («<a target="_blank" href="https://www.w3.org/TR/CSS21/visudet.html#containing-block-details">initial containing block</a>»),
+            которым является окно, <i>а не документ</i>.</p>
+            <p><b>То есть, координаты и ширины вычисляются относительно окна, а не документа.</b></p>
+            <p>Может быть, получится так?</p>
+<pre><code class="language-css">div {
+    position: absolute;
+    left: 0; top: 0; /* В левый-верхний угол, и растянуть... */
+    right: 0; bottom: 0; /* ... Указываем противоположные границы */
+}</code></pre>
+            <p>С виду логично, но не получится!</p>
+            <p>Координаты <code>top/right/left/bottom</code> вычисляются относительно <i>окна</i>. Значение
+            <code>bottom: 0</code> - нижняя граница окна, а не документа, блок растянется до нее. То есть, будет то
+            же самое, что и в предыдущем примере.</p>
+        </article>
+
+    </article>
+
+    <article>
+        <h2>position: absolute в позиционированном родителе</h2>
+        <p>Если у элемента есть позиционированный предок, то <code>position: absolute</code> работает относительно
+        него, а не относительно документа.</p>
+        <p>То есть, достаточно поставить родительскому <code>div</code> позицию <code>relative</code>, даже без
+        координат - и заголовок будет в его правом-верхнем углу, вот так:</p>
+<pre><code class="language-html">&lt;style&gt;
+    h2 {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+&lt;/style&gt;
+
+&lt;div style="background: #fee; width: 500px; position: relative;"&gt;
+    Заголовок в правом-верхнем углу div.
+
+    &lt;h2 style="background: #aef; margin: 0"&gt;Заголовок&lt;/h2&gt;
+
+    &lt;div&gt;А тут - всякий разный текст...&lt;br&gt;
+        ... В две строки!&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="background: #fee; width: 500px; position: relative;">
+                Заголовок в правом-верхнем углу div.
+
+                <h2 style="background: #aef; margin: 0; position: absolute; right: 0; top: 0;">Заголовок</h2>
+
+                <div>А тут - всякий разный текст...<br>
+                    ... В две строки!</div>
+            </div>
+        </div>
+        <p>Нужно пользоваться таким позиционированием с осторожностью, т.к. оно может перекрыть текст. Этим оно отличается
+        от <code>float</code>.</p>
+        <p>Сравните:</p>
+        <ul>
+            <li>
+                <p>Используем <code>position</code> для размещения элемента управления:</p>
+<pre><code class="language-html">&lt;button style="position: absolute; right: 10px; opacity: 0.8;"&gt;
+    Кнопка
+&lt;/button&gt;
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9</code></pre>
+                <div class="example" style="position: relative">
+                    <button style="position: absolute; right: 10px; opacity: 0.8">Кнопка</button>
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                </div>
+                <p><b>Часть текста перекрывается.</b> Кнопка более не участвует в потоке.</p>
+            </li>
+            <li>
+                <p>Используем <code>float</code> для размещения элемента управления:</p>
+<pre><code class="language-html">&lt;button style="float: right; margin-right: 10px; opacity: 0.8;"&gt;
+    Кнопка
+&lt;/button&gt;
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9</code></pre>
+                <div class="example">
+                    <button style="float: right; margin-right: 10px; opacity: 0.8">Кнопка</button>
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                    1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9
+                </div>
+                <p><b>Браузер освобождает место справа, текст перенесен.</b> Кнопка продолжает находиться в потоке,
+                просто сдвинута.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>position: fixed</h2>
+        <p>Это подвид абсолютного позиционирования.</p>
+        <p>Синтаксис:</p>
+<pre><code class="language-css">position: fixed;</code></pre>
+        <p>Позиционирует объект точно так же, как <code>absolute</code>, но относительно <code>window</code>.</p>
+        <p>Разница в нескольких словах:</p>
+        <p><b>Когда страницу прокручивают, фиксированный элемент остается на своем месте и не прокручивается вместе
+        со страницей.</b></p>
+        <p>В следующем примере, при прокрутке документа, ссылка <code>#top</code> всегда остается на своем месте.</p>
+<pre><code class="language-html">&lt;style&gt;
+    #top {
+        position: fixed;
+        right: 10px;
+        top: 10px;
+        background: #fee;
+    }
+&lt;/style&gt;
+
+&lt;a href="#" id="top"&gt;Наверх (остается при прокрутке)&lt;/a&gt;
+
+Фиксированное позиционирование.
+
+&lt;p&gt;Текст страницы... Прокрути меня...&lt;/p&gt;
+&lt;p&gt;Много строк...&lt;/p&gt;&lt;p&gt;Много строк...&lt;/p&gt;
+&lt;p&gt;Много строк...&lt;/p&gt;&lt;p&gt;Много строк...&lt;/p&gt;
+&lt;p&gt;Много строк...&lt;/p&gt;&lt;p&gt;Много строк...&lt;/p&gt;
+&lt;p&gt;Много строк...&lt;/p&gt;&lt;p&gt;Много строк...&lt;/p&gt;</code></pre>
+        <iframe src="iframes/2.html" style="border: 3px solid var(--border-color-grey); border-radius: 0.5rem"></iframe>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Виды позиционирования и их особенности.</p>
+        <ul>
+            <li>
+                <p><code>static</code></p>
+                <p>Иначе называется «без позиционирования». В явном виде задается только если надо переопределить
+                другое правило CSS.</p>
+            </li>
+            <li>
+                <p><code>relative</code></p>
+                <p>Сдвигает элемент относительно текущего места.</p>
+                <ul>
+                    <li>
+                        <p>Противоположные границы <code>left/right</code> (<code>top/bottom</code>) одновременно
+                        указать нельзя.</p>
+                    </li>
+                    <li>
+                        <p>Окружающие элементы ведут себя так, как будто элемент не сдвигался.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>absolute</code></p>
+                <p>Визуально переносит элемент на новое место.</p>
+                <p>Новое место вычисляется по координатам <code>left/top/right/bottom</code> относительно ближайшего
+                позиционированного родителя. Если такого родителя нет, то им считается окно.</p>
+                <ul>
+                    <li>
+                        <p>Ширина элемента по умолчанию устанавливается по содержимому.</p>
+                    </li>
+                    <li>
+                        <p>Можно указать противоположные границы <code>left/right</code> (<code>top/bottom</code>).
+                        Элемент растянется.</p>
+                    </li>
+                    <li>
+                        <p>Окружающие элементы заполняют освободившееся место.</p>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <p><code>fixed</code></p>
+                <p>Подвид абсолютного позиционирования, при котором элемент привязывается к координатам окна, а не
+                документа.</p>
+                <p>При прокрутке он остается на том же месте.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Почитать</h2>
+        <p>CSS-позиционирование по-настоящему глубоко в спецификации
+        <a target="_blank" href="https://www.w3.org/TR/CSS2/visuren.html#positioning-scheme">Visual Formatting Model, 9.3 и ниже</a>.</p>
+        <p>Еще есть хорошее руководство <a target="_blank" href="https://www.barelyfitz.com/screencast/html-training/css/positioning/">CSS Positioning in 10 steps</a>,
+        которое охватывает основные типы позиционирования.</p>
+    </article>
+</body>
+</html>
