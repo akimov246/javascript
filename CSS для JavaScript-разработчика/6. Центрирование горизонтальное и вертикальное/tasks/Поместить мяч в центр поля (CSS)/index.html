@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Поместить мяч в центр поля (CSS)</title>
+    <style>
+        div {
+            width: 50vw;
+            height: 50vh;
+            background-color: #00FF00;
+            border-width: 1rem;
+            border-style: groove;
+            border-color: black grey;
+            background-image: radial-gradient(circle, black 0.001rem, transparent 2px);
+            background-size: 1rem 1rem;
+            position: relative;
+        }
+
+        img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <img src="images/ball.svg" alt style="width: 5rem">
+    </div>
+</body>
+</html>

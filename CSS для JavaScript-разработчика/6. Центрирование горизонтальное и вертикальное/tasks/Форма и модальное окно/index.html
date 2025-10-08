@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Форма + модальное окно</title>
+    <style>
+        html {
+            height: 1000px;
+        }
+
+        #login {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: grid;
+            border: 1px solid black;
+            border-radius: 0.5rem;
+            width: clamp(310px, 30vw, 30vw);
+            height: 20vh;
+            grid-template-columns: 1fr 5fr;
+            padding: 0.5rem;
+            background: white;
+        }
+
+        #login #image img {
+            width: 100%;
+        }
+
+        #login #form form {
+            display: grid;
+            grid-template-columns: 1fr 5fr;
+            width: 90%;
+            gap: 0.2rem;
+            height: 90%;
+            margin-left: 1rem;
+        }
+
+        #login #form form span, #login #form form button {
+            grid-column: 1 / -1;
+        }
+
+        #login #form label, #login #form span {
+            align-self: center;
+        }
+
+        #modal {
+            position: fixed;
+            box-sizing: border-box;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: deepskyblue;
+            opacity: 0.3;
+            border: 20px solid white;
+        }
+    </style>
+</head>
+<body>
+    <p>Текст Текст Текст</p>
+    <button>Эта кнопка не работает</button>
+    <p>Текст Текст Текст</p>
+    <div id="modal"></div>
+    <div id="login">
+        <div id="image">
+            <img src="images/key.png" alt>
+        </div>
+        <div id="form">
+            <form>
+                <span>Добро пожаловать!</span>
+                <label>Логин</label><input>
+                <label>Пароль</label><input>
+                <button type="button">Войти</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
