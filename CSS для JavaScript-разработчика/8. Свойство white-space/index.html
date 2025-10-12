@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойство white-space</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Свойство white-space</h2>
+        <p>Свойство <code>white-space</code> позволяет сохранять пробелы и переносы строк.</p>
+        <p>У него есть два известных значения:</p>
+        <ul>
+            <li>
+                <p><code>white-space: normal</code> - обычное поведение.</p>
+            </li>
+            <li>
+                <p><code>white-space: pre</code> - текст ведет себя, как будто оформлен в тег <code>pre</code>.</p>
+            </li>
+        </ul>
+        <p>Но браузеры поддерживают и другие, которые также бывают очень полезны.</p>
+    </article>
+
+    <article>
+        <h2>pre/nowrap</h2>
+        <p>Встречаем первую «сладкую парочку» - <code>pre</code> и <code>nowrap</code>.</p>
+        <p>Оба этих значения меняют стандартное поведение HTML при работе с текстом:</p>
+        <p><code>pre</code>:</p>
+        <ul>
+            <li>
+                <p>Сохраняет пробелы.</p>
+            </li>
+            <li>
+                <p>Переносит текст при явном разрыве строки.</p>
+            </li>
+        </ul>
+        <p><code>nowrap</code>:</p>
+        <ul>
+            <li>
+                <p>Не сохраняет пробелы.</p>
+            </li>
+            <li>
+                <p>Игнорирует явные разрывы строки (не переносит текст).</p>
+            </li>
+        </ul>
+        <p>Оба этих значения поддерживаются кросс-браузерно.</p>
+        <p><b>Их основной недостаток - текст может вылезти из контейнера.</b></p>
+        <p>Для примера, рассмотрим следующий фрагмент кода:</p>
+<pre><code class="language-javascript">if (hours > 18) {
+    // Пойти поиграть в теннис
+}</code></pre>
+        <p><code>white-space: pre</code>:</p>
+<pre><code class="language-html">&lt;style&gt;
+    div {
+        font-family: monospace;
+        width: 200px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div style="white-space: pre"&gt;if (hours > 18) {
+    // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+        <div class="example">
+<div style="white-space: pre; font-family: monospace; width: 200px; border: 1px solid black;">if (hours > 18) {
+    // Пойти поиграть в теннис
+}</div>
+        </div>
+        <p>Здесь пробелы и переводы строк сохранены. В HTML этому значению <code>white-space</code> соответствует тег
+        <code>pre</code>.</p>
+        <p><code>white-space: nowrap</code>:</p>
+<pre><code class="language-html">&lt;style&gt;
+    div {
+        font-family: monospace;
+        width: 200px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div style="white-space: nowrap"&gt;if (hours > 18) {
+    // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="white-space: nowrap; font-family: monospace; width: 200px; border: 1px solid black;">if (hours > 18) {
+                // Пойти поиграть в теннис
+                }</div>
+        </div>
+        <p>Здесь переводы строк проигнорированы, а подряд идущие пробелы, если присмотреться - сжаты в один (например,
+        перед комментарием <code>//</code>).</p>
+        <p>Допустим, мы хотим разрешить посетителям публиковать код на сайте, с сохранением разметки. Но тег
+        <code>pre</code> и описанные выше значения <code>white-space</code> для этого не подойдут!</p>
+        <p>Злой посетитель Василий Пупкин может написать такой текст, который вылезет из контейнера и поломает верстку
+        страницы.</p>
+        <p>Можно скрыть вылезшее значение при помощи <code>overflow-x: hidden</code> или сделать так, чтобы была
+        горизонтальная прокрутка, но к счастью, есть другие значения <code>white-space</code>, специально для таких
+        случаев.</p>
+    </article>
+
+    <article>
+        <h2>pre-wrap/pre-line</h2>
+        <ul>
+            <li>
+                <p><code>pre-wrap</code></p>
+                <p>То же самое, что <code>pre</code>, но переводит строку, если текст вылезает из контейнера.</p>
+            </li>
+            <li>
+                <p><code>pre-line</code></p>
+                <p>То же самое, что <code>pre</code>, но переводит строку, если текст вылезает из контейнера
+                и не сохраняет пробелы.</p>
+            </li>
+        </ul>
+        <p>Оба поведения отлично прослеживаются на примерах:</p>
+        <p><code>white-space: pre-wrap</code>:</p>
+<pre><code class="language-html">&lt;style&gt;
+    div {
+        font-family: monospace;
+        width: 200px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div style="white-space: pre-wrap"&gt;if (hours > 18) {
+    // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="white-space: pre-wrap; font-family: monospace; width: 200px; border: 1px solid black;">if (hours > 18) {
+    // Пойти поиграть в теннис
+}</div>
+        </div>
+        <p>Отличный выбор для безопасной вставки кода посетителями.</p>
+        <p><code>white-space: pre-line</code>:</p>
+<pre><code class="language-html">&lt;style&gt;
+    div {
+        font-family: monospace;
+        width: 200px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div style="white-space: pre-line"&gt;if (hours > 18) {
+    // Пойти поиграть в теннис
+}
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="white-space: pre-line; font-family: monospace; width: 200px; border: 1px solid black;">if (hours > 18) {
+    // Пойти поиграть в теннис
+}</div>
+        </div>
+        <p>Сохранены переводы строк, ничего не вылезает, но пробелы интерпретированы в режиме обычного HTML.</p>
+    </article>
+</body>
+</html>
