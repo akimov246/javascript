@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойство outline</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Свойство outline</h2>
+        <p>Свойство <code>outline</code> задает дополнительную рамку вокруг элемента, <i>за пределами его CSS-блока</i>.</p>
+        <p>Для примера, рассмотрим его вместе с обычной рамкой <code>border</code>:</p>
+<pre><code class="language-html">&lt;div style="border: 3px solid blue; outline: 3px solid red;"&gt;
+    Элемент
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="border: 3px solid blue; outline: 3px solid red;">Элемент</div>
+        </div>
+        <ul>
+            <li>
+                <p><b>В отличие от <code>border</code>, рамка <code>outline</code> не участвует в блочной модели CSS.</b>
+                Она не занимает места и не меняет размер элемента. Поэтому его используют, когда хотят добавить рамку
+                без изменения других CSS-параметров.</p>
+            </li>
+            <li>
+                <p>Также, в отличие от <code>border</code>, рамку <code>outline</code> можно задать только со всех сторон:
+                свойств <code>outline-top</code>, <code>outline-left</code> не существует.</p>
+            </li>
+        </ul>
+        <p>Так как <code>outline</code> находится за границами - <b><code>outline</code>-рамки соседей могут перекрывать
+        друг друга</b>:</p>
+<pre><code class="language-html">&lt;div style="outline: 3px solid green;"&gt;
+    Элемент
+&lt;/div&gt;
+&lt;div style="outline: 3px solid red;"&gt;
+    Элемент
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="outline: 3px solid green">Элемент</div>
+            <div style="outline: 3px solid red">Элемент</div>
+        </div>
+        <p>В примере выше верхняя рамка нижнего элемента находится на территории верхнего и наоборот.</p>
+        <p>Все современные браузеры также поддерживают свойство <code>outline-offset</code>, задающее отступ
+        <code>outline</code> от внешней границы элемента:</p>
+<pre><code class="language-html">&lt;div style="border: 3px solid blue; outline: 3px solid red; outline-offset: 5px;"&gt;
+    Расстояние между рамками будет 5px
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="border: 3px solid blue; outline: 3px solid red; outline-offset: 5px;">
+                Расстояние между рамками будет 5px
+            </div>
+        </div>
+        <p>Еще раз заметим, что основная особенность <code>outline</code> - в том, что при наличии <code>outline-offset</code>
+        или без него - он не занимает места в блоке.</p>
+        <p>Поэтому его часто используют для стилей <code>:hover</code> и других аналогичных, когда нужно выделить
+        элемент, но чтобы ничего при этом не прыгало.</p>
+    </article>
+</body>
+</html>
