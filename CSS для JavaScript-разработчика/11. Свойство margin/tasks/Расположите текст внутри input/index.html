@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Расположите текст внутри input</title>
+    <style>
+        p {
+            margin: 0;
+        }
+
+        input::placeholder {
+            color: red;
+        }
+
+        input:hover {
+            box-shadow: yellow 0 0 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <p>Добро пожаловать!</p>
+        <input type="password" placeholder="Скажи пароль, друг">
+        <p>... и заходи</p>
+    </div>
+</body>
+</html>

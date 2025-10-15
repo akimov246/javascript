@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойство margin</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Свойство margin</h2>
+        <p>Свойство <code>margin</code> задает отступы вокруг элемента. У него есть несколько особенностей, которые
+        мы здесь рассмотрим.</p>
+    </article>
+
+    <article>
+        <h2>Объединение отступов</h2>
+        <p>Вертикальные отступы поглощают друг друга, горизонтальные - нет.</p>
+        <p>Например, вот документ с вертикальными и горизонтальными отступами:</p>
+<pre><code class="language-html">&lt;body style="background: #aef"&gt;
+    &lt;p style="margin: 20px; background: white;"&gt;
+        &lt;span style="margin: 20px; background: orange"&gt;Горизонтальный 20px&lt;/span&gt;
+        ← 40px →
+        &lt;span style="margin: 20px; background: orange;"&gt;20px отступ"&lt;/span&gt;
+    &lt;/p&gt;
+    &lt;p style="margin: 15px; background: white;"&gt;Вертикальный 20px&lt;/p&gt;
+&lt;/body&gt;</code></pre>
+        <div class="example" style="background: #aef">
+            <p style="margin: 20px; background: white;">
+                <span style="margin: 20px; background: orange;">Горизонтальный 20px</span>
+                ← 40px →
+                <span style="margin: 20px; background: orange;">20px отступ</span>
+            </p>
+            <p style="margin: 15px; background: white;">Вертикальный 20px</p>
+        </div>
+        <p>Расстояние по горизонтали между элементами <code>span</code> равно <code>40px</code>, так как горизонтальные
+        отступы по <code>20px</code> сложились.</p>
+        <p>А вот по вертикали расстояние от <code>span</code> до <code>p</code> равно <code>20px</code>: из двух
+        вертикальных отступов выбирается больший <code>max(20px, 15px) = 20px</code> и применяется.</p>
+    </article>
+
+    <article>
+        <h2>Отрицательные margin-top/left</h2>
+        <p>Отрицательные значения <code>margin-top/margin-left</code> смещают элемент со своего обычного места.</p>
+        <p>В CSS есть другой способ добиться похожего эффекта - а именно, <code>position: relative</code>. Но между
+        ними есть одно принципиальное различие.</p>
+        <p><b>При сдвиге через <code>margin</code> соседние элементы занимают освободившееся пространство, в отличие
+        от <code>positive: relative</code>, при котором элемент визуально сдвигается, но место, где он был,
+        остается «занятым».</b></p>
+        <p>То есть, элемент продолжает полноценно участвовать в потоке.</p>
+    </article>
+
+    <article>
+        <h2>Пример: вынос заголовка</h2>
+        <p>Например, есть документ с информационными блоками:</p>
+<pre><code class="language-html">&lt;style&gt;
+    div {
+        border: 1px solid blue;
+        margin: 2em;
+        font: .8em/1.25 sans-serif;
+    }
+
+    h2 {
+        background: #aef;
+        margin: 0 0 0.8em 0;
+    }
+&lt;/style&gt;
+
+&lt;div&gt;
+    &lt;h2&gt;Общие положения&lt;/h2&gt;
+    &lt;p&gt;Настоящие Правила дорожного движения устанавливают единый порядок дорожного движения на всей территории
+    Российской Федерации. Другие нормативные акты, касающиеся дорожного движения, должны основываться на требованиях
+    Правил и не противоречить им.&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;div&gt;
+    &lt;h2&gt;Общие обязанности водителей&lt;/h2&gt;
+    &lt;p&gt;Водитель механического транспортного средства обязан иметь при себе и по требованию сотрудников милиции
+    передавать им для проверки:&lt;/p&gt;
+    &lt;ul&gt;
+        &lt;li&gt;Водительское удостоверение на право управления транспортным средством соответствующей категории;&lt;/li&gt;
+        &lt;li&gt;...и так далее...&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="border: 1px solid blue; margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="background: #aef; margin: 0 0 0.8em 0;">Общие положения</h2>
+                <p>Настоящие Правила дорожного движения устанавливают единый порядок дорожного движения на всей территории
+                Российской Федерации. Другие нормативные акты, касающиеся дорожного движения, должны основываться на требованиях
+                Правил и не противоречить им.</p>
+            </div>
+            <div style="border: 1px solid blue; margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="background: #aef; margin: 0 0 0.8em 0;">Общие обязанности водителей</h2>
+                <p>Водитель механического транспортного средства обязан иметь при себе и по требованию сотрудников милиции
+                передавать им для проверки:</p>
+                <ul>
+                    <li>Водительское удостоверение на право управления транспортным средством соответствующей категории;</li>
+                    <li>...и так далее...</li>
+                </ul>
+            </div>
+        </div>
+        <p><b>Использование отрицательного <code>margin-top</code> позволяет вынести заголовки над блоком.</b></p>
+<pre><code class="language-css">/* Вверх чуть больше, чем на высоту строки (1.25em) */
+h2 {
+    margin-top: -1.3em;
+}</code></pre>
+        <p>Результат:</p>
+        <div class="example">
+            <div style="border: 1px solid blue; margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="background: #aef; margin-top: -1.3em;">Общие положения</h2>
+                <p>Настоящие Правила дорожного движения устанавливают единый порядок дорожного движения на всей территории
+                    Российской Федерации. Другие нормативные акты, касающиеся дорожного движения, должны основываться на требованиях
+                    Правил и не противоречить им.</p>
+            </div>
+            <div style="border: 1px solid blue; margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="background: #aef; margin-top: -1.3em;">Общие обязанности водителей</h2>
+                <p>Водитель механического транспортного средства обязан иметь при себе и по требованию сотрудников милиции
+                    передавать им для проверки:</p>
+                <ul>
+                    <li>Водительское удостоверение на право управления транспортным средством соответствующей категории;</li>
+                    <li>...и так далее...</li>
+                </ul>
+            </div>
+        </div>
+        <p>А вот что было бы при использовании <code>position</code>:</p>
+<pre><code class="language-css">h2 {
+    position: relative;
+    top: -1.3em;
+}</code></pre>
+        <p>Результат:</p>
+        <div class="example">
+            <div style="border: 1px solid blue; margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="background: #aef; position: relative; top: -2.2em;">Общие положения</h2>
+                <p>Настоящие Правила дорожного движения устанавливают единый порядок дорожного движения на всей территории
+                    Российской Федерации. Другие нормативные акты, касающиеся дорожного движения, должны основываться на требованиях
+                    Правил и не противоречить им.</p>
+            </div>
+            <div style="border: 1px solid blue; margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="background: #aef; position: relative; top: -2.2em;">Общие обязанности водителей</h2>
+                <p>Водитель механического транспортного средства обязан иметь при себе и по требованию сотрудников милиции
+                    передавать им для проверки:</p>
+                <ul>
+                    <li>Водительское удостоверение на право управления транспортным средством соответствующей категории;</li>
+                    <li>...и так далее...</li>
+                </ul>
+            </div>
+        </div>
+        <p><b>При использовании <code>position</code>, в отличие от <code>margin</code>, на месте заголовков, внутри
+        блоков, осталось пустое пространство.</b></p>
+    </article>
+
+    <article>
+        <h2>Пример: вынос разрыва</h2>
+        <p>Организуем информацию чуть по-другому. Пусть после каждого заголовка будет разрыв:</p>
+<pre><code class="language-html">&lt;div&gt;
+    &lt;h2&gt;Заголовок&lt;/h2&gt;
+    &lt;hr&gt;
+
+    &lt;p&gt;Текст Текст Текст&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+        <p>Пример документа с такими разрывами:</p>
+        <div class="example">
+            <div style="margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="margin: 0">Общие положения</h2>
+                <hr>
+                <p>Настоящие Правила дорожного движения устанавливают единый порядок дорожного движения на всей территории
+                    Российской Федерации. Другие нормативные акты, касающиеся дорожного движения, должны основываться на требованиях
+                    Правил и не противоречить им.</p>
+            </div>
+            <div style="margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="margin: 0">Общие обязанности водителей</h2>
+                <hr>
+                <p>Водитель механического транспортного средства обязан иметь при себе и по требованию сотрудников милиции
+                    передавать им для проверки:</p>
+                <ul>
+                    <li>Водительское удостоверение на право управления транспортным средством соответствующей категории;</li>
+                    <li>...и так далее...</li>
+                </ul>
+            </div>
+        </div>
+        <p>Для красоты мы хотим, чтобы разрыв <code>hr</code> начинался левее, чем основной текст. Отрицательный
+        <code>margin-left</code> нам поможет:</p>
+<pre><code class="language-css">hr.margin {
+    margin-left: -2em;
+}
+
+hr.position {
+    position: relative;
+    left: -2em;
+}</code></pre>
+        <p>Результат:</p>
+        <div class="example">
+            <div style="margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="margin: 0">Общие положения (hr.margin)</h2>
+                <hr style="margin-left: -2em;">
+                <p>Настоящие Правила дорожного движения устанавливают единый порядок дорожного движения на всей территории
+                    Российской Федерации. Другие нормативные акты, касающиеся дорожного движения, должны основываться на требованиях
+                    Правил и не противоречить им.</p>
+            </div>
+            <div style="margin: 2em; font: .8em/1.25 sans-serif;">
+                <h2 style="margin: 0">Общие обязанности водителей (hr.position)</h2>
+                <hr style="position: relative; left: -2em;">
+                <p>Водитель механического транспортного средства обязан иметь при себе и по требованию сотрудников милиции
+                    передавать им для проверки:</p>
+                <ul>
+                    <li>Водительское удостоверение на право управления транспортным средством соответствующей категории;</li>
+                    <li>...и так далее...</li>
+                </ul>
+            </div>
+        </div>
+        <p>Обратите внимание на разницу между методами сдвига!</p>
+        <ul>
+            <li>
+                <p><code>hr.margin</code> сначала сдвинулся, а потом нарисовался до конца блока.</p>
+            </li>
+            <li>
+                <p><code>hr.position</code> сначала нарисовался, а потом сдвинулся - в результате справа осталось пустое
+                пространство.</p>
+            </li>
+        </ul>
+        <p>Уже отсюда видно, что отрицательные <code>margin</code> - исключительно полезное средство позиционирования!</p>
+    </article>
+
+    <article>
+        <h2>Отрицательные margin-right/bottom</h2>
+        <p>Отрицательные <code>margin-right/bottom</code> ведут себя по-другому, чем <code>margin-left/top</code>.
+        Они не сдвигают элемент, а «укорачивают» его.</p>
+        <p>То есть, хотя сам размер блока не уменьшается, но следующий элемент будет думать, что он меньше на указанное
+        в <code>margin-right/bottom</code> значение.</p>
+        <p>Например, в примере ниже вторая строка налезет на первую:</p>
+<pre><code class="language-html">&lt;div style="border: 1px solid blue; margin-bottom: -0.5em;"&gt;
+    Первый
+&lt;/div&gt;
+
+&lt;div style="border: 1px solid red;"&gt;
+    Второй div думает, что высота первого на 0.5em меньше
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="border: 1px solid blue; margin-bottom: -0.5em">
+                Первый
+            </div>
+            <div style="border: 1px solid red;">
+                Второй div думает, что высота первого на 0.5em меньше
+            </div>
+        </div>
+        <p>Это используют, в частности, для красивых вносок, с приданием иллюзии грубины.</p>
+        <p>Например:</p>
+        <div class="example">
+            У div'а с холодильниками стоит margin-bottom: -1em
+            <div style="background: #aef; width: 50%; padding: 1rem 1rem 2rem 2rem; margin-bottom: -1.2em;">
+                Наши холодильники - самые лучшие холодильники в мире! Наши холодильники - самые лучшие
+                холодильники в мире! Наши холодильники - самые лучшие холодильники в мире!
+                Наши холодильники - самые лучшие холодильники в мире!
+            </div>
+            <div style="display: inline-block; background: black; color: white; margin-left: 1.5rem; padding: 0.2rem">Так считают: 5 человек</div>
+            <div style="display: inline-block; background: black; color: white; margin-left: 1.5rem; padding: 0.2rem">Оставьте <u>свой</u> отзыв!</div>
+        </div>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>
+                <p>Отрицательные <code>margin-left/top</code> сдвигают элемент влево/вверх. Остальные элементы это
+                учитывают, в отличие от сдвига через <code>position</code>.</p>
+            </li>
+            <li>
+                <p>Отрицательные <code>margin-right/bottom</code> заставляют другие элементы думать, что блок меньше
+                по размеру справа/снизу, чем он на самом деле.</p>
+            </li>
+        </ul>
+        <p>Отличная статья на тему отрицательных <code>margin</code>:
+        <a target="_blank" href="https://coding.smashingmagazine.com/2009/07/27/the-definitive-guide-to-using-negative-margins/">The Definitive Guide to Using Negative Margins</a>.</p>
+    </article>
+</body>
+</html>
