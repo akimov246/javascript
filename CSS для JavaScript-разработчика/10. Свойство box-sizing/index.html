@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойство box-sizing</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Свойство box-sizing</h2>
+        <p>Свойство <code>box-sizing</code> может принимать одно из двух значений - <code>border-box</code> или
+        <code>content-box</code>. В зависимости от выбранного значения браузер по-разному трактует значение
+        свойство <code>width/height</code>.</p>
+    </article>
+
+    <article>
+        <h2>Значения box-sizing</h2>
+        <ul>
+            <li>
+                <p><code>content-box</code></p>
+                <p>Это значение по умолчанию. В этом случае свойства <code>width/height</code> обозначает то,
+                что находится <i>внутри</i> <code>padding</code>.</p>
+            </li>
+            <li>
+                <p><code>border-box</code></p>
+                <p>Значения <code>width/height</code> задают высоту/ширину <i>всего элемента</i>.</p>
+            </li>
+        </ul>
+        <p>Для большей наглядности посмотрим на картинку этого <code>div</code> в зависимости от <code>box-sizing</code>:</p>
+<pre><code class="language-css">div {
+    width: 200px;
+    height: 100px;
+    box-sizing: border-box (вверху) | content-box (внизу);
+
+    padding: 20px;
+    border: 5px solid brown;
+}</code></pre>
+        <img src="images/border-box.svg" alt style="width: 40vw">
+        <p>В верхнем случае браузер нарисовал весь элемент размером в <code>width * height</code>, в нижнем -
+        интерпретировал <code>width/height</code> как размеры внутренней области.</p>
+        <p>Исторически сложилось так, что по умолчанию стоит <code>content-box</code>, а <code>border-box</code>
+        некоторые браузеры используют если не указан <code>DOCTYPE</code>, в режиме совместимости.</p>
+        <p>Но есть как минимум один случай, когда явное указание <code>border-box</code> может быть полезно:
+        растягивание элемента до ширины родителя.</p>
+    </article>
+
+    <article>
+        <h2>Пример: подстроить ширину к родителю</h2>
+        <p>Задача: подогнать элемент по ширине внешнего элемента, чтобы он заполнял все его пространство. Без
+        привязки к конкретному размеру элемента в пикселях.</p>
+        <p>Например, мы хотим, чтобы элементы формы ниже были одинакового размера:</p>
+<pre><code class="language-html">&lt;style&gt;
+    form {
+        width: 200px;
+        border: 2px solid green;
+    }
+
+    form input,
+    form select {
+        display: block;
+        padding-left: 5px;
+        /* padding для красоты */
+    }
+&lt;/style&gt;
+
+&lt;form&gt;
+    &lt;input&gt;
+    &lt;input&gt;
+    &lt;select&gt;
+        &lt;option&gt;опции&lt;/option&gt;
+    &lt;/select&gt;
+&lt;/form&gt;</code></pre>
+        <div class="example">
+            <form style="width: 200px; border: 2px solid green;">
+                <input style="display: block; padding-left: 5px;">
+                <input style="display: block; padding-left: 5px;">
+                <select style="display: block; padding-left: 5px;">
+                    <option>опции</option>
+                </select>
+            </form>
+        </div>
+        <p>Как сделать, чтобы элементы растянулись четко по ширине <code>form</code>?</p>
+    </article>
+
+    <article>
+        <h2>Попытка: width: 100%</h2>
+        <p>Первое, что приходит в голову - поставить всем элементам <code>input</code> ширину <code>width: 100%</code>.</p>
+        <p>Попробуем:</p>
+<pre><code class="language-html">&lt;style&gt;
+    form {
+        width: 200px;
+        border: 2px solid green;
+    }
+
+    form input,
+    form select {
+        display: block;
+        padding-left: 5px;
+        width: 100%;
+    }
+&lt;/style&gt;
+
+&lt;form&gt;
+    &lt;input&gt;
+    &lt;input&gt;
+    &lt;select&gt;
+        &lt;option&gt;опции&lt;/option&gt;
+    &lt;/select&gt;
+&lt;/form&gt;</code></pre>
+        <div class="example">
+            <form style="width: 200px; border: 2px solid green;">
+                <input style="display: block; padding-left: 5px; width: 100%;">
+                <input style="display: block; padding-left: 5px; width: 100%;">
+                <select style="display: block; padding-left: 5px; width: 100%;">
+                    <option>опции</option>
+                </select>
+            </form>
+        </div>
+        <p>Как видно, не получается. <b>Элементы вылезают за пределы родителя.</b></p>
+        <p><b>Причина - ширина элемента 100% по умолчанию относится к внутренней области, не включающей
+        <code>padding</code> и <code>border</code>.</b> То есть, внутренняя область растягивается до <code>100%</code>
+        родителя, и к ней снаружи прибавляются <code>padding/border</code>, которые и вылезают.</p>
+    </article>
+
+    <article>
+        <h2>Решение: box-sizing</h2>
+        <p><b>При помощи <code>box-sizing: border-box</code> мы можем сказать браузеру, что ширина, которую мы ставим,
+        относится к элементу полностью, включая <code>border</code> и <code>padding</code>:</b></p>
+<pre><code class="language-html">&lt;style&gt;
+    form {
+        width: 200px;
+        border: 2px solid green;
+    }
+
+    form input,
+    form select {
+        display: block;
+        padding-left: 5px;
+        box-sizing: border-box;
+        width: 100%;
+    }
+&lt;/style&gt;
+
+&lt;form&gt;
+    &lt;input&gt;
+    &lt;input&gt;
+    &lt;select&gt;
+        &lt;option&gt;опции&lt;/option&gt;
+    &lt;/select&gt;
+&lt;/form&gt;</code></pre>
+        <div class="example">
+            <form style="width: 200px; border: 2px solid green;">
+                <input style="display: block; padding-left: 5px; width: 100%; box-sizing: border-box;">
+                <input style="display: block; padding-left: 5px; width: 100%; box-sizing: border-box;">
+                <select style="display: block; padding-left: 5px; width: 100%; box-sizing: border-box;">
+                    <option>опции</option>
+                </select>
+            </form>
+        </div>
+        <p>Мы сохранили «родную» рамку вокруг <code>input/select</code> и не добавили лишних элементов. Все замечательно.</p>
+    </article>
+</body>
+</html>
