@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Лишнее место под IMG</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Лишнее место под IMG</h2>
+        <p>Иногда под <code>img</code> «вдруг» появляется лишнее место. Посмотрим на эти грабли внимательнее, почему
+        такое бывает и как этого избежать.</p>
+    </article>
+
+    <article>
+        <h2>Демонстрация проблемы</h2>
+        <p>Например:</p>
+<pre><code class="language-html">&lt;style&gt;
+    * {
+        margin: 0;
+        padding: 0;
+    }
+&lt;/style&gt;
+
+&lt;table&gt;
+    &lt;tr&gt;
+        &lt;td style="border: 1px solid red;"&gt;
+            &lt;img src="images/square.png"&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+        <div class="example">
+            <table style="margin: 0; padding: 0">
+                <tbody style="margin: 0; padding: 0">
+                <tr style="margin: 0; padding: 0">
+                    <td style="border: 1px solid red; margin: 0; padding: 0">
+                        <img src="images/square_50.png" style="margin: 0; padding: 0; width: 100%">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>Посмотрите внимательно! Вы видите расстояние между рамками снизу? Это потому, что <b>браузер
+        резервирует дополнительное место под инлайновым элементом, чтобы туда выносить «хвосты» букв.</b></p>
+        <p>Вот как выглядит та же картинка с выступающим вниз символом рядом:</p>
+        <div class="example">
+            <table style="margin: 0; padding: 0">
+                <tbody style="margin: 0; padding: 0">
+                <tr style="margin: 0; padding: 0">
+                    <td style="border: 1px solid red; margin: 0; padding: 0; width: max-content; text-align: left">
+                        <img src="images/square_50.png" style="margin: 0; padding: 0; width: 85%">p
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <p>В примере картинка обернута в красный <code>td</code>. Таблица подстраивается под размер содержимого,
+        так что проблема явно видна. Но она касается не только таблицы. Аналогичная ситуация возникает, если вокруг
+        <code>img</code> будет другой элемент с явно указанным размером, «облегающий» картинку по высоте. Браузер
+        постарается зарезервировать место под <code>img</code>, хотя оно там не нужно.</p>
+    </article>
+
+    <article>
+        <h2>Решение: сделать элемент блочным</h2>
+        <p>Самый лучший способ избежать этого - поставить <code>display: block</code> таким картинкам:</p>
+<pre><code class="language-html">&lt;style&gt;
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    img {
+        display: block;
+    }
+&lt;/style&gt;
+
+&lt;table&gt;
+    &lt;tr&gt;
+        &lt;td style="border: 1px solid red;"&gt;
+            &lt;img src="images/square.png"&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+        <div class="example">
+            <table style="margin: 0; padding: 0">
+                <tr style="margin: 0; padding: 0">
+                    <td style="border: 1px solid red; margin: 0; padding: 0">
+                        <img src="images/square_50.png" style="display: block; width: 100%">
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>Под блочным элементом ничего не резервируется. Проблема исчезла.</p>
+    </article>
+
+    <article>
+        <h2>Решение: задать vertical-align</h2>
+        <p>А что, если мы, по каким-то причинам, не хотим делать элемент блочным?</p>
+        <p>Существует еще один способ избежать проблемы - использовать свойство
+        <a target="_blank" href="https://www.w3.org/TR/CSS2/visudet.html#propdef-vertical-align">vertical-align</a>.</p>
+        <p><b>Если установить <code>vertical-align</code> в <code>top</code>, то инлайн-элемент будет отпозиционирован
+        по верхней границе текущей строки.</b></p>
+        <p>При этом браузер не будет оставлять место под изображением, так как запланирует продолжение строки сверху,
+        а не снизу:</p>
+<pre><code class="language-html">&lt;style&gt;
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    img {
+        vertical-align: top;
+    }
+&lt;/style&gt;
+
+&lt;table&gt;
+    &lt;tr&gt;
+        &lt;td style="border: 1px solid red;"&gt;
+            &lt;img src="images/square.png"&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+        <div class="example">
+            <table>
+                <tr style="margin: 0; padding: 0">
+                    <td style="border: 1px solid red; margin: 0; padding: 0">
+                        <img src="images/square_50.png" style="vertical-align: top; width: 100%">
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>А вот как браузер отобразит соседние символы в этом случае: <code class="language-html">p&lt;img src="images/square.png"&gt;p</code></p>
+        <div class="example">
+            <table>
+                <tr style="margin: 0; padding: 0;">
+                    <td style="border: 1px solid red; margin: 0; padding: 0; white-space: nowrap; width: 80px">
+                        p<img src="images/square_50.png" style="vertical-align: top; margin: 0; padding: 0">p
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>С другой стороны, сама строка никуда не делась, изображение по-прежнему является ее частью, а браузер
+        планирует разместить другое текстовое содержимое, хоть и сверху. Поэтому если изображение маленькое,
+        то произойдет дополнение пустым местом до высоты строки:</p>
+        <p>Например, для <code class="language-html">&lt;img src="images/square.png" style="height: 10px;"&gt;</code></p>
+        <div class="example">
+            <table>
+                <tr>
+                    <td style="border: 1px solid red; margin: 0; padding: 0">
+                        <img src="images/square_50.png" style="height: 10px; vertical-align: top; width: 100%">
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <p>Таким образом, требуется уменьшить еще и <code>line-height</code> контейнера. Окончательное решение
+        для маленьких изображений с <code>vertical-align</code>:</p>
+<pre><code class="language-html">&lt;style&gt;
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    td {
+        line-height: 10px;
+    }
+
+    img {
+        vertical-align: top;
+    }
+&lt;/style&gt;
+
+&lt;table&gt;
+    &lt;tr&gt;
+        &lt;td style="border: 1px solid red;"&gt;
+            &lt;img src="images/square.png" style="height: 10px;"&gt;
+        &lt;/td&gt;
+    &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+        <p>Результат:</p>
+        <div class="example">
+            <table>
+                <tr>
+                    <td style="border: 1px solid red; margin: 0; padding: 0; line-height: 10px;">
+                        <img src="images/square_50.png" style="height: 10px; width: 100%; vertical-align: top">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>
+                <p>Пробелы под картинками появляются, чтобы оставить место под «хвосты» букв в строке. Строка
+                «подразумевается», т.к. <code>display: inline</code>.</p>
+            </li>
+            <li>
+                <p>Можно избежать пробела, если изменить <code>display</code>, например, на <code>block</code>.</p>
+            </li>
+            <li>
+                <p>Альтернатива: <code>vertica-align: top</code> (или <code>bottom</code>), но для маленьких
+                изображений может понадобиться уменьшить <code>line-height</code>, чтобы контейнер не оставлял место
+                под строку.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
