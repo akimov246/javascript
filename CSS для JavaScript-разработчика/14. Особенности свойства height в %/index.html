@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Особенности свойства height в %</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Особенности свойства height в %</h2>
+        <p>Обычно свойство <code>height</code>, указанное в процентах, означает высоту относительно внешнего блока.</p>
+        <p>Однако, не все так просто. Интересно, что для произвольного блочного элемента <code>height</code> в процентах
+        работать не будет!</p>
+        <p>Чтобы лучше понять ситуацию, рассмотрим пример.</p>
+    </article>
+
+    <article>
+        <h2>Пример</h2>
+        <p>Наша цель - получить верстку такого вида:</p>
+        <div class="example">
+            <div style="position: relative; border: 1px solid black;">
+                <div style="height: 100%;
+                     background: #EEE url(images/arrow_left.png) center center no-repeat;
+                     border-right: #AAA 1px solid;
+                     width: 30px;
+                     position: absolute;
+                     left: 0;
+                     top: 0;
+                     cursor: pointer;"></div>
+                <div style="margin-left: 35px;">
+                    <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра
+                    Милна (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                    Один из самых известных героев детской литературы XX века.</p>
+                    <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и
+                    фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень
+                    популярен и в Советском Союзе.</p>
+                </div>
+            </div>
+        </div>
+        <p><b>При этом блок с левой стрелкой должен быть отдельным элементом внутри контейнера.</b></p>
+        <p>Это удобно для интеграции с JavaScript, чтобы отлавливать на нем клики мыши.</p>
+        <p>То есть, HTML-код требуется такой:</p>
+<pre><code class="language-html">&lt;div class="container"&gt;
+    &lt;div class="toggler"&gt;
+        &lt;--! Стрелка влево при помощи CSS, ширина фиксирована --&gt;
+    &lt;/div&gt;
+    &lt;div class="content"&gt;
+        ...Текст...
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+        <p>Есть разные варианты, но, возможно, вы решили сдвинуть <code>.toggler</code> влево, при помощи
+        <code>float: left</code> (тем более, что он фиксированной ширины) и увеличить до <code>height: 100%</code>,
+        чтобы он занял все пространство по вертикали.</p>
+        <p><b>Вы еще не видите подвох? Смотрим внимательно, что будет происходить с <code>height: 100%</code>...</b></p>
+    </article>
+
+    <article>
+        <h2>Демо height: 100% + float: left</h2>
+        <p>CSS:</p>
+<pre><code class="language-css">.container {
+    border: 1px solid black;
+}
+
+.content {
+    /* margin-left нужен, так как слева от содержимого будет стрелка */
+    margin-left: 35px;
+}
+
+.toggler {
+    /* Зададим размеры блока со стрелкой */
+    height: 100%;
+    width: 30px;
+    float: left;
+
+    background: #EEE url(images/arrow_left.png) center center no-repeat;
+    border-right: #AAA 1px solid;
+    cursor: pointer;
+}</code></pre>
+        <p>А теперь посмотрим этот вариант в действии:</p>
+        <div class="example">
+            <div style="position: relative; border: 1px solid black;">
+                <div style="height: 100%;
+                     background: #EEE url(images/arrow_left.png) center center no-repeat;
+                     border-right: #AAA 1px solid;
+                     width: 30px;
+                     float: left;
+                     cursor: pointer;"></div>
+                <div style="margin-left: 35px;">
+                    <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра
+                        Милна (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                        Один из самых известных героев детской литературы XX века.</p>
+                    <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и
+                        фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень
+                        популярен и в Советском Союзе.</p>
+                </div>
+            </div>
+        </div>
+        <p>Как видно, блок со стрелкой вообще исчез! Куда же он подевался?</p>
+        <p>Ответ нам даст спецификация CSS 2.1
+        <a target="_blank" href="https://www.w3.org/TR/CSS2/visudet.html#propdef-height">пункт 10.5</a>.</p>
+        <p><b>«Если высота внешнего блока вычисляется по содержимому, то высота в % не работает, и заменяется
+        на <code>height: auto</code>. Кроме случая, когда у элемента стоит <code>position: absolute</code>.»</b></p>
+        <p>В нашем случае высота <code>.container</code> как раз определяется по содержимому, поэтому для
+        <code>.toggler</code> проценты не действуют, а размер вычисляется как при <code>height: auto</code>.</p>
+        <p>Какая же она - эта автоматическая высота? Вспоминаем, что обычно размеры <code>float</code> определяются
+        по содержимому (<a target="_blank" href="https://www.w3.org/TR/CSS2/visudet.html#float-width">10.3.5</a>).
+        А содержимого-то в <code>.toggler</code> нет, так что высота нулевая. Поэтому этот блок и не виден.</p>
+        <p>Если бы мы точно знали высоту внешнего блока и добавили ее в CSS - это решило бы проблему.</p>
+        <p>Например:</p>
+<pre><code class="language-css">.container {
+    height: 200px; /* Теперь height в % внутри будет работать */
+}</code></pre>
+        <p>Результат:</p>
+        <div class="example">
+            <div style="position: relative; border: 1px solid black; height: 200px">
+                <div style="height: 100%;
+                     background: #EEE url(images/arrow_left.png) center center no-repeat;
+                     border-right: #AAA 1px solid;
+                     width: 30px;
+                     position: absolute;
+                     left: 0;
+                     top: 0;
+                     cursor: pointer;"></div>
+                <div style="margin-left: 35px;">
+                    <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра
+                        Милна (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                        Один из самых известных героев детской литературы XX века.</p>
+                    <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и
+                        фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень
+                        популярен и в Советском Союзе.</p>
+                </div>
+            </div>
+        </div>
+        <p>... Но в данном случае этот путь неприемлем! Ведь мы не знаем, сколько будет текста и какой будет итоговая
+        высота.</p>
+        <p>Поэтому решим задачу по-другому.</p>
+    </article>
+
+    <article>
+        <h2>Правильно: height: 100% + position: absolute</h2>
+        <p>Процент будет работать, если поставить <code>.toggler</code> свойство <code>position: absolute</code>
+        и спозиционировать его в левом-верхнем углу <code>.container</code>
+        (у которого сделать <code>position: relative</code>):</p>
+<pre><code class="language-css">.container {
+    position: relative;
+    border: 1px solid black;
+}
+
+.content {
+    margin-left: 35px;
+}
+
+.toggler {
+    position: absolute;
+    left: 0;
+    top: 0;
+
+    height: 100%;
+    width: 30px;
+    cursor: pointer;
+
+    border-right: #AAA 1px solid;
+    background: #EEE url(images/arrow_left.png) center center no-repeat;
+}</code></pre>
+        <p>Результат:</p>
+        <div class="example">
+            <div style="position: relative; border: 1px solid black;">
+                <div style="height: 100%;
+                     background: #EEE url(images/arrow_left.png) center center no-repeat;
+                     border-right: #AAA 1px solid;
+                     width: 30px;
+                     position: absolute;
+                     left: 0;
+                     top: 0;
+                     cursor: pointer;"></div>
+                <div style="margin-left: 35px;">
+                    <p>Ви́нни-Пу́х (англ. Winnie-the-Pooh) — плюшевый мишка, персонаж повестей и стихов Алана Александра
+                        Милна (цикл не имеет общего названия и обычно тоже называется «Винни-Пух», по первой книге).
+                        Один из самых известных героев детской литературы XX века.</p>
+                    <p>В 1960-е—1970-е годы, благодаря пересказу Бориса Заходера «Винни-Пух и все-все-все», а затем и
+                        фильмам студии «Союзмультфильм», где мишку озвучивал Евгений Леонов, Винни-Пух стал очень
+                        популярен и в Советском Союзе.</p>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <article>
+        <h2>Проблема с height: 100%, проявляющаяся, когда у родительского элемента не установлен height,
+        но указан min-height</h2>
+        <p>Вам необходимо установить <code>height: 1px</code> для родителя, чтобы дочерний элемент смог занять всю
+        высоту указанную в <code>min-height</code>:</p>
+<pre><code class="language-css">.parent {
+    min-height: 300px;
+    height: 1px; /* Требуется, чтобы дочерний блок взял высоту 100% */
+}
+
+.child {
+    height: 100%;
+}</code></pre>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <ul>
+            <li>
+                <p>Свойство <code>height</code>, указанное в %, работает только если для внешнего блока указана высота.</p>
+            </li>
+            <li>
+                <p>Стандарт CSS 2.1 предоставляет обход этой проблемы, отдельно указывая, что проценты работают
+                при <code>position: absolute</code>. На практике это часто выручает.</p>
+            </li>
+            <li>
+                <p>Если у родительского элемента не установлено <code>height</code>, а указано <code>min-height</code>,
+                то, чтобы дочерний блок занят 100% высоты, нужно родителю поставить свойство <code>height: 1px</code>.</p>
+            </li>
+        </ul>
+    </article>
+</body>
+</html>
