@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Свойство overflow</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Свойство overflow</h2>
+        <p>Свойство <code>overflow</code> управляет тем, как ведет себя содержимое блочного элемента, если его размер
+        превышает допустимую длину/ширину.</p>
+        <p>Обычно блок увеличивается в размерах при добавлении в него элементов, заключая в себе всех потомков.</p>
+        <p>Но что, если высота/ширина указаны явно? Тогда блок не может увеличиться, и содержимое «переполняет» блок.
+        Его отображение в этом случае задается свойством <code>overflow</code>.</p>
+        <p>Возможные значения:</p>
+        <ul>
+            <li>
+                <p><code>visible</code> (по умолчанию)</p>
+            </li>
+            <li>
+                <p><code>hidden</code></p>
+            </li>
+            <li>
+                <p><code>scroll</code></p>
+            </li>
+            <li>
+                <p><code>auto</code></p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>visible</h2>
+        <p>Если не ставить <code>overflow</code> явно или поставить <code>visible</code>, то содержимое отображается
+        за границами блока.</p>
+        <p>Например:</p>
+<pre><code class="language-html">&lt;style&gt;
+    .overflow {
+        /* overflow не задан */
+        width: 200px;
+        height: 80px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+    visible ЭтотТекстВылезаетСправаЭтотТекстВылезаетСправа
+    Этот текст вылезает снизу Этот текст вылезает снизу
+    Этот текст вылезает снизу Этот текст вылезает снизу
+&lt;/div&gt;</code></pre>
+        <div class="example" style="height: 120px">
+            <div style="width: 200px; height: 80px; border: 1px solid black;">
+                visible ЭтотТекстВылезаетСправаЭтотТекстВылезаетСправа
+                Этот текст вылезает снизу Этот текст вылезает снизу
+                Этот текст вылезает снизу Этот текст вылезает снизу
+            </div>
+        </div>
+        <p>Как правило, такое переполнение указывает на ошибку в верстке. Если содержимое может быть больше контейнера -
+        используют другие значения.</p>
+    </article>
+
+    <article>
+        <h2>hidden</h2>
+        <p>Переполняющее содержимое не отображается.</p>
+<pre><code class="language-html">&lt;style&gt;
+    .overflow {
+        overflow: hidden;
+        width: 200px;
+        height: 80px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+    hidden ЭтотТекстВылезаетСправаЭтотТекстВылезаетСправа
+    Этот текст вылезает снизу Этот текст вылезает снизу
+    Этот текст вылезает снизу Этот текст вылезает снизу
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="width: 200px; height: 80px; border: 1px solid black; overflow: hidden;">
+                hidden ЭтотТекстВылезаетСправаЭтотТекстВылезаетСправа
+                Этот текст вылезает снизу Этот текст вылезает снизу
+                Этот текст вылезает снизу Этот текст вылезает снизу
+            </div>
+        </div>
+        <p>Вылезающее за границу содержимое становится недоступно.</p>
+        <p>Это свойство иногда используют от лени, когда какой-то элемент дизайна немного вылезает за границу, и вместо
+        исправления верстки его просто скрывают. Как правило, долго оно не живет, верстку все равно приходится исправлять.</p>
+    </article>
+
+    <article>
+        <h2>auto</h2>
+        <p>При переполнении отображается полосы прокрутки.</p>
+<pre><code class="language-html">&lt;style&gt;
+    .overflow {
+        overflow: auto;
+        width: 200px;
+        height: 80px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+    auto ЭтотТекстВылезаетСправаЭтотТекстВылезаетСправа
+    Этот текст вылезает снизу Этот текст вылезает снизу
+    Этот текст вылезает снизу Этот текст вылезает снизу
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="width: 200px; height: 80px; border: 1px solid black; overflow: auto;">
+                auto ЭтотТекстВылезаетСправаЭтотТекстВылезаетСправа
+                Этот текст вылезает снизу Этот текст вылезает снизу
+                Этот текст вылезает снизу Этот текст вылезает снизу
+            </div>
+        </div>
+    </article>
+
+    <article>
+        <h2>scroll</h2>
+        <p>Полоса прокрутки отображается всегда.</p>
+<pre><code class="language-html">&lt;style&gt;
+    .overflow {
+        overflow: scroll;
+        width: 200px;
+        height: 80px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+    scroll Переполнения нет.
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="width: 200px; height: 80px; border: 1px solid black; overflow: scroll;">
+                scroll Переполнения нет.
+            </div>
+        </div>
+        <p>То же самое, что <code>auto</code>, но полоса прокрутки видна всегда, даже если переполнения нет.</p>
+    </article>
+
+    <article>
+        <h2>overflow-x, overflow-y</h2>
+        <p>Можно указать поведение блока при переполнении по ширине <code>overflow-x</code> и высоте - в
+        <code>overflow-y</code>:</p>
+<pre><code class="language-html">&lt;style&gt;
+    .overflow {
+        overflow-x: auto;
+        overflow-y: hidden;
+        width: 200px;
+        height: 80px;
+        border: 1px solid black;
+    }
+&lt;/style&gt;
+
+&lt;div class="overflow"&gt;
+    ПоШиринеПолосаПрокруткиAutoПоШиринеПолосаПрокруткиAuto
+    Этот текст вылезает снизу Этот текст вылезает снизу
+    Этот текст вылезает снизу Этот текст вылезает снизу
+&lt;/div&gt;</code></pre>
+        <div class="example">
+            <div style="width: 200px; height: 80px; border: 1px solid black; overflow-x: auto; overflow-y: hidden">
+                ПоШиринеПолосаПрокруткиAutoПоШиринеПолосаПрокруткиAuto
+                Этот текст вылезает снизу Этот текст вылезает снизу
+                Этот текст вылезает снизу Этот текст вылезает снизу
+            </div>
+        </div>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+        <p>Свойства <code>overflow-x/overflow-y</code> (или оба одновременно: <code>overflow</code>) задают поведение
+        контейнера при переполнении:</p>
+        <ul>
+            <li>
+                <p><code>visible</code></p>
+                <p>По умолчанию, содержимое вылезает за границы блока.</p>
+            </li>
+            <li>
+                <p><code>hidden</code></p>
+                <p>Переполняющее содержимое невидимо.</p>
+            </li>
+            <li>
+                <p><code>auto</code></p>
+                <p>Полоса прокрутки при переполнении.</p>
+            </li>
+            <li>
+                <p><code>scroll</code></p>
+                <p>Полоса прокрутки всегда.</p>
+            </li>
+        </ul>
+        <p>Кроме того, значение <code>overflow: auto | hidden</code> изменяет поведение контейнера, содержащего
+        <code>float</code>. Так как элемент с <code>float</code> находится вне потока, то обычно контейнер не выделяет
+        под него место. Но если стоит такой <code>overflow</code>, то место выделяется, т.е. контейнер растягивается.
+        Более подробно этот вопрос рассмотрен в статье
+        <a target="_blank" href="../4.%20Свойство%20float/index.html">Свойство float</a>.</p>
+    </article>
+</body>
+</html>
