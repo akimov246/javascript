@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Отступ между парами, размером со строку</title>
+    <style>
+        body {
+            font: 14px/1.5 serif;
+        }
+
+        ul {
+            margin: 0;
+        }
+
+        ul li:nth-child(2n):not(:last-child) {
+            margin-bottom: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    Текст вверху без отступа от списка.
+    <ul>
+        <li>Маша</li>
+        <li>Паша</li>
+        <li>Даша</li>
+        <li>Женя</li>
+        <li>Саша</li>
+        <li>Гоша</li>
+    </ul>
+    Текст внизу без отступа от списка.
+</body>
+</html>
