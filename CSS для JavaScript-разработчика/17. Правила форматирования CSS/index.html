@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Правила форматирования CSS</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>Правила форматирования CSS</h2>
+        <p>Для того, чтобы CSS легко читался, полезно соблюдать пять правил форматирования.</p>
+    </article>
+
+    <article>
+        <h2>Каждое свойство - на отдельной строке</h2>
+        <p>Так - неверно:</p>
+<pre><code class="language-css">#snapshot-box h2 { padding: 0 0 6px 0; font-weight: bold; position: absolute; left: 0; top: 0; }</code></pre>
+        <p>Так - правильно:</p>
+<pre><code class="language-css">#snapshot-box h2 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    padding: 0 0 6px 0;
+    font-weight: bold;
+}</code></pre>
+        <p>Цель - лучшая читаемость, проще найти и поправить свойство.</p>
+    </article>
+
+    <article>
+        <h2>Каждый селектор - на отдельной строке</h2>
+        <p>Неправильно:</p>
+<pre><code class="language-css">#snapshot-box h2, #profile-box h2, #oreder-box h2 {
+    padding: 0 0 6px 0;
+    font-weight: bold;
+}</code></pre>
+        <p>Правильно:</p>
+<pre><code class="language-css">#snapshot-box h2,
+#profile-box h2,
+#oreder-box h2 {
+    padding: 0 0 6px 0;
+    font-weight: bold;
+}</code></pre>
+        <p>Цель - лучшая читаемость, проще найти селектор.</p>
+    </article>
+
+    <article>
+        <h2>Свойства, сильнее влияющие на документ, идут первыми</h2>
+        <p>Рекомендуется располагать свойства в следующем порядке:</p>
+        <ol>
+            <li>
+                <p>Сначала положение элемента относительно других: <code>position</code>, <code>left/right/top/bottom</code>,
+                <code>float</code>, <code>clear</code>, <code>z-index</code>.</p>
+            </li>
+            <li>
+                <p>Затем размеры и отступы: <code>width</code>, <code>height</code>, <code>margin</code>,
+                <code>padding</code>...</p>
+            </li>
+            <li>
+                <p>Рамка <code>border</code>, она частично относится к размерам.</p>
+            </li>
+            <li>
+                <p>Общее оформление содержимого: <code>list-style-type</code>, <code>overflow</code>...</p>
+            </li>
+            <li>
+                <p>Цветовое и стилевое оформление: <code>background</code>, <code>color</code>, <code>font</code>...</p>
+            </li>
+        </ol>
+        <p><b>Общая логика сортировки: «от общего - к локальному и менее важному».</b></p>
+        <p>При таком порядке свойства, определяющие структуру документа, будут видны наиболее отчетливо, в начале,
+        а самые незначительно влияющие (например, цвет) - в конце.</p>
+        <p>Например:</p>
+<pre><code class="language-css">#snapshot-box h2 {
+    position: absolute; /* Позиционирование */
+    left: 0;
+    top: 0;
+
+    padding: 0 0 6px 0; /* Размеры и отступы */
+
+    color: red; /* Стилевое оформление */
+    font-weight: bold;
+}</code></pre>
+        <p><b>Свойство без префикса пишется последним.</b></p>
+        <p>Например:</p>
+<pre><code class="language-css">-webkit-box-shadow: 0 0 100px 20px #000;
+box-shadow: 0 0 100px 20px #000;</code></pre>
+        <p>Это нужно, чтобы стандартная (окончательная) реализация всегда была важнее, чем временные браузерные.</p>
+    </article>
+
+    <article>
+        <h2>Организация CSS-файлов проекта</h2>
+        <p>Стили можно разделить на две основные группы:</p>
+        <ol>
+            <li>
+                <p><b>Блоки-компоненты имеют свой CSS.</b> Например, CSS для диалогового окна, CSS для профиля
+                посетителя, CSS для меню.</p>
+                <p>Такой CSS идет «в комплексе» с модулем, его удобно выделять в отдельные файлы и подключать через
+                <code>@import</code>.</p>
+                <p>Конечно, при разработке будет много CSS-файлов, но при выкладке проекта система сборки и сжатия
+                CSS заменит директивы <code>@import</code> на их содержимое, объединяя все CSS в один файл.</p>
+            </li>
+            <li>
+                <p><b>Страничный и интегрирующий CSS.</b></p>
+                <p>Этот CSS описывает общий вид страницы, расположение компонент и их дополнительную стилизацию,
+                зависящую от места на странице и т.п.</p>
+<pre><code class="language-css">.tab .profile { /* Профиль внутри вкладки */
+    float: left;
+    width: 300px;
+    height: 200px;
+}</code></pre>
+                <p>Важные страничные блоки можно выделять особыми комментариями:</p>
+<pre><code class="language-css">/** ===========================
+ *  Профиль посетителя
+ *  ===========================
+*/
+
+.profile {
+    border: 1px solid gray;
+}
+
+profile h2 {
+    color: blue;
+    font-size: 1.8em;
+}</code></pre>
+            </li>
+        </ol>
+        <p>CSS-препроцессоры, такие как
+        <a target="_blank" href="https://sass-lang.com/">SASS</a>,
+        <a target="_blank" href="https://lesscss.org/">LESS</a>,
+        <a target="_blank" href="https://learnboost.github.com/stylus/">Stylus</a>,
+        <a target="_blank" href="https://github.com/postcss/autoprefixer">Autoprefixer</a>
+        (<a target="_blank" href="https://goonlinetools.com/autoprefixer/">доступен как онлайн-инструмент</a>) делают
+        написание CSS сильно удобнее.</p>
+        <p>Выберите один из них и используйте. Единственное, они добавляют дополнительную предобработку CSS, которую
+        нужно учесть, и желательно, на сервере.</p>
+    </article>
+</body>
+</html>
