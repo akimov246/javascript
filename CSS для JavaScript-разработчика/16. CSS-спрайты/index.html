@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSS-спрайты</title>
+    <link href="../../style.css" rel="stylesheet">
+    <script defer src="../../highlightElements.js"></script>
+</head>
+<body>
+    <article>
+        <h2>CSS-спрайты</h2>
+        <p>CSS-спрайт - способ объединить много изображений в одно, чтобы:</p>
+        <ol>
+            <li>
+                <p>Сократить количество обращений к серверу.</p>
+            </li>
+            <li>
+                <p>Загрузить несколько изображений сразу, включая те, которые понадобятся в будущем.</p>
+            </li>
+            <li>
+                <p>Если у изображений сходная палитра, то объединенное изображение будет меньше по размеру, чем совокупность
+                исходных картинок.</p>
+            </li>
+        </ol>
+        <p>Рассмотрим, как это работает, на примере дерева:</p>
+<pre><code class="language-html">&lt;ul&gt;
+    &lt;li class="open"&gt;
+        &lt;div class="icon"&gt;&lt;/div&gt;
+        &lt;div class="text"&gt;Раздел 1&lt;br&gt;
+        В две строки&lt;/div&gt;
+        &lt;ul&gt;
+            &lt;li class="closed"&gt;
+                &lt;div class="icon"&gt;&lt;/div&gt;
+                &lt;div class="text"&gt;Раздел 1.1 в одну строку&lt;/div&gt;
+            &lt;/li&gt;
+            &lt;li class="left"&gt;
+                &lt;div class="icon"&gt;&lt;/div&gt;
+                &lt;div class="text"&gt;Страница 1.2&lt;br&gt;
+                в две строки&lt;/div&gt;
+            &lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li class="closed"&gt;
+        &lt;div class="icon"&gt;&lt;/div&gt;
+        &lt;div class="text"&gt;Раздел 2&lt;br&gt;
+        В две строки&lt;/div&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+        <div class="example">
+            <ul style="list-style: none;">
+                <li>
+                    <div style="cursor: pointer; background: url(images/minus.gif); width: 16px; height: 16px; display: inline-block; vertical-align: top"></div>
+                    <div style="display: inline-block">Раздел 1<br>В две строки</div>
+                    <ul style="list-style: none">
+                        <li>
+                            <div style="cursor: pointer; background: url(images/plus.gif); width: 16px; height: 16px; display: inline-block; vertical-align: top"></div>
+                            <div style="display: inline-block">Раздел 1.1 в одну строку</div>
+                        </li>
+                        <li>
+                            <div style="cursor: text; background: url(images/article.gif); width: 16px; height: 16px; display: inline-block; vertical-align: top"></div>
+                            <div style="display: inline-block">Страница 1.2<br>в две строки</div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div style="cursor: pointer; background: url(images/plus.gif); width: 16px; height: 16px; display: inline-block; vertical-align: top"></div>
+                    <div style="display: inline-block">Раздел 2<br>
+                    В две строки</div>
+                </li>
+            </ul>
+        </div>
+        <p>Сейчас «плюс», «минус» и «статья» - три отдельных изображения. Объединим их в спрайт.</p>
+    </article>
+
+    <article>
+        <h2>Шаг 1. Использовать background</h2>
+        <p>Первый шаг к объединению изображений в «спрайт» - показывать их через <code>background</code>, а не через
+        тег <code>img</code>.</p>
+        <p>В данном случае он уже сделан. Стиль для дерева:</p>
+<pre><code class="language-css">.icon {
+    width: 16px;
+    height: 16px;
+    float: left;
+}
+
+.open .icon {
+    cursor: pointer;
+    background: url(images/minus.gif);
+}
+
+.closed .icon {
+    cursor: pointer;
+    background: url(images/plus.gif);
+}
+
+.leaf .icon {
+    cursor: text;
+    background: url(images/article.gif);
+}</code></pre>
+    </article>
+
+    <article>
+        <h2>Шаг 2. Объединить изображения</h2>
+        <p>Составим из нескольких изображений одно <code>icons.gif</code>, расположив их, например, по вертикали.</p>
+        <p>Из <img alt src="images/plus.gif" style="width: 16px;">, <img alt src="images/minus.gif" style="width: 16px;"> и
+        <img alt src="images/article.gif" style="width: 16px;"> получится одна картинка:
+        <img alt src="images/icons.gif" style="width: 16px;"></p>
+    </article>
+
+    <article>
+        <h2>Шаг 3. Показать часть спрайта в «окошке»</h2>
+        <p>А теперь самое забавное. Размер <code>div</code> для иконки - жестко фиксирован:</p>
+<pre><code class="language-css">.icon {
+    width: 16px;
+    height: 16px;
+    float: left;
+}</code></pre>
+        <p>Это значит, что если поставить в качестве <code>background</code> объединенную картинку, то вся она не
+        поместится, будет видна только верхняя часть:</p>
+        <div class="example">
+            <div style="display: inline-block; background: url(images/icons.gif); width: 16px; height: 16px; border: 1px dotted black; vertical-align: top"></div>
+            <div style="display: inline-block;">Пример раздела</div>
+        </div>
+        <p>Если бы высота иконки была больше, например, <code>16x48</code>, как в примере ниже, то было бы видно и
+        остальное:</p>
+        <div class="example">
+            <div style="display: inline-block; background: url(images/icons.gif); width: 16px; height: 48px; border: 1px dotted black; vertical-align: top"></div>
+            <div style="display: inline-block;">Пример раздела</div>
+        </div>
+        <p>... Но так как там всего <code>16px</code>, то помещается только одно изображение.</p>
+    </article>
+
+    <article>
+        <h2>Шаг 4. Сдвинуть спрайт</h2>
+        <p>Сдвиг фона <code>background-position</code> позволяет выбирать, какую именно часть спрайта видно.</p>
+        <p>В спрайте <code>icons.gif</code> изображения объединены так, что сдвиг на <code>16px</code> покажет
+        следующую иконку:</p>
+<pre><code class="language-css">.icon {
+    width: 16px;
+    height: 16px;
+    float: left;
+    background: url(images/icons.gif) no-repeat;
+}
+
+.open .icon {
+    background-position: 0 -16px; /* Вверх на 16px */
+    cursor: pointer;
+}
+
+.closed .icon {
+    background-position: 0 0; /* По умолчанию */
+    cursor: pointer;
+}
+
+.article .icon {
+    background-position: 0 -32px; /* Вверх на 32px */
+    cursor: text;
+}</code></pre>
+        <p>Результат:</p>
+        <div class="example">
+            <ul style="list-style: none;">
+                <li>
+                    <div style="background-image: url(images/icons.gif); width: 16px; height: 16px; background-position: 0 -16px; display: inline-block; vertical-align: top"></div>
+                    <div style="display: inline-block">Раздел 1<br>В две строки</div>
+                    <ul style="list-style: none">
+                        <li>
+                            <div style="background-image: url(images/icons.gif); width: 16px; height: 16px; background-position: 0 0; display: inline-block; vertical-align: top"></div>
+                            <div style="display: inline-block">Раздел 1.1 в одну строку</div>
+                        </li>
+                        <li>
+                            <div style="background-image: url(images/icons.gif); width: 16px; height: 16px; background-position: 0 -32px; display: inline-block; vertical-align: top"></div>
+                            <div style="display: inline-block">Страница 1.2<br>в две строки</div>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <div style="background-image: url(images/icons.gif); width: 16px; height: 16px; background-position: 0 0; display: inline-block; vertical-align: top"></div>
+                    <div style="display: inline-block">Раздел 2<br>
+                        В две строки</div>
+                </li>
+            </ul>
+        </div>
+        <ul>
+            <li>
+                <p>В спрайт могут объединяться изображения разных размеров, т.е. сдвиг может быть любым.</p>
+            </li>
+            <li>
+                <p>Сдвигать можно и по горизонтали и по вертикали.</p>
+            </li>
+        </ul>
+    </article>
+
+    <article>
+        <h2>Отступы</h2>
+        <p>Обычно отступы делаются <code>margin/padding</code>, но иногда их бывает удобно предусмотреть в спрайте.</p>
+        <p>Тогда если элемент немного больше, чем размер изображения, то в «окошке» не появится лишнего.</p>
+        <p>Пример спрайта с отступами:</p>
+        <img src="images/sprites-example.png" alt style="width: 30vw">
+        <p>Иконка RSS находится в нем на координатах <code>(90px, 40px)</code>:</p>
+        <img src="images/sprites-example-lines2.png" alt style="width: 30vw">
+        <p>Это значит, что для того, чтобы показать эту иконку, нужно сместить фон:</p>
+<pre><code class="language-css">background-position: -90px -40px;</code></pre>
+        <p>При этом в левом-верхнем углу фона как раз и будет эта иконка:</p>
+        <div class="example">
+            <div style="background-image: url(images/sprites-example.png); width: 35px; height: 35px; background-position: -90px -40px; border: 1px solid black; float: left"></div>
+            <p style="margin: 0">Очень интересная новость Очень интересная новость Очень интересная новость Очень интересная новость
+            Очень интересная новость Очень интересная новость Очень интересная новость Очень интересная новость
+            Очень интересная новость Очень интересная новость Очень интересная новость Очень интересная новость
+            Очень интересная новость Очень интересная новость Очень интересная новость Очень интересная новость
+            Очень интересная новость Очень интересная новость Очень интересная новость Очень интересная новость</p>
+        </div>
+        <p>Элемент в котором находится иконка (в рамке), больше по размеру, чем картинка:</p>
+        <p>Его стиль:</p>
+<pre><code class="language-css">.rss {
+    width: 35px; /* Ширина/высота больше, чем размер иконки */
+    height: 35px;
+    border: 1px solid black;
+    float: left;
+    background-image: url(sprite.png);
+    background-position: -90px -40px;
+}</code></pre>
+        <p>Если бы в спрайте не было отступов, то в такое большое «окошко» наверняка влезли бы другие иконки.</p>
+    </article>
+
+    <article>
+        <h2>Итого</h2>
+
+        <article class="note">
+            <h3>Когда использовать для изображений <code>img</code>, а когда <code>CSS background</code>?</h3>
+            <p>Решение лучше всего принимать, исходя из принципов семантической верстки.</p>
+            <p>Задайте вопрос - что здесь делает изображение? Является ли оно самостоятельным элементом страницы
+            (фотография, аватар посетителя), или же оформляет что-либо (иконка узла дерева)?</p>
+            <p>Элемент <code>img</code> следует использовать в первом случае, а для оформления у нас есть CSS.</p>
+        </article>
+
+        <p>Спрайты позволяют:</p>
+        <ol>
+            <li>
+                <p>Сократить количество обращений к серверу.</p>
+            </li>
+            <li>
+                <p>Загрузить несколько изображений сразу, включая те, которые понадобятся в будущем.</p>
+            </li>
+            <li>
+                <p>Если у изображений сходная палитра, то объединенное изображение будет меньше по размеру, чем
+                совокупность исходных картинок.</p>
+            </li>
+        </ol>
+        <p>Если фоновое изображение нужно повторять по горизонтали или вертикали, то спрайты тоже подойдут - изображения
+        в них нужно располагать в этом случае так, чтобы при повторении не были видны соседи, т.е. соответственно,
+        вертикально или горизонтально, но не «решеткой».</p>
+        <p>Далее мы встретимся со спрайтами при создании интерфейсов, чтобы кнопка при наведении меняла свое изображение.
+        Один спрайт будет содержать все состояния кнопки, а переключения внешнего вида - осуществляться при помощи
+        сдвига <code>background-position</code>.</p>
+    </article>
+</body>
+</html>
